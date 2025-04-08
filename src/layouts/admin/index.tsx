@@ -5,31 +5,48 @@ import Footer from 'components/footer/FooterAdmin';
 import Navbar from 'components/navbar/NavbarAdmin';
 import Sidebar from 'components/sidebar/Sidebar';
 import { SidebarContext } from 'contexts/SidebarContext';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import routes from 'routes';
 
+import { useLocation } from 'react-router-dom'; // Importar useLocation
+
 // Custom Chakra theme
 export default function Dashboard(props: { [x: string]: any }) {
+
   const { ...rest } = props;
   // states and functions
   const [fixed] = useState(false);
   const [toggleSidebar, setToggleSidebar] = useState(false);
+  const [brandText, setBrandText] = useState('Default Brand Text'); // Estado para brandText
+  const location = useLocation(); // Hook para obtener la ubicación actual
+
+
+
+  useEffect(() => {
+    // Actualizar brandText cada vez que cambie la ubicación
+    setBrandText(getActiveRoute(routes));
+  }, [location, routes]); // Escuchar cambios en location y routes
+
+
+
   // functions for changing the states from components
   const getRoute = () => {
     return window.location.pathname !== '/admin/full-screen-maps';
   };
+
   const getActiveRoute = (routes: RoutesType[]): string => {
     let activeRoute = 'Default Brand Text';
     for (let i = 0; i < routes.length; i++) {
       if (
-        window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
+        location.pathname === routes[i].layout + routes[i].path // Comparar con la ruta actual
       ) {
         return routes[i].name;
       }
     }
     return activeRoute;
   };
+
   const getActiveNavbar = (routes: RoutesType[]): boolean => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
@@ -89,11 +106,11 @@ export default function Dashboard(props: { [x: string]: any }) {
           transitionTimingFunction="linear, linear, ease"
         >
           <Portal>
-            <Box>
+            <Box> 
               <Navbar
                 onOpen={onOpen}
-                logoText={'Horizon UI Dashboard PRO'}
-                brandText={getActiveRoute(routes)}
+                logoText={''}
+                brandText={brandText}
                 secondary={getActiveNavbar(routes)}
                 message={getActiveNavbarText(routes)}
                 fixed={fixed}
