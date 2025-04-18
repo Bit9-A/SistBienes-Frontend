@@ -28,19 +28,9 @@ import {
   Card,
   CardHeader,
   CardBody,
-  Stack,
   Select,
   HStack,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
 } from "@chakra-ui/react"
 import { SearchIcon } from "@chakra-ui/icons"
 import {
@@ -56,6 +46,7 @@ import {
 } from "react-icons/fi"
 
 import UserForm from "./components/UserForm"
+import { text } from "stream/consumers"
 
 
 const userTypes = {
@@ -117,6 +108,7 @@ const UserManage = () => {
   const headerBg = useColorModeValue("gray.50", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const hoverBg = useColorModeValue("gray.50", "gray.700")
+  const textColor = useColorModeValue("type.title", "white")
 
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }} >
@@ -125,10 +117,10 @@ const UserManage = () => {
         {/* Card Header with Title and New User Button */}
         <CardHeader>
           <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
-            <Heading size="lg" fontWeight="bold" color="teal.600">
+            <Heading size="lg" fontWeight="bold" color={textColor}>
               Usuarios
             </Heading>
-            <Button leftIcon={<Icon as={FiUserPlus as React.ElementType} />} colorScheme="teal" size="md" onClick={onOpen}>
+            <Button bgColor={'type.bgbutton'} leftIcon={<Icon as={FiUserPlus as React.ElementType} />} colorScheme="teal" size="md" onClick={onOpen}>
               Nuevo Usuario
             </Button>
           </Flex>
@@ -174,7 +166,7 @@ const UserManage = () => {
               </Box>
             </HStack>
 
-            <Button leftIcon={<Icon as={FiDownload as React.ElementType} />} variant="outline" colorScheme="teal" size="md">
+            <Button color={'type.title'} leftIcon={<Icon as={FiDownload as React.ElementType} />} variant="outline" colorScheme={'type.bgbutton'} size="md">
               Exportar
             </Button>
           </Flex>
@@ -283,13 +275,13 @@ const UserManage = () => {
           <Flex justify="space-between" align="center" mt={4}>
             <Text color="gray.600">Mostrando 1-3 de 3 usuarios</Text>
             <HStack spacing={2}>
-              <Button size="sm" isDisabled={true} colorScheme="teal" variant="outline">
+              <Button size="sm" isDisabled={true} colorScheme={'type.bgbutton'} variant="outline">
                 Anterior
               </Button>
-              <Button size="sm" colorScheme="teal" variant="solid">
+              <Button size="sm" bgColor={'type.bgbutton'} color={'type.cbutton'} variant="solid">
                 1
               </Button>
-              <Button size="sm" isDisabled={true} colorScheme="teal" variant="outline">
+              <Button size="sm" isDisabled={true} colorScheme={'type.bgbutton'} variant="outline">
                 Siguiente
               </Button>
             </HStack>
