@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import {
-    Icon,
+  Icon,
   Box,
   Flex,
   Table,
@@ -55,7 +55,9 @@ import {
   FiHash,
 } from "react-icons/fi"
 
-// Map for user types - for dropdown options
+import UserForm from "./components/UserForm"
+
+
 const userTypes = {
   1: { name: "Administrador", color: "green" },
   2: { name: "Usuario", color: "blue" },
@@ -117,14 +119,14 @@ const UserManage = () => {
   const hoverBg = useColorModeValue("gray.50", "gray.700")
 
   return (
-    <Box pt={{ base: "130px", md: "80px", xl: "80px" }} px={{ base: 4, md: 6 }}>
+    <Box pt={{ base: "130px", md: "80px", xl: "80px" }} >
       {/* Main Card Container */}
       <Card bg={cardBg} boxShadow="sm" borderRadius="xl" border="1px" borderColor={borderColor} mb={6}>
         {/* Card Header with Title and New User Button */}
         <CardHeader>
           <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
             <Heading size="lg" fontWeight="bold" color="teal.600">
-              Gestión de Usuarios
+              Usuarios
             </Heading>
             <Button leftIcon={<Icon as={FiUserPlus as React.ElementType} />} colorScheme="teal" size="md" onClick={onOpen}>
               Nuevo Usuario
@@ -160,7 +162,7 @@ const UserManage = () => {
                   value={selectedDept}
                   onChange={(e) => setSelectedDept(e.target.value)}
                   borderRadius="md"
-                  w={{ base: "full", md: "180px" }}
+                  w={{ base: "full", md: "auto" }}
                 >
                   <option value="all">Todos los departamentos</option>
                   {Object.entries(departments).map(([id, name]) => (
@@ -183,7 +185,7 @@ const UserManage = () => {
             borderColor={borderColor}
             borderRadius="lg"
             boxShadow="sm"
-            overflow="hidden"
+            overflow="auto"
             mb={4}
           >
             <Table variant="simple" size="md">
@@ -294,81 +296,9 @@ const UserManage = () => {
           </Flex>
         </CardBody>
       </Card>
-
-      {/* User Edit/Create Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Crear Nuevo Usuario</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <Stack spacing={4}>
-              <Flex gap={4}>
-                <FormControl flex="1">
-                  <FormLabel>Nombre</FormLabel>
-                  <Input placeholder="Nombre" />
-                </FormControl>
-                <FormControl flex="1">
-                  <FormLabel>Apellido</FormLabel>
-                  <Input placeholder="Apellido" />
-                </FormControl>
-              </Flex>
-
-              <FormControl>
-                <FormLabel>Email</FormLabel>
-                <Input placeholder="Email" type="email" />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Cédula</FormLabel>
-                <Input placeholder="V-12345678" />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Teléfono</FormLabel>
-                <Input placeholder="Teléfono" />
-              </FormControl>
-
-              <Flex gap={4}>
-                <FormControl flex="1">
-                  <FormLabel>Tipo de Usuario</FormLabel>
-                  <Select defaultValue="2">
-                    {Object.entries(userTypes).map(([id, { name }]) => (
-                      <option key={id} value={id}>
-                        {name}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl flex="1">
-                  <FormLabel>Departamento</FormLabel>
-                  <Select defaultValue="1">
-                    {Object.entries(departments).map(([id, name]) => (
-                      <option key={id} value={id}>
-                        {name}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Flex>
-
-              <FormControl>
-                <FormLabel>Contraseña</FormLabel>
-                <Input placeholder="Contraseña" type="password" />
-              </FormControl>
-            </Stack>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button colorScheme="teal" mr={3}>
-              Crear Usuario
-            </Button>
-            <Button onClick={onClose}>Cancelar</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <UserForm isOpen={isOpen} onClose={onClose} userTypes={userTypes} departments={departments} />
     </Box>
   )
 }
 
-export default UserManage;
+export default UserManage
