@@ -7,6 +7,7 @@ import {
   Table,
   Thead,
   Tbody,
+  Text,
   Tr,
   Th,
   Td,
@@ -25,11 +26,38 @@ import {
   ModalCloseButton,
   TableContainer,
   useDisclosure,
+  Heading,
+  Card,
+  CardHeader,
+  CardBody,
+  HStack,
+  InputGroup,
+  InputLeftElement,
+  Badge,
+  IconButton,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Menu,
 } from '@chakra-ui/react';
 
-import Card from 'components/card/Card';
+
 import { HSeparator } from "components/separator/Separator";
-import { BsBox2 } from "react-icons/bs";
+
+import { BsBox2, BsBoxSeam } from "react-icons/bs";
+import { SearchIcon } from "@chakra-ui/icons"
+import {
+  FiEdit,
+  FiTrash2,
+  FiMoreVertical,
+  FiUserPlus,
+  FiFilter,
+  FiDownload,
+  FiUser,
+  FiMail,
+  FiHash,
+} from "react-icons/fi"
+
 // Interfaz para los bienes
 interface BienMueble {
   id: number;
@@ -53,6 +81,7 @@ export default function Inventory() {
   const [bienes, setBienes] = useState<BienMueble[]>([]); // Estado para los bienes
   const [nuevoBien, setNuevoBien] = useState<Partial<BienMueble>>({}); // Estado para el formulario
   const { isOpen, onOpen, onClose } = useDisclosure() // Estado para el modal
+  const [searchQuery, setSearchQuery] = useState("")
   const textColor = useColorModeValue('secondaryGray.900', 'white');
 
   // Simulación de carga de datos desde la base de datos
@@ -96,30 +125,66 @@ export default function Inventory() {
   };
 
 
-  //Colores 
+  //Colores
+  const cardBg = useColorModeValue("white", "gray.700")
   const headerBg = useColorModeValue("gray.50", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const hoverBg = useColorModeValue("gray.50", "gray.700")
+
   return (
-    <Box p="20px">
-      <Card mt="8%">
-        <Flex display="flex" justify="space-between" align="center">
-          <Box fontSize="2xl" fontWeight="bold" color={textColor}>
-            Inventario de Bienes
-          </Box>
-          <Button variant="outline" size="sm" leftIcon={<Icon as={BsBox2 as React.ElementType} />} onClick={onOpen}>
-            Agregar Bien
-          </Button>
-        </Flex>
+    <Box pt={{ base: "130px", md: "80px", xl: "80px" }} px={{ base: 4, md: 6 }}>
+      <Card bg={cardBg} boxShadow="sm" borderRadius="xl" border="1px" borderColor={borderColor} mb={6}>
+        <CardHeader>
+          <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+            <Heading size="lg" fontWeight="bold" color={textColor}>
+              Inventario de Bienes
+            </Heading>
+            <Button variant="outline" size="sm" leftIcon={<Icon as={BsBox2 as React.ElementType} />} onClick={onOpen}>
+              Nuevo Bien
+            </Button>
+          </Flex>
+        </CardHeader>
         {/* Tabla de bienes */}
-        <HSeparator my="20px" />
-        <Box overflowX="auto">
-          <TableContainer border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="hidden" mb={4}>
+        <CardBody>
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            justify="space-between"
+            align={{ base: "stretch", md: "center" }}
+            mb={6}
+            gap={4}
+          >
+            <HStack spacing={4} flex={{ md: 2 }}>
+              <InputGroup maxW={{ md: "320px" }}>
+                <InputLeftElement pointerEvents="none">
+                  <SearchIcon color="gray.400" />
+                </InputLeftElement>
+                <Input
+                  placeholder="Buscar Bienes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  borderRadius="md"
+                />
+              </InputGroup>
+            </HStack>
+
+            <Button leftIcon={<Icon as={FiDownload as React.ElementType} />} variant="outline" colorScheme="blue" size="md">
+              Exportar
+            </Button>
+          </Flex>
+          {/* Tabla de bienes */}
+          <TableContainer
+            border="1px"
+            borderColor={borderColor}
+            borderRadius="lg"
+            boxShadow="sm"
+            overflow="hidden"
+            mb={4}
+          >
             <Table variant="simple" size="md">
               <Thead bg={headerBg}>
                 <Tr>
                   <Th display={{ base: "none", md: "table-cell" }}>Nombre</Th>
-                  <Th display={{ base: "none", lg: "table-cell" }} >Descripción</Th>
+                  <Th display={{ base: "none", lg: "table-cell" }}>Descripción</Th>
                   <Th display={{ base: "none", md: "table-cell" }}>Marca</Th>
                   <Th display={{ base: "none", md: "table-cell" }}>Modelo</Th>
                   <Th display={{ base: "none", sm: "table-cell" }}>Cantidad</Th>
@@ -131,20 +196,101 @@ export default function Inventory() {
               <Tbody>
                 {bienes.map((bien) => (
                   <Tr key={bien.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
-                    <Td>{bien.nombre}</Td>
-                    <Td>{bien.descripcion}</Td>
-                    <Td>{bien.marca}</Td>
-                    <Td>{bien.modelo}</Td>
-                    <Td>{bien.cantidad}</Td>
-                    <Td>{bien.valor_unitario}</Td>
-                    <Td>{bien.valor_total}</Td>
-                    <Td>{bien.fecha}</Td>
+                    <Td>
+                      <Flex align="center">
+                        <Box
+                          bg="blue.100"
+                          color="blue.700"
+                          borderRadius="full"
+                          p={2}
+                          mr={3}
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                        >
+                          <Icon as={BsBoxSeam as React.ElementType} />
+
+                        </Box>
+                        <Box>
+                          <Text fontWeight="medium">{`${bien.nombre}`}</Text>
+                          <Text fontSize="sm" color="gray.500" display={{ base: "block", md: "none" }}>
+                            {bien.descripcion}
+                          </Text>
+                        </Box>
+                      </Flex>
+                    </Td>
+                    <Td>
+                      <Badge
+                        colorScheme={"gray"}
+                        borderRadius="full"
+                        px={2}
+                        py={1}
+                      >
+                        {"Desconocido"}
+                      </Badge>
+                    </Td>
+                    <Td display={{ base: "none", lg: "table-cell" }}>{bien.descripcion}</Td>
+                    <Td display={{ base: "none", md: "table-cell" }}>{bien.marca}</Td>
+                    <Td display={{ base: "none", md: "table-cell" }}>{bien.modelo}</Td>
+                    <Td display={{ base: "none", sm: "table-cell" }}>{bien.cantidad}</Td>
+                    <Td display={{ base: "none", sm: "table-cell" }}>{bien.valor_unitario}</Td>
+                    <Td display={{ base: "none", sm: "table-cell" }}>{bien.valor_total}</Td>
+                    <Td display={{ base: "none", lg: "table-cell" }}>{bien.fecha}</Td>
+                    <Td>
+                      <Flex justify="center" gap={2}>
+                        <IconButton
+                          aria-label="Editar usuario"
+                          icon={<Icon as={FiEdit as React.ElementType} />}
+                          size="sm"
+                          colorScheme="blue"
+                          variant="ghost"
+                          onClick={() => { }}
+                        />
+                        <IconButton
+                          aria-label="Eliminar usuario"
+                          icon={<Icon as={FiTrash2 as React.ElementType} />}
+                          size="sm"
+                          colorScheme="red"
+                          variant="ghost"
+                          onClick={() => { }}
+                        />
+                        <Menu>
+                          <MenuButton
+                            as={IconButton}
+                            aria-label="Más opciones"
+                            icon={<Icon as={FiMoreVertical as React.ElementType} />}
+                            variant="ghost"
+                            size="sm"
+                          />
+                          <MenuList>
+                            <MenuItem icon={<Icon as={FiUser as React.ElementType} />}>Ver perfil</MenuItem>
+                            <MenuItem icon={<Icon as={FiMail as React.ElementType} />}>Enviar correo</MenuItem>
+                            <MenuItem icon={<Icon as={FiHash as React.ElementType} />}>Restablecer contraseña</MenuItem>
+                          </MenuList>
+                        </Menu>
+                      </Flex>
+                    </Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
           </ TableContainer>
-        </Box>
+          {/* Pagination */}
+          <Flex justify="space-between" align="center" mt={4}>
+            <Text color="gray.600">Mostrando Bienes</Text>
+            <HStack spacing={2}>
+              <Button size="sm" isDisabled={true} colorScheme={textColor} variant="outline">
+                Anterior
+              </Button>
+              <Button size="sm" colorScheme={textColor} variant="solid">
+                1
+              </Button>
+              <Button size="sm" isDisabled={true} colorScheme={textColor} variant="outline">
+                Siguiente
+              </Button>
+            </HStack>
+          </Flex>
+        </CardBody>
 
         {/* Formulario para agregar bienes */}
 

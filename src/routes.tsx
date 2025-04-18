@@ -21,7 +21,7 @@ import Inventory from 'views/admin/inventory';
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
-
+import UserManage from 'views/admin/user';
 const routes = [
   {
     name: 'Inicio',
@@ -35,7 +35,7 @@ const routes = [
     layout: '/admin',
     path: '/user-management',
     icon: <Icon as={MdPerson as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <UserManage />,
   },
   {
     name: 'Gestión de Bienes',
