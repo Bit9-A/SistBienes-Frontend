@@ -21,6 +21,8 @@ import Inventory from 'views/admin/inventory';
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
+import UserManage from 'views/admin/user';
+import Marketplace from 'views/admin/marketplace';
 
 const routes = [
   {
@@ -35,21 +37,21 @@ const routes = [
     layout: '/admin',
     path: '/user-management',
     icon: <Icon as={MdPerson as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null ,
+    component: <UserManage /> ,
   },
   {
     name: 'Gestión de Bienes',
     layout: '/admin',
     path: '/asset-management',
     icon: <Icon as={MdBarChart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <Inventory />,
   },
   {
-    name: 'Incorporaciones e Dsincorporaciones',
+    name: 'Incorporaciones e Desincorporaciones',
     layout: '/admin',
     path: '/incorporations',
     icon: <Icon as={MdOutlineShoppingCart as React.ElementType} width="20px" height="20px" color="inherit" />,
-   component:null,
+   component:<DataTables />,
   },
   {
     name: 'Traslados',

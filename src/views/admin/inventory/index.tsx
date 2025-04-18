@@ -83,7 +83,7 @@ export default function Inventory() {
   };
 
   return (
-    <Box p="20px">
+    <Box pt={{ base: '180px', md: '80px', xl: '80px' }}>
       <Flex justify="space-between" align="center" mb="20px">
         <Box fontSize="2xl" fontWeight="bold" color={textColor}>
           Inventario de Bienes
