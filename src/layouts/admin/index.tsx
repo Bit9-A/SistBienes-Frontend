@@ -5,7 +5,7 @@ import Footer from 'components/footer/FooterAdmin';
 import Navbar from 'components/navbar/NavbarAdmin';
 import Sidebar from 'components/sidebar/Sidebar';
 import { SidebarContext } from 'contexts/SidebarContext';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import routes from 'routes';
 
@@ -13,7 +13,6 @@ import { useLocation } from 'react-router-dom'; // Importar useLocation
 
 // Custom Chakra theme
 export default function Dashboard(props: { [x: string]: any }) {
-
   const { ...rest } = props;
   // states and functions
   const [fixed] = useState(false);
@@ -21,14 +20,10 @@ export default function Dashboard(props: { [x: string]: any }) {
   const [brandText, setBrandText] = useState('Default Brand Text'); // Estado para brandText
   const location = useLocation(); // Hook para obtener la ubicación actual
 
-
-
   useEffect(() => {
     // Actualizar brandText cada vez que cambie la ubicación
     setBrandText(getActiveRoute(routes));
   }, [location, routes]); // Escuchar cambios en location y routes
-
-
 
   // functions for changing the states from components
   const getRoute = () => {
@@ -39,7 +34,8 @@ export default function Dashboard(props: { [x: string]: any }) {
     let activeRoute = 'Default Brand Text';
     for (let i = 0; i < routes.length; i++) {
       if (
-        location.pathname === routes[i].layout + routes[i].path // Comparar con la ruta actual
+        location.pathname ===
+        routes[i].layout + routes[i].path // Comparar con la ruta actual
       ) {
         return routes[i].name;
       }
@@ -90,7 +86,11 @@ export default function Dashboard(props: { [x: string]: any }) {
           setToggleSidebar,
         }}
       >
-        <Sidebar routes={routes} display="none" {...rest} />
+        <Sidebar
+          routes={routes}
+          setToggleSidebar={setToggleSidebar}
+          {...rest}
+        />
         <Box
           float="right"
           minHeight="100vh"
@@ -98,15 +98,18 @@ export default function Dashboard(props: { [x: string]: any }) {
           overflow="auto"
           position="relative"
           maxHeight="100%"
-          w={{ base: '100%', xl: 'calc( 100% - 290px )' }}
-          maxWidth={{ base: '100%', xl: 'calc( 100% - 290px )' }}
-          transition="all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1)"
-          transitionDuration=".2s, .2s, .35s"
-          transitionProperty="top, bottom, width"
-          transitionTimingFunction="linear, linear, ease"
+          w={{
+            base: '100%',
+            xl: toggleSidebar ? 'calc(100% - 300px)' : '100%', // Ajustar ancho según el estado del sidebar
+          }}
+          ml={{
+            base: '0px',
+            xl: toggleSidebar ? '300px' : '0px', // Mover contenido a la derecha si el sidebar está abierto
+          }}
+          transition="all 0.3s ease"
         >
           <Portal>
-            <Box> 
+            <Box>
               <Navbar
                 onOpen={onOpen}
                 logoText={''}
@@ -114,6 +117,7 @@ export default function Dashboard(props: { [x: string]: any }) {
                 secondary={getActiveNavbar(routes)}
                 message={getActiveNavbarText(routes)}
                 fixed={fixed}
+                toggleSidebar={toggleSidebar} // Pasar el estado del sidebar
                 {...rest}
               />
             </Box>

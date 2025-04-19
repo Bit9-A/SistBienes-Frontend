@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "SistBienes",
+  "name": "Application de gestion de bienes",
   "icons": [
     {
       "src": "favicon.ico",
