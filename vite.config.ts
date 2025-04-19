@@ -22,6 +22,8 @@ export default defineConfig({
   server: {
     port: 10000, // Puerto del servidor de desarrollo
     open: true, // Abre el navegador automáticamente
+    allowedHosts: ['sistbienes-frontend.onrender.com'], // Permitir hosts específicos
+    
   },
   build: {
     outDir: 'build', // Carpeta de salida para el build
