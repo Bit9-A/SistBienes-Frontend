@@ -74,21 +74,24 @@ export default function Dashboard(props: { [x: string]: any }) {
           setToggleSidebar,
         }}
       >
-        <Sidebar routes={routes} display="none" {...rest} />
-        <Box
-          float="left"
-          minHeight="100vh"
-          height="100%"
-          overflow="auto"
-          position="relative"
-          maxHeight="100%"
-          w={{ base: '100%', xl: 'calc( 100% - 290px )' }}
-          maxWidth={{ base: '100%', xl: 'calc( 100% - 290px )' }}
-          transition="all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1)"
-          transitionDuration=".2s, .2s, .35s"
-          transitionProperty="top, bottom, width"
-          transitionTimingFunction="linear, linear, ease"
-        >
+        <Sidebar routes={routes} setToggleSidebar={setToggleSidebar} {...rest} />
+  <Box
+    float="right"
+    minHeight="100vh"
+    height="100%"
+    overflow="auto"
+    position="relative"
+    maxHeight="100%"
+    w={{
+      base: '100%',
+      xl: toggleSidebar ? '100%' : 'calc(100% - 300px)', // Ajustar ancho según el estado del sidebar
+    }}
+    ml={{
+      base: '0px',
+      xl: toggleSidebar ? '0px' : '300px', // Mover contenido a la derecha si el sidebar está abierto
+    }}
+    transition="all 0.3s ease"
+  >
           <Portal>
             <Box>
               <Navbar

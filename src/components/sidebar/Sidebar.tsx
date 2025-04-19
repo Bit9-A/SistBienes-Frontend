@@ -1,7 +1,8 @@
 import React from 'react';
-
+import { useState } from 'react';
 // chakra imports
 import {
+	IconButton,
 	Box,
 	Flex,
 	Drawer,
@@ -16,42 +17,90 @@ import {
 import Content from 'components/sidebar/components/Content';
 import { renderThumb, renderTrack, renderView } from 'components/scrollbar/Scrollbar';
 import { Scrollbars } from 'react-custom-scrollbars-2';
+import { IoMenu, IoClose } from 'react-icons/io5';
 
 // Assets
 import { IoMenuOutline } from 'react-icons/io5';
 
-function Sidebar(props: { routes: RoutesType[]; [x: string]: any }) {
-	const { routes } = props;
-
-	let variantChange = '0.2s linear';
-	let shadow = useColorModeValue('14px 17px 40px 4px rgba(112, 144, 176, 0.08)', 'unset');
-	// Chakra Color Mode
-	let sidebarBg = useColorModeValue('white', 'navy.800');
-	let sidebarMargins = '0px';
-
-	// SIDEBAR
+function Sidebar(props: { routes: RoutesType[]; setToggleSidebar: (value: boolean) => void }) {
+	const { routes, setToggleSidebar } = props;
+  
+	const [isOpen, setIsOpen] = useState(false); // Estado interno del Sidebar
+  
+	const sidebarBg = useColorModeValue('white', 'navy.800');
+	const shadow = useColorModeValue('14px 17px 40px 4px rgba(112, 144, 176, 0.08)', 'unset');
+	const buttonBg = useColorModeValue('type.bgbutton', 'type.bgbutton'); // Color del botón
+  
+	const toggleSidebar = () => {
+	  const newState = !isOpen;
+	  setIsOpen(newState);
+	  setToggleSidebar(newState); // Actualiza el estado global del Sidebar
+	};
+  
 	return (
-		<Box display={{ sm: 'none', xl: 'block' }} position='fixed' minH='100%'>
-			<Box
-				bg={sidebarBg}
-				transition={variantChange}
-				w='300px'
-				h='100vh'
-				m={sidebarMargins}
-				minH='100%'
-				overflowX='hidden'
-				boxShadow={shadow}>
-				<Scrollbars
-					autoHide
-					renderTrackVertical={renderTrack}
-					renderThumbVertical={renderThumb}
-					renderView={renderView}>
-					<Content routes={routes} />
-				</Scrollbars>
-			</Box>
+	  <Flex display={{ base: 'none', lg: 'flex' }}> {/* Ocultar en pantallas pequeñas */}
+		{/* Botón para abrir el sidebar */}
+		{!isOpen && (
+		  <IconButton
+			aria-label="Open Sidebar"
+			icon={<Icon as={IoMenu as React.ElementType} />}
+			onClick={toggleSidebar}
+			bg={buttonBg}
+			color="white"
+			position="fixed"
+			top="20px"
+			left="20px"
+			zIndex="1000"
+			_hover={{ bg: 'gray.600' }}
+		  />
+		)}
+  
+		{/* Sidebar */}
+		<Box
+		  bg={sidebarBg}
+		  transition="width 0.3s ease"
+		  w={isOpen ? '300px' : '0px'}
+		  h="100vh"
+		  overflow="hidden"
+		  boxShadow={shadow}
+		  position="fixed"
+		  zIndex="999"
+		>
+		  {isOpen && (
+			<>
+			  <Scrollbars
+				autoHide
+				renderTrackVertical={renderTrack}
+				renderThumbVertical={renderThumb}
+				renderView={renderView}
+			  >
+				<Content routes={routes} />
+			  </Scrollbars>
+  
+			  {/* Botón para cerrar el sidebar */}
+			  <IconButton
+				aria-label="Close Sidebar"
+				icon={<Icon as={IoClose as React.ElementType} />}
+				onClick={toggleSidebar}
+				bg={buttonBg}
+				color="white"
+				position="absolute"
+				bottom="20px"
+				left="50%"
+				transform="translateX(-50%)"
+				zIndex="1000"
+				_hover={{ bg: 'gray.600' }}
+			  />
+			</>
+		  )}
 		</Box>
+	  </Flex>
 	);
-}
+  }
+  
+
+  
+
 
 // FUNCTIONS
 export function SidebarResponsive(props: { routes: RoutesType[] }) {
