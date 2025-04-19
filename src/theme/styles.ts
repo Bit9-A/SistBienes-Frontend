@@ -1,6 +1,12 @@
-import { mode } from '@chakra-ui/theme-tools';
+import { mode } from '@chakra-ui/theme-tools';;
 export const globalStyles = {
 	colors: {
+		type: {
+			title: '#4632da',
+			bgbutton: '#310493',
+			cbutton: '#ffffff',
+			gbutton: '##00dafc',
+		},
 		brand: {
 			100: '#E9E3FF',
 			200: '#422AFB',
