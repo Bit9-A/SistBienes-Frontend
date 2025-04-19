@@ -4,7 +4,7 @@ export const globalStyles = {
 		type: {
 			title: '#4632da',
 			bgbutton: '#310493',
-			cbutton: '#fff',
+			cbutton: '#ffffff',
 			gbutton: '##00dafc',
 		},
 		brand: {
