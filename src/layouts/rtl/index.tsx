@@ -8,7 +8,7 @@ import { RtlProvider } from 'components/rtlProvider/RtlProvider';
 import { SidebarContext } from 'contexts/SidebarContext';
 import { useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import routes from 'routes';
+import routes from '../../routes';
 
 // Custom Chakra theme
 export default function Dashboard(props: { [x: string]: any }) {
@@ -37,7 +37,7 @@ export default function Dashboard(props: { [x: string]: any }) {
       if (
         window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
       ) {
-        return routes[i].secondary;
+        return routes[i].secondary ?? false;
       }
     }
     return activeNavbar;

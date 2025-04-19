@@ -7,7 +7,7 @@ import Sidebar from 'components/sidebar/Sidebar';
 import { SidebarContext } from 'contexts/SidebarContext';
 import { useState, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import routes from 'routes';
+import routes from '../../routes';
 
 import { useLocation } from 'react-router-dom'; // Importar useLocation
 
@@ -49,7 +49,7 @@ export default function Dashboard(props: { [x: string]: any }) {
       if (
         window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
       ) {
-        return routes[i].secondary;
+        return routes[i].secondary ?? false;
       }
     }
     return activeNavbar;

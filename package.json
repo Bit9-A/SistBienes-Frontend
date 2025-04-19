@@ -1,6 +1,6 @@
 {
-  "name": "horizon-ui-chakra-typescript",
-  "version": "3.0.0",
+  "name": "sistbienes",
+  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@babel/preset-react": "^7.18.6",
@@ -30,15 +30,15 @@
     "react-icons": "^5.5.0",
     "react-is": "^18.3.1",
     "react-router-dom": "^6.25.1",
-    "react-scripts": "^5.0.1",
     "stylis": "^4.1.1",
     "stylis-plugin-rtl": "2.0.2",
     "typescript": "^4.7.4",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm install --force && npm run build",
@@ -70,7 +70,7 @@
     "@types/node": "^22.14.1",
     "@types/react-calendar": "^3.5.2",
     "@types/react-router-dom": "^5.3.3",
-    "@vitejs/plugin-react": "^4.4.0",
+    "@vitejs/plugin-react": "^4.4.1",
     "ajv": "^8.17.1",
     "vite": "^6.3.2"
   }

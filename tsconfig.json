@@ -22,10 +22,21 @@
     "downlevelIteration": true,
     "baseUrl": "src",
     "paths": {
-      "@assets/*": ["./src/assetsassets/*"]
-    },
+      "@assets/*": ["assets/*"], // Alias para assets
+      "@components/*": ["components/*"], // Alias para componentes
+      "@views/*": ["views/*"], // Alias para vistas
+      "@contexts/*": ["contexts/*"], // Alias para contextos
+      "@hooks/*": ["hooks/*"], // Alias para hooks
+      "@types/*": ["types/*"], // Alias para types
+      "@themes/*": ["themes/*"] // Alias para themes
+    }
   },
   "include": [
     "./src"
 , "src/views/admin/user/components/.tsx"  ], 
+"exclude": [
+    "node_modules", // Excluir node_modules
+    "build", // Excluir la carpeta de salida
+    "dist" // Excluir la carpeta de salida de Vite
+  ]
 }
