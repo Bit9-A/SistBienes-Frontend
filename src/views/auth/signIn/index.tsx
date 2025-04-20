@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { MdOutlineRemoveRedEye } from 'react-icons/md';
 import { RiEyeCloseLine } from 'react-icons/ri';
-import banner from 'assets/img/BANNER-ALCALDIA-CARDENAS-1.png';
+import banner from 'assets/img/banner.png';
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const handlePasswordVisibility = () => setShowPassword(!showPassword);

@@ -4,7 +4,7 @@ import { Flex, Icon, useColorModeValue, Image, Text } from '@chakra-ui/react';
 // Custom components
 import { HorizonLogo } from 'components/icons/Icons';
 import { HSeparator } from 'components/separator/Separator';
-import BannerAlcadia from 'assets/img/BANNER-ALCALDIA-CARDENAS-1.png'
+import BannerAlcadia from 'assets/img/banner.png';
 
 export function SidebarBrand() {
 	//   Chakra color mode
