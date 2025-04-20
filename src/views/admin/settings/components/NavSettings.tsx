@@ -3,7 +3,7 @@
 import type React from "react"
 import { Flex, Button, useColorModeValue } from "@chakra-ui/react"
 
-export type SettingsTab = "general" | "departaments" | "subgroups" | "parroquias" | "sistema"
+export type SettingsTab = "general" | "departaments" | "subgroups" | "parroquias" | "concepts"
 
 interface NavSettingsProps {
   activeTab: SettingsTab
@@ -23,6 +23,8 @@ const NavSettings: React.FC<NavSettingsProps> = ({ activeTab, setActiveTab }) =>
     { id: "departaments", label: "Departamentos" },
     { id: "subgroups", label: "Subgrupos" },
     { id: "parroquias", label: "Parroquias" },
+    { id: "concepts", label: "Conceptos de Movimiento" },
+
   ]
 
   return (
