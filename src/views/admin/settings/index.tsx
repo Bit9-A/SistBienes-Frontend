@@ -7,6 +7,7 @@ import GeneralSettings from "./components/General"
 import Departaments from "./components/Departaments"
 import SubGroup from "./components/SubGroup"
 import Parish from "./components/Parish"
+import ConceptsMoves from "./components/ConceptsMoves"
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general")
@@ -22,8 +23,10 @@ const Settings = () => {
         return <SubGroup />
       case "parroquias":
         return <Parish />
+      case "concepts":
+        return <ConceptsMoves /> 
       default:
-        return //<GeneralSettings />
+        return <GeneralSettings />
     }
   }
 
