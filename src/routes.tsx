@@ -23,6 +23,7 @@ import Inventory from 'views/admin/inventory';
 import SignInCentered from 'views/auth/signIn';
 import UserManage from 'views/admin/user';
 import Marketplace from 'views/admin/marketplace';
+import Settings from 'views/admin/settings';
 
 const routes = [
   {
@@ -79,7 +80,7 @@ const routes = [
     layout: '/admin',
     path: '/settings',
     icon: <Icon as={MdSettings as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <Settings/>,
   },
   {
     name: 'Notificaciones',
