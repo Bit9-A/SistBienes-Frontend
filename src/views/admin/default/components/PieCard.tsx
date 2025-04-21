@@ -11,7 +11,6 @@ export default function Conversion(props: { [x: string]: any }) {
 	// Chakra Color Mode
 	const textColor = useColorModeValue('secondaryGray.900', 'white');
 	const cardColor = useColorModeValue('white', 'navy.700');
-	const cardShadow = useColorModeValue('0px 18px 40px rgba(112, 144, 176, 0.12)', 'unset');
 	return (
 		<Card p='20px' alignItems='center' flexDirection='column' w='100%' {...rest}>
 			<Flex
@@ -20,11 +19,15 @@ export default function Conversion(props: { [x: string]: any }) {
 				alignItems='center'
 				w='100%'
 				mb='8px'>
-				<Text color={textColor} fontSize='md' fontWeight='600' mt='4px'>
-					Your Pie Chart
-				</Text>
+				<Box>
+					<Text fontSize="xl" fontWeight="bold" color={'type.title'}>
+						Distribución por Categoría
+					</Text>
+					<Text fontSize="sm" color="gray.500">
+						Porcentaje de bienes por tipo
+					</Text>
+				</Box>
 				<Select fontSize='sm' variant='subtle' defaultValue='monthly' width='unset' fontWeight='700'>
-					<option value='daily'>Daily</option>
 					<option value='monthly'>Monthly</option>
 					<option value='yearly'>Yearly</option>
 				</Select>
@@ -34,34 +37,81 @@ export default function Conversion(props: { [x: string]: any }) {
 			<Card
 				bg={cardColor}
 				flexDirection='row'
-				boxShadow={cardShadow}
 				w='100%'
 				p='15px'
 				px='20px'
 				mt='15px'
-				mx='auto'>
-				<Flex direction='column' py='5px'>
-					<Flex align='center'>
-						<Box h='8px' w='8px' bg='brand.500' borderRadius='50%' me='4px' />
-						<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px'>
-							Your files
+				mx='auto'
+			>
+				<Flex direction="row" align="center" justify="space-between" w="100%" wrap="wrap">
+					{/* Equipos Informáticos */}
+					<Flex direction='column' py='5px' align="center" flex="1" minW="120px" maxW="180px">
+						<Flex align='center'>
+							<Box h='8px' w='8px' bg='#90caf9' borderRadius='50%' me='4px' />
+							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
+								Equipos Informáticos
+							</Text>
+						</Flex>
+						<Text fontSize='lg' color={textColor} fontWeight='700'>
+							53%
 						</Text>
 					</Flex>
-					<Text fontSize='lg' color={textColor} fontWeight='700'>
-						63%
-					</Text>
-				</Flex>
-				<VSeparator mx={{ base: '60px', xl: '60px', '2xl': '60px' }} />
-				<Flex direction='column' py='5px' me='10px'>
-					<Flex align='center'>
-						<Box h='8px' w='8px' bg='#6AD2FF' borderRadius='50%' me='4px' />
-						<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px'>
-							System
+					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
+
+					{/* Mobiliario */}
+					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
+						<Flex align='center'>
+							<Box h='8px' w='8px' bg='#f8bbd0' borderRadius='50%' me='4px' />
+							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
+								Mobiliario
+							</Text>
+						</Flex>
+						<Text fontSize='lg' color={textColor} fontWeight='700'>
+							22%
 						</Text>
 					</Flex>
-					<Text fontSize='lg' color={textColor} fontWeight='700'>
-						25%
-					</Text>
+					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
+
+					{/* Vehículos */}
+					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
+						<Flex align='center'>
+							<Box h='8px' w='8px' bg='#80cbc4' borderRadius='50%' me='4px' />
+							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
+								Vehículos
+							</Text>
+						</Flex>
+						<Text fontSize='lg' color={textColor} fontWeight='700'>
+							12%
+						</Text>
+					</Flex>
+					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
+
+					{/* Equipos de Oficina */}
+					<Flex direction='column' py='5px' align="center" flex="1" minW="120px" maxW="160px">
+						<Flex align='center'>
+							<Box h='8px' w='8px' bg='#ffe082' borderRadius='50%' me='4px' />
+							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
+								Equipos de Oficina
+							</Text>
+						</Flex>
+						<Text fontSize='lg' color={textColor} fontWeight='700'>
+							8%
+						</Text>
+					</Flex>
+					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
+
+					{/* Audiovisuales */}
+					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
+						<Flex align='center'>
+							<Box h='8px' w='8px' bg='#00dafc' borderRadius='50%' me='4px' />
+							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
+								Audiovisuales
+							</Text>
+						</Flex>
+						<Text fontSize='lg' color={textColor} fontWeight='700'>
+							5%
+						</Text>
+					</Flex>
 				</Flex>
 			</Card>
 		</Card>
