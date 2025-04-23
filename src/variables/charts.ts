@@ -312,6 +312,18 @@ export const pieChartOptions: any = {
 	chart: {
 		width: '50px'
 	},
+	animations: {
+		enabled: true,
+		speed: 800,
+		animateGradually: {
+			enabled: true,
+			delay: 150
+		},
+		dynamicAnimation: {
+			enabled: true,
+			speed: 350
+		}
+	},
 	states: {
 		hover: {
 			filter: {
@@ -337,7 +349,7 @@ export const pieChartOptions: any = {
 		}
 	},
 	fill: {
-		colors: ['#90caf9', '#f8bbd0', '#80cbc4', '#ffe082', '#00dafc']
+		colors: ['#47a7f5', '#f176a0', '#87cb80', '#ffcd36', '#00dafc']
 	},
 	tooltip: {
 		enabled: true,
@@ -351,8 +363,8 @@ export const pieChartData = [53, 22, 12, 8, 5];
 
 export const lineChartDataTotalSpent = [
 	{
-		name: 'Profit',
-		data: [30, 40, 24, 46, 20, 46]
+		name: 'Adquisiones Ultimo Mes',
+		data: [1, 2, 4, 13]
 	}
 ];
 
@@ -367,10 +379,23 @@ export const lineChartOptionsTotalSpent: any = {
 			left: 0,
 			blur: 10,
 			opacity: 0.1,
-			color: '#4318FF'
+			color: '#00dafc'
 		}
+
 	},
-	colors: ['#4318FF', '#39B8FF'],
+	colors: ['#00dafc'],
+	fill: {
+		type: 'gradient',
+		gradient: {
+			shade: 'dark',
+			gradientToColors: ['#FDD835'],
+			shadeIntensity: 1,
+			type: 'horizontal',
+			opacityFrom: 1,
+			opacityTo: 1,
+			stops: [0, 100, 100, 100]
+		},
+	},
 	markers: {
 		size: 0,
 		colors: 'white',
@@ -398,7 +423,7 @@ export const lineChartOptionsTotalSpent: any = {
 	},
 	xaxis: {
 		type: 'numeric',
-		categories: ['SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB'],
+		categories: ['ENE', 'FEB', 'MAR', 'ABR'],
 		labels: {
 			style: {
 				colors: '#A3AED0',
@@ -426,5 +451,6 @@ export const lineChartOptionsTotalSpent: any = {
 			opacity: 0.5
 		}
 	},
-	color: ['#7551FF', '#39B8FF']
+
+	color: ['#7551FF']
 };

@@ -47,7 +47,7 @@ export default function Conversion(props: { [x: string]: any }) {
 					{/* Equipos Informáticos */}
 					<Flex direction='column' py='5px' align="center" flex="1" minW="120px" maxW="180px">
 						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#90caf9' borderRadius='50%' me='4px' />
+							<Box h='8px' w='8px' bg='#47a7f5' borderRadius='50%' me='4px' />
 							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
 								Equipos Informáticos
 							</Text>
@@ -61,7 +61,7 @@ export default function Conversion(props: { [x: string]: any }) {
 					{/* Mobiliario */}
 					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
 						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#f8bbd0' borderRadius='50%' me='4px' />
+							<Box h='8px' w='8px' bg='#f176a0' borderRadius='50%' me='4px' />
 							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
 								Mobiliario
 							</Text>
@@ -75,7 +75,7 @@ export default function Conversion(props: { [x: string]: any }) {
 					{/* Vehículos */}
 					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
 						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#80cbc4' borderRadius='50%' me='4px' />
+							<Box h='8px' w='8px' bg='#87cb80' borderRadius='50%' me='4px' />
 							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
 								Vehículos
 							</Text>
@@ -89,7 +89,7 @@ export default function Conversion(props: { [x: string]: any }) {
 					{/* Equipos de Oficina */}
 					<Flex direction='column' py='5px' align="center" flex="1" minW="120px" maxW="160px">
 						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#ffe082' borderRadius='50%' me='4px' />
+							<Box h='8px' w='8px' bg='#ffcd36' borderRadius='50%' me='4px' />
 							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
 								Equipos de Oficina
 							</Text>
