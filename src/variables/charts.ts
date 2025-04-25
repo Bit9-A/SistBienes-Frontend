@@ -3,7 +3,7 @@
 export const barChartDataDailyTraffic = [
 	{
 		name: 'Daily Traffic',
-		data: [ 20, 30, 40, 20, 45, 50, 30 ]
+		data: [20, 30, 40, 20, 45, 50, 30]
 	}
 ];
 
@@ -27,7 +27,7 @@ export const barChartOptionsDailyTraffic: any = {
 		theme: 'dark'
 	},
 	xaxis: {
-		categories: [ '00', '04', '08', '12', '14', '16', '18' ],
+		categories: ['00', '04', '08', '12', '14', '16', '18'],
 		show: false,
 		labels: {
 			show: true,
@@ -106,11 +106,11 @@ export const barChartOptionsDailyTraffic: any = {
 export const barChartDataUserActivity = [
 	{
 		name: 'PRODUCT A',
-		data: [ 70, 55, 41, 67, 22, 43 ]
+		data: [70, 55, 41, 67, 22, 43]
 	},
 	{
 		name: 'PRODUCT B',
-		data: [ 90, 70, 60, 50, 80, 90 ]
+		data: [90, 70, 60, 50, 80, 90]
 	}
 ];
 
@@ -135,7 +135,7 @@ export const barChartOptionsUserActivity = {
 		theme: 'dark'
 	},
 	xaxis: {
-		categories: [ 'S', 'M', 'T', 'W', 'T', 'F' ],
+		categories: ['S', 'M', 'T', 'W', 'T', 'F'],
 		show: false,
 		labels: {
 			show: true,
@@ -185,12 +185,12 @@ export const barChartOptionsUserActivity = {
 	},
 	fill: {
 		type: 'solid',
-		colors: [ '#5E37FF', '#6AD2FF' ]
+		colors: ['#5E37FF', '#6AD2FF']
 	},
 	legend: {
 		show: false
 	},
-	colors: [ '#5E37FF', '#6AD2FF' ],
+	colors: ['#5E37FF', '#6AD2FF'],
 	dataLabels: {
 		enabled: false
 	},
@@ -206,15 +206,15 @@ export const barChartOptionsUserActivity = {
 export const barChartDataConsumption = [
 	{
 		name: 'PRODUCT A',
-		data: [ 400, 370, 330, 390, 320, 350, 360, 320, 380 ]
+		data: [400, 370, 330, 390, 320, 350, 360, 320, 380]
 	},
 	{
 		name: 'PRODUCT B',
-		data: [ 400, 370, 330, 390, 320, 350, 360, 320, 380 ]
+		data: [400, 370, 330, 390, 320, 350, 360, 320, 380]
 	},
 	{
 		name: 'PRODUCT C',
-		data: [ 400, 370, 330, 390, 320, 350, 360, 320, 380 ]
+		data: [400, 370, 330, 390, 320, 350, 360, 320, 380]
 	}
 ];
 
@@ -239,7 +239,7 @@ export const barChartOptionsConsumption: any = {
 		theme: 'dark'
 	},
 	xaxis: {
-		categories: [ '17', '18', '19', '20', '21', '22', '23', '24', '25' ],
+		categories: ['17', '18', '19', '20', '21', '22', '23', '24', '25'],
 		show: false,
 		labels: {
 			show: true,
@@ -289,12 +289,12 @@ export const barChartOptionsConsumption: any = {
 	},
 	fill: {
 		type: 'solid',
-		colors: [ '#5E37FF', '#6AD2FF', '#E1E9F8' ]
+		colors: ['#5E37FF', '#6AD2FF', '#E1E9F8']
 	},
 	legend: {
 		show: false
 	},
-	colors: [ '#5E37FF', '#6AD2FF', '#E1E9F8' ],
+	colors: ['#5E37FF', '#6AD2FF', '#E1E9F8'],
 	dataLabels: {
 		enabled: false
 	},
@@ -307,10 +307,22 @@ export const barChartOptionsConsumption: any = {
 };
 
 export const pieChartOptions: any = {
-	labels: [ 'Your files', 'System', 'Empty' ],
-	colors: [ '#4318FF', '#6AD2FF', '#EFF4FB' ],
+	labels: ['Equipos Informáticos', ' Mobiliario', 'Vehículos', 'Equipos de Oficina', 'Audiovisuales'],
+	colors: ['#90caf9', '#f8bbd0', '#80cbc4', '#ffe082', '#00dafc'],
 	chart: {
 		width: '50px'
+	},
+	animations: {
+		enabled: true,
+		speed: 800,
+		animateGradually: {
+			enabled: true,
+			delay: 150
+		},
+		dynamicAnimation: {
+			enabled: true,
+			speed: 350
+		}
 	},
 	states: {
 		hover: {
@@ -337,7 +349,7 @@ export const pieChartOptions: any = {
 		}
 	},
 	fill: {
-		colors: [ '#4318FF', '#6AD2FF', '#EFF4FB' ]
+		colors: ['#47a7f5', '#f176a0', '#87cb80', '#ffcd36', '#00dafc']
 	},
 	tooltip: {
 		enabled: true,
@@ -345,18 +357,14 @@ export const pieChartOptions: any = {
 	}
 };
 
-export const pieChartData = [ 63, 25, 12 ];
+export const pieChartData = [53, 22, 12, 8, 5];
 
 // Total Spent Default
 
 export const lineChartDataTotalSpent = [
 	{
-		name: 'Revenue',
-		data: [ 50, 64, 48, 66, 49, 68 ]
-	},
-	{
-		name: 'Profit',
-		data: [ 30, 40, 24, 46, 20, 46 ]
+		name: 'Adquisiones Ultimo Mes',
+		data: [1, 2, 4, 13]
 	}
 ];
 
@@ -371,10 +379,23 @@ export const lineChartOptionsTotalSpent: any = {
 			left: 0,
 			blur: 10,
 			opacity: 0.1,
-			color: '#4318FF'
+			color: '#00dafc'
 		}
+
 	},
-	colors: [ '#4318FF', '#39B8FF' ],
+	colors: ['#00dafc'],
+	fill: {
+		type: 'gradient',
+		gradient: {
+			shade: 'dark',
+			gradientToColors: ['#FDD835'],
+			shadeIntensity: 1,
+			type: 'horizontal',
+			opacityFrom: 1,
+			opacityTo: 1,
+			stops: [0, 100, 100, 100]
+		},
+	},
 	markers: {
 		size: 0,
 		colors: 'white',
@@ -402,7 +423,7 @@ export const lineChartOptionsTotalSpent: any = {
 	},
 	xaxis: {
 		type: 'numeric',
-		categories: [ 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB' ],
+		categories: ['ENE', 'FEB', 'MAR', 'ABR'],
 		labels: {
 			style: {
 				colors: '#A3AED0',
@@ -426,9 +447,10 @@ export const lineChartOptionsTotalSpent: any = {
 	grid: {
 		show: false,
 		column: {
-			color: [ '#7551FF', '#39B8FF' ],
+			color: ['#7551FF', '#39B8FF'],
 			opacity: 0.5
 		}
 	},
-	color: [ '#7551FF', '#39B8FF' ]
+
+	color: ['#7551FF']
 };
