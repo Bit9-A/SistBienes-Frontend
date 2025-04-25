@@ -46,7 +46,6 @@ import {
 } from "react-icons/fi"
 
 import UserForm from "./components/UserForm"
-import { text } from "stream/consumers"
 
 
 const userTypes = {

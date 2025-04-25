@@ -23,6 +23,8 @@ import Inventory from 'views/admin/inventory';
 import SignInCentered from 'views/auth/signIn';
 import UserManage from 'views/admin/user';
 import Marketplace from 'views/admin/marketplace';
+import Settings from 'views/admin/settings';
+import AssetManagementPage from 'views/admin/Incorporations';
 
 const routes = [
   {
@@ -51,7 +53,7 @@ const routes = [
     layout: '/admin',
     path: '/incorporations',
     icon: <Icon as={MdOutlineShoppingCart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <DataTables/>,
+    component: <AssetManagementPage/>,
   },
   {
     name: 'Traslados',
@@ -79,7 +81,7 @@ const routes = [
     layout: '/admin',
     path: '/settings',
     icon: <Icon as={MdSettings as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <Settings/>,
   },
   {
     name: 'Notificaciones',
