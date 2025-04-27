@@ -9,8 +9,8 @@ import {
   CardBody,
   useColorModeValue,
 } from "@chakra-ui/react";
-import IncorporationsTable from "./components/IncorporationsTable";
-import DisposalsTable from "./components/DisposalsTable";
+import IncorporationsTable from "./Incorporations/IncorporationsTable";
+import DisposalsTable from "./Disposals/DisposalsTable";
 
 export default function AssetManagementPage() {
   const [activeTab, setActiveTab] = useState("incorporations");
