@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardBody,
   useColorModeValue,
+  Stack,
 } from "@chakra-ui/react";
 import IncorporationsTable from "./Incorporations/IncorporationsTable";
 import DisposalsTable from "./Disposals/DisposalsTable";
@@ -29,17 +30,13 @@ export default function AssetManagementPage() {
   ];
 
   return (
-    <Box pt={{ base: "130px", md: "80px", xl: "80px" }} mx="auto" py={10}>
+    <Box pt={{ base: "130px", md: "80px", xl: "80px" }} px={{ base: 4, md: 8 }} w="100%">
       <Card>
-        <CardHeader>
-          <Heading size="lg" textAlign="center">
-            Gestión de Activos
-          </Heading>
-        </CardHeader>
         <CardBody>
           {/* Custom Tab Navigation */}
           <Flex
             direction="row"
+            wrap="wrap" // Permite que los botones se ajusten en varias filas en pantallas pequeñas
             w="100%"
             bg={bg}
             borderBottom="1px solid"
@@ -47,7 +44,7 @@ export default function AssetManagementPage() {
             p={2}
             mb={4}
             borderRadius="md"
-            overflowX="auto"
+            overflowX="auto" // Permite desplazamiento horizontal si hay demasiados botones
           >
             {tabs.map((tab) => (
               <Button
@@ -59,6 +56,7 @@ export default function AssetManagementPage() {
                 borderColor={borderColor}
                 borderRadius="md"
                 mr={2}
+                mb={2} // Espaciado vertical para botones en filas adicionales
                 onClick={() => setActiveTab(tab.id)}
                 _hover={{ bg: hoverBg }}
               >
@@ -68,8 +66,10 @@ export default function AssetManagementPage() {
           </Flex>
 
           {/* Tab Content */}
-          {activeTab === "incorporations" && <IncorporationsTable />}
-          {activeTab === "disposals" && <DisposalsTable />}
+          <Box mt={4} overflowX="auto">
+            {activeTab === "incorporations" && <IncorporationsTable />}
+            {activeTab === "disposals" && <DisposalsTable />}
+          </Box>
         </CardBody>
       </Card>
     </Box>
