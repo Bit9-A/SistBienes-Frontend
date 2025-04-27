@@ -24,7 +24,7 @@ import SignInCentered from 'views/auth/signIn';
 import UserManage from 'views/admin/user';
 import Marketplace from 'views/admin/marketplace';
 import Settings from 'views/admin/settings';
-import AssetManagementPage from 'views/admin/Incorporations';
+import AssetManagementPage from 'views/admin/movements/index';
 
 const routes = [
   {
