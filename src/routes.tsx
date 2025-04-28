@@ -24,9 +24,12 @@ import SignInCentered from 'views/auth/signIn';
 import UserManage from 'views/admin/user';
 import Marketplace from 'views/admin/marketplace';
 import Settings from 'views/admin/settings';
-import AssetManagementPage from 'views/admin/Incorporations';
-import Transfer from 'views/admin/transfers'
+import AssetManagementPage from 'views/admin/movements/index';
+import NotificationsHistory from 'views/admin/notifications';
+import Transfer from 'views/admin/transfer';
 
+import AuditModule from 'views/admin/audit';
+import MissingAssetsReport from 'views/admin/reports';
 const routes = [
   {
     name: 'Inicio',
@@ -68,14 +71,14 @@ const routes = [
     layout: '/admin',
     path: '/audit',
     icon: <Icon as={MdAssignment as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <AuditModule />,
   },
   {
     name: 'Reportes',
     layout: '/admin',
     path: '/reports',
     icon: <Icon as={MdBarChart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <MissingAssetsReport />,
   },
   {
     name: 'Configuración',
@@ -89,7 +92,7 @@ const routes = [
     layout: '/admin',
     path: '/notifications',
     icon: <Icon as={MdNotifications as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <NotificationsHistory />,
   },
   {
     name: 'Cerrar sesión',

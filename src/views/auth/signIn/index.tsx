@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -12,44 +12,91 @@ import {
   Text,
   Image,
   useColorModeValue,
-} from '@chakra-ui/react';
-import { MdOutlineRemoveRedEye } from 'react-icons/md';
-import { RiEyeCloseLine } from 'react-icons/ri';
-import banner from 'assets/img/banner.png';
+  useToast,
+} from "@chakra-ui/react";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { RiEyeCloseLine } from "react-icons/ri";
+import { useNavigate } from "react-router-dom"; // Importa useNavigate
+import banner from "assets/img/banner.png";
+
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const toast = useToast();
+  const navigate = useNavigate(); // Inicializa useNavigate
+
   const handlePasswordVisibility = () => setShowPassword(!showPassword);
 
+  // Usuario predefinido
+  const predefinedUser = {
+    email: "adrian24vergel@gmail.com",
+    password: "123456",
+  };
+
+  const handleSubmit = () => {
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Por favor, completa todos los campos.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (email === predefinedUser.email && password === predefinedUser.password) {
+      toast({
+        title: "Inicio de sesión exitoso",
+        description: "Bienvenido al sistema.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      navigate("/admin/default"); // Redirige al dashboard
+    } else {
+      toast({
+        title: "Error",
+        description: "Correo o contraseña incorrectos.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Chakra color mode
-  const textColor = useColorModeValue('navy.700', 'white');
-  const textColorSecondary = useColorModeValue('gray.400', 'gray.400');
-  const textColorBrand = useColorModeValue('brand.500', 'white');
+  const textColor = useColorModeValue("navy.700", "white");
+  const textColorSecondary = useColorModeValue("gray.400", "gray.400");
+
   return (
     <Flex
       w="100%"
       h="100vh"
       alignItems="center"
       justifyContent="center"
-      bg={useColorModeValue('gray.50', 'gray.800')}
+      bg={useColorModeValue("gray.50", "gray.800")}
     >
       <Flex
-        w={{ base: '90%', md: '800px' }}
-        bg={useColorModeValue('white', 'gray.700')}
+        w={{ base: "90%", md: "800px" }}
+        bg={useColorModeValue("white", "gray.700")}
         borderRadius="lg"
         boxShadow="lg"
         overflow="hidden"
       >
+        {/* Banner */}
         <Flex
           alignItems="center"
           justifyContent="center"
           bgColor="type.bgbutton"
-          display={{ base: 'none', md: 'flex' }}
+          display={{ base: "none", md: "flex" }}
         >
           <Image src={banner} alt="Banner Alcaldía" objectFit="contain" />
         </Flex>
 
         {/* Formulario de inicio de sesión */}
-        <Box w={{ base: '100%', md: '60%' }} p={8}>
+        <Box w={{ base: "100%", md: "60%" }} p={8}>
           <Heading color={textColor} fontSize="2xl" mb={4}>
             Iniciar Sesión
           </Heading>
@@ -62,15 +109,19 @@ const SignIn = () => {
               type="email"
               placeholder="correo@ejemplo.com"
               focusBorderColor="blue.500"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </FormControl>
           <FormControl mb={6}>
             <FormLabel color={textColor}>Contraseña</FormLabel>
             <InputGroup>
               <Input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="********"
                 focusBorderColor="blue.500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <InputRightElement>
                 <Button
@@ -87,7 +138,7 @@ const SignIn = () => {
               </InputRightElement>
             </InputGroup>
           </FormControl>
-          <Button w="100%" colorScheme="blue" mb={4}>
+          <Button w="100%" colorScheme="blue" mb={4} onClick={handleSubmit}>
             Iniciar Sesión
           </Button>
           <Text fontSize="sm" color={textColorSecondary} textAlign="center">
