@@ -25,6 +25,8 @@ import UserManage from 'views/admin/user';
 import Marketplace from 'views/admin/marketplace';
 import Settings from 'views/admin/settings';
 
+import AuditModule from 'views/admin/audit';
+
 const routes = [
   {
     name: 'Inicio',
@@ -66,7 +68,7 @@ const routes = [
     layout: '/admin',
     path: '/audit',
     icon: <Icon as={MdAssignment as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <AuditModule/>,
   },
   {
     name: 'Reportes',
