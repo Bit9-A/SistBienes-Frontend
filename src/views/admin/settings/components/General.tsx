@@ -21,7 +21,7 @@ const GeneralSettings: React.FC = () => {
       <VStack spacing={4} align="stretch">
         <FormControl>
           <FormLabel>Nombre de la Institución</FormLabel>
-          <Input placeholder="Nombre de la institución" />
+          <Input placeholder="Nombre de la institución" focusBorderColor="type.bgbutton" />
         </FormControl>
 
         <FormControl>
@@ -33,7 +33,8 @@ const GeneralSettings: React.FC = () => {
             p={4}
             textAlign="center"
             cursor="pointer"
-            _hover={{ borderColor: "blue.400" }}
+
+            _hover={{ borderColor: "type.bgbutton" }}
           >
             <Icon as={FiUpload} boxSize={6} color="gray.500" />
             <Text mt={2} color="gray.500">
@@ -52,7 +53,7 @@ const GeneralSettings: React.FC = () => {
             p={4}
             textAlign="center"
             cursor="pointer"
-            _hover={{ borderColor: "blue.400" }}
+            _hover={{ borderColor: "type.bgbutton" }}
           >
             <Icon as={FiUpload} boxSize={6} color="gray.500" />
             <Text mt={2} color="gray.500">
@@ -71,7 +72,7 @@ const GeneralSettings: React.FC = () => {
             p={4}
             textAlign="center"
             cursor="pointer"
-            _hover={{ borderColor: "blue.400" }}
+            _hover={{ borderColor: "type.bgbutton" }}
           >
             <Icon as={FiUpload} boxSize={6} color="gray.500" />
             <Text mt={2} color="gray.500">
@@ -81,7 +82,9 @@ const GeneralSettings: React.FC = () => {
           </Box>
         </FormControl>
 
-        <Button colorScheme="blue" alignSelf="flex-end">
+        <Button colorScheme="purple"
+          bgColor={'type.bgbutton'}
+          alignSelf="flex-end">
           Guardar cambios
         </Button>
       </VStack>

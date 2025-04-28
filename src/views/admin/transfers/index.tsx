@@ -50,6 +50,7 @@ import {
     FiArchive,
 } from "react-icons/fi"
 
+import { BsBoxes } from "react-icons/bs";
 
 type Transfer = {
     id: string;
@@ -212,7 +213,25 @@ export default function TransferPage() {
                             <Tbody>
                                 {filteredTransfers.map((item) => (
                                     <Tr key={item.id}>
-                                        <Td>{item.id}</Td>
+                                        <Td>
+                                            <Flex align="center">
+                                                <Box
+                                                    bg="blue.100"
+                                                    color="blue.700"
+                                                    borderRadius="full"
+                                                    p={2}
+                                                    mr={3}
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justifyContent="center"
+                                                >
+                                                    <Icon as={BsBoxes as React.ElementType} />
+
+                                                </Box>
+                                                <Box>
+                                                    <Text fontWeight="medium">{`${item.id}`}</Text>
+                                                </Box>
+                                            </Flex></Td>
                                         <Td>{item.fecha}</Td>
                                         <Td>{item.departamentoOrigen}</Td>
                                         <Td>{item.departamentoDestino}</Td>

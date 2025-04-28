@@ -47,26 +47,26 @@ const sampleMissingAssets = [
     jefe_id: 2,
     observaciones: "Escritorio no encontrado durante la auditoría.",
   },
-    {
-        id: 2,
-        traslado_id: 102,
-        mueble_id: 1002,
-        unidad: "Finanzas",
-        valor: 300.0,
-        funcionario_id: 2,
-        jefe_id: 3,
-        observaciones: "Silla rota y no reparable.",
-    },
-    {
-        id: 3,
-        traslado_id: 103,
-        mueble_id: 1003,
-        unidad: "IT",
-        valor: 1500.0,
-        funcionario_id: 3,
-        jefe_id: 1,
-        observaciones: "Computadora portátil desaparecida.",
-    },
+  {
+    id: 2,
+    traslado_id: 102,
+    mueble_id: 1002,
+    unidad: "Finanzas",
+    valor: 300.0,
+    funcionario_id: 2,
+    jefe_id: 3,
+    observaciones: "Silla rota y no reparable.",
+  },
+  {
+    id: 3,
+    traslado_id: 103,
+    mueble_id: 1003,
+    unidad: "IT",
+    valor: 1500.0,
+    funcionario_id: 3,
+    jefe_id: 1,
+    observaciones: "Computadora portátil desaparecida.",
+  },
 ];
 
 // Datos de ejemplo para mapear IDs a nombres
@@ -158,7 +158,8 @@ const MissingAssetsReport = () => {
               Reportar Bienes Faltantes
             </Heading>
             <Button
-              colorScheme="blue"
+              bgColor="type.bgbutton"
+              colorScheme="purple"
               leftIcon={<FiPlus />}
               onClick={onOpen}
             >

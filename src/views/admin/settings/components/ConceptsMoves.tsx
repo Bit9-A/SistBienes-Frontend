@@ -96,13 +96,13 @@ const ConceptsMoves = () => {
       {/* Botones para alternar entre Incorporación y Desincorporación */}
       <HStack spacing={4} mb={4}>
         <Button
-          colorScheme={activeType === 'incorporacion' ? 'blue' : 'gray'}
+          colorScheme={activeType === 'incorporacion' ? 'purple' : 'gray'}
           onClick={() => setActiveType('incorporacion')}
         >
           Incorporación
         </Button>
         <Button
-          colorScheme={activeType === 'desincorporacion' ? 'blue' : 'gray'}
+          colorScheme={activeType === 'desincorporacion' ? 'purple' : 'gray'}
           onClick={() => setActiveType('desincorporacion')}
         >
           Desincorporación

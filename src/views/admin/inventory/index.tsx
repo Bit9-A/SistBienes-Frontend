@@ -129,7 +129,7 @@ export default function Inventory() {
         id_Parroquia: 1,
       },
       {
-        id: 1,
+        id: 2,
         grupo: 1,
         subgrupo: "2-01",
         cantidad: 10,
@@ -320,10 +320,12 @@ export default function Inventory() {
             <Heading size="lg" fontWeight="bold" color={'type.title'}>
               Inventario de Bienes
             </Heading>
-            <Button variant="outline"
-              color="type.bgbutton"
-              borderColor="type.bgbutton"
-              _hover={{ bg: "type.bgbutton", color: "type.cbutton" }} size="md" leftIcon={<Icon as={BsBox2 as React.ElementType} />} onClick={() => { setNewAssets({}); onOpen() }}>
+            <Button
+              bgColor="type.bgbutton"
+              colorScheme="purple"
+              size="md"
+              leftIcon={<Icon as={BsBox2 as React.ElementType} />}
+              onClick={() => { setNewAssets({}); onOpen() }}>
               Agregar Bien
             </Button>
           </Flex>
@@ -457,21 +459,16 @@ export default function Inventory() {
             <Text color="gray.600">Mostrando Bienes</Text>
             <HStack spacing={2}>
               <Button size="sm" variant="outline"
-                color="type.bgbutton"
-                borderColor="type.bgbutton"
-                _hover={{ bg: "type.bgbutton", color: "type.cbutton" }}>
+                colorScheme={'type.bgbutton'}
+                isDisabled={true}>
                 Anterior
               </Button>
-              <Button size="sm" variant="solid"
-                color="type.bgbutton"
-                borderColor="type.bgbutton"
-                _hover={{ bg: "type.bgbutton", color: "type.cbutton" }}>
+              <Button size="sm" bgColor={'type.bgbutton'} color={'type.cbutton'} variant="solid">
                 1
               </Button>
               <Button size="sm" variant="outline"
-                color="type.bgbutton"
-                borderColor="type.bgbutton"
-                _hover={{ bg: "type.bgbutton", color: "type.cbutton" }}>
+                colorScheme={'type.bgbutton'}
+                isDisabled={true}>
                 Siguiente
               </Button>
             </HStack>

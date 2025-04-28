@@ -42,10 +42,10 @@ const NavSettings: React.FC<NavSettingsProps> = ({ activeTab, setActiveTab }) =>
         <Button
           key={tab.id}
           variant="ghost"
-          color={activeTab === tab.id ? borderColor : textColor}
+          color={activeTab === tab.id ? "type.bgbutton" : textColor}
           bg={activeTab === tab.id ? bgActive : "transparent"}
           borderBottom={activeTab === tab.id ? "2px solid" : "none"}
-          borderColor={borderColor}
+          borderColor={"type.bgbutton"}
           borderRadius="md"
           mr={2}
           mb={2} // Espaciado vertical para botones en filas adicionales

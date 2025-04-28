@@ -119,7 +119,11 @@ const UserManage = () => {
             <Heading size="lg" fontWeight="bold" color={textColor}>
               Usuarios
             </Heading>
-            <Button bgColor={'type.bgbutton'} leftIcon={<Icon as={FiUserPlus as React.ElementType} />} colorScheme="teal" size="md" onClick={onOpen}>
+            <Button
+              bgColor={'type.bgbutton'}
+              leftIcon={<Icon as={FiUserPlus as React.ElementType} />}
+              colorScheme="purple"
+              size="md" onClick={onOpen}>
               Nuevo Usuario
             </Button>
           </Flex>
@@ -197,8 +201,8 @@ const UserManage = () => {
                     <Td>
                       <Flex align="center">
                         <Box
-                          bg="teal.50"
-                          color="teal.700"
+                          bg="blue.100"
+                          color="blue.700"
                           borderRadius="full"
                           p={2}
                           mr={3}
