@@ -26,7 +26,7 @@ import Marketplace from 'views/admin/marketplace';
 import Settings from 'views/admin/settings';
 import AssetManagementPage from 'views/admin/movements/index';
 import NotificationsHistory from 'views/admin/notifications';
-import Transfer from 'views/admin/transfer';
+import Transfer from 'views/admin/transfers';
 
 import AuditModule from 'views/admin/audit';
 import MissingAssetsReport from 'views/admin/reports';
