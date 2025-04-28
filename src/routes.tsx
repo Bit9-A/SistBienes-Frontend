@@ -28,7 +28,7 @@ import AssetManagementPage from 'views/admin/movements/index';
 import NotificationsHistory from 'views/admin/notifications';
 
 import AuditModule from 'views/admin/audit';
-
+import MissingAssetsReport from 'views/admin/reports';
 const routes = [
   {
     name: 'Inicio',
@@ -77,7 +77,7 @@ const routes = [
     layout: '/admin',
     path: '/reports',
     icon: <Icon as={MdBarChart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <MissingAssetsReport/>,
   },
   {
     name: 'Configuración',
