@@ -25,6 +25,7 @@ import UserManage from 'views/admin/user';
 import Marketplace from 'views/admin/marketplace';
 import Settings from 'views/admin/settings';
 import AssetManagementPage from 'views/admin/Incorporations';
+import Transfer from 'views/admin/transfers'
 
 const routes = [
   {
@@ -32,35 +33,35 @@ const routes = [
     layout: '/admin',
     path: '/default',
     icon: <Icon as={MdHome as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <MainDashboard/>,
+    component: <MainDashboard />,
   },
   {
     name: 'Gestión de Usuarios',
     layout: '/admin',
     path: '/user-management',
     icon: <Icon as={MdPerson as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <UserManage/>,
+    component: <UserManage />,
   },
   {
     name: 'Gestión de Bienes',
     layout: '/admin',
     path: '/asset-management',
     icon: <Icon as={MdBarChart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <Inventory/>,
+    component: <Inventory />,
   },
   {
     name: 'Incorporaciones e Desincorporaciones',
     layout: '/admin',
     path: '/incorporations',
     icon: <Icon as={MdOutlineShoppingCart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <AssetManagementPage/>,
+    component: <AssetManagementPage />,
   },
   {
     name: 'Traslados',
     layout: '/admin',
     path: '/transfers',
     icon: <Icon as={MdHistory as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <Transfer />,
   },
   {
     name: 'Auditoría',
@@ -81,7 +82,7 @@ const routes = [
     layout: '/admin',
     path: '/settings',
     icon: <Icon as={MdSettings as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <Settings/>,
+    component: <Settings />,
   },
   {
     name: 'Notificaciones',
