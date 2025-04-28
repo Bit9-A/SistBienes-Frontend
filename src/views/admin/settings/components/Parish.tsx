@@ -44,8 +44,9 @@ const Parish = () => {
   // Simulación de datos iniciales
   useEffect(() => {
     setParishes([
-      { id: 1, nombre: 'Parroquia San Juan' },
-      { id: 2, nombre: 'Parroquia La Merced' },
+      { id: 1, nombre: 'Tariba' },
+      { id: 2, nombre: 'Amenodoro Rangel Lamús' },
+      { id: 3, nombre: 'La Florida' },
     ]);
   }, []);
 
