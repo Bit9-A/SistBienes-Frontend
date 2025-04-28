@@ -25,6 +25,7 @@ import UserManage from 'views/admin/user';
 import Marketplace from 'views/admin/marketplace';
 import Settings from 'views/admin/settings';
 import AssetManagementPage from 'views/admin/movements/index';
+import NotificationsHistory from 'views/admin/notifications';
 
 const routes = [
   {
@@ -88,7 +89,7 @@ const routes = [
     layout: '/admin',
     path: '/notifications',
     icon: <Icon as={MdNotifications as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <NotificationsHistory/>,
   },
   {
     name: 'Cerrar sesión',
