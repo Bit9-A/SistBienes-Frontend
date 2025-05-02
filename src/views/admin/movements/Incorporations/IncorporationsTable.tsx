@@ -169,6 +169,7 @@ export default function IncorporationsTable() {
       >
         <Button
           colorScheme="purple"
+          bgColor={'type.bgbutton'}
           onClick={openAddDialog}
           size={buttonSize}
           leftIcon={isMobile ? undefined : <FiEdit />}

@@ -26,6 +26,7 @@ import Marketplace from 'views/admin/marketplace';
 import Settings from 'views/admin/settings';
 import AssetManagementPage from 'views/admin/movements/index';
 import NotificationsHistory from 'views/admin/notifications';
+import Transfer from 'views/admin/transfers';
 
 import AuditModule from 'views/admin/audit';
 import MissingAssetsReport from 'views/admin/reports';
@@ -35,63 +36,63 @@ const routes = [
     layout: '/admin',
     path: '/default',
     icon: <Icon as={MdHome as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <MainDashboard/>,
+    component: <MainDashboard />,
   },
   {
     name: 'Gestión de Usuarios',
     layout: '/admin',
     path: '/user-management',
     icon: <Icon as={MdPerson as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <UserManage/>,
+    component: <UserManage />,
   },
   {
     name: 'Gestión de Bienes',
     layout: '/admin',
     path: '/asset-management',
     icon: <Icon as={MdBarChart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <Inventory/>,
+    component: <Inventory />,
   },
   {
     name: 'Incorporaciones e Desincorporaciones',
     layout: '/admin',
     path: '/incorporations',
     icon: <Icon as={MdOutlineShoppingCart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <AssetManagementPage/>,
+    component: <AssetManagementPage />,
   },
   {
     name: 'Traslados',
     layout: '/admin',
     path: '/transfers',
     icon: <Icon as={MdHistory as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: null,
+    component: <Transfer />,
   },
   {
     name: 'Auditoría',
     layout: '/admin',
     path: '/audit',
     icon: <Icon as={MdAssignment as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <AuditModule/>,
+    component: <AuditModule />,
   },
   {
     name: 'Reportes',
     layout: '/admin',
     path: '/reports',
     icon: <Icon as={MdBarChart as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <MissingAssetsReport/>,
+    component: <MissingAssetsReport />,
   },
   {
     name: 'Configuración',
     layout: '/admin',
     path: '/settings',
     icon: <Icon as={MdSettings as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <Settings/>,
+    component: <Settings />,
   },
   {
     name: 'Notificaciones',
     layout: '/admin',
     path: '/notifications',
     icon: <Icon as={MdNotifications as React.ElementType} width="20px" height="20px" color="inherit" />,
-    component: <NotificationsHistory/>,
+    component: <NotificationsHistory />,
   },
   {
     name: 'Cerrar sesión',

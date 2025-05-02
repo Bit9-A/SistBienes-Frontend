@@ -108,7 +108,7 @@ const SignIn = () => {
             <Input
               type="email"
               placeholder="correo@ejemplo.com"
-              focusBorderColor="blue.500"
+              focusBorderColor="type.bgbutton"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -119,7 +119,7 @@ const SignIn = () => {
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="********"
-                focusBorderColor="blue.500"
+                focusBorderColor="type.bgbutton"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -138,7 +138,12 @@ const SignIn = () => {
               </InputRightElement>
             </InputGroup>
           </FormControl>
-          <Button w="100%" colorScheme="blue" mb={4} onClick={handleSubmit}>
+          <Button w="100%"
+            bg="type.bgbutton"
+            color="white"
+            _hover={{ bg: "type.bgbutton", opacity: 0.9 }}
+            mb={4}
+            onClick={handleSubmit}>
             Iniciar Sesión
           </Button>
           <Text fontSize="sm" color={textColorSecondary} textAlign="center">

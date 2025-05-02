@@ -99,6 +99,7 @@ export default function Inventory() {
   const [departments, setDepartments] = useState<Department[]>([]); // Estado para los departamentos
   const [newAssets, setNewAssets] = useState<Partial<MovableAsset>>({}); // Estado para el formulario
   const [selectedAssets, setSelectedAssets] = useState<MovableAsset | null>(null); // Estado para el bien seleccionado
+  const [filteredAssets, setFilteredAssets] = useState<MovableAsset[]>([]);
   const [deleteConfirmation, setDeleteConfirmation] = useState('') // Estado para la confirmación de eliminación
   const { isOpen, onOpen, onClose } = useDisclosure() // Estado para el modal
   const { isOpen: isOpenEdit, onOpen: onOpenEdit, onClose: onCloseEdit } = useDisclosure() // Estado para el modal de edit
@@ -108,8 +109,8 @@ export default function Inventory() {
 
   // Simulación de carga de datos desde la base de datos
   useEffect(() => {
-    // Aquí puedes reemplazar con una llamada a tu API
-    setAssets([
+    // Simulación de carga de datos desde la base de datos
+    const initial = [
       {
         id: 1,
         grupo: 1,
@@ -127,7 +128,26 @@ export default function Inventory() {
         id_estado: 1,
         id_Parroquia: 1,
       },
-    ]);
+      {
+        id: 2,
+        grupo: 1,
+        subgrupo: "2-01",
+        cantidad: 10,
+        nombre: 'Mesa',
+        descripcion: 'Mesa de oficina ergonómica',
+        marca: 'ErgoTable',
+        modelo: 'X200',
+        numero_serial: '12345ABC',
+        valor_unitario: 150.0,
+        valor_total: 1500.0,
+        fecha: '2025-04-08',
+        departamento: 1,
+        id_estado: 1,
+        id_Parroquia: 1,
+      },
+    ];
+    setAssets(initial);
+    setFilteredAssets(initial);
   }, []);
 
   // Map for Groups - for dropdown options
@@ -268,6 +288,24 @@ export default function Inventory() {
     }
   }
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    applyFilters(query);
+  };
+
+  const applyFilters = (query: string) => {
+    let filtered = [...assets];
+    if (query) {
+      filtered = filtered.filter((item) =>
+        item.nombre.toLowerCase().includes(query.toLowerCase()) ||
+        item.descripcion.toLowerCase().includes(query.toLowerCase()) ||
+        item.marca.toLowerCase().includes(query.toLowerCase()) ||
+        item.modelo.toLowerCase().includes(query.toLowerCase()) ||
+        item.numero_serial.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+    setFilteredAssets(filtered);
+  };
   //Colores
   const cardBg = useColorModeValue("white", "gray.700")
   const headerBg = useColorModeValue("gray.50", "gray.800")
@@ -282,10 +320,12 @@ export default function Inventory() {
             <Heading size="lg" fontWeight="bold" color={'type.title'}>
               Inventario de Bienes
             </Heading>
-            <Button variant="outline"
-              color="type.bgbutton"
-              borderColor="type.bgbutton"
-              _hover={{ bg: "type.bgbutton", color: "type.cbutton" }} size="md" leftIcon={<Icon as={BsBox2 as React.ElementType} />} onClick={() => { setNewAssets({}); onOpen() }}>
+            <Button
+              bgColor="type.bgbutton"
+              colorScheme="purple"
+              size="md"
+              leftIcon={<Icon as={BsBox2 as React.ElementType} />}
+              onClick={() => { setNewAssets({}); onOpen() }}>
               Agregar Bien
             </Button>
           </Flex>
@@ -307,7 +347,7 @@ export default function Inventory() {
                 <Input
                   placeholder="Buscar Bienes..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   borderRadius="md"
                 />
               </InputGroup>
@@ -345,7 +385,7 @@ export default function Inventory() {
                 </Tr>
               </Thead>
               <Tbody>
-                {assets.map((asset) => (
+                {filteredAssets.map((asset) => (
                   <Tr key={asset.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
                     <Td>
                       <Flex align="center">
@@ -419,21 +459,16 @@ export default function Inventory() {
             <Text color="gray.600">Mostrando Bienes</Text>
             <HStack spacing={2}>
               <Button size="sm" variant="outline"
-                color="type.bgbutton"
-                borderColor="type.bgbutton"
-                _hover={{ bg: "type.bgbutton", color: "type.cbutton" }}>
+                colorScheme={'type.bgbutton'}
+                isDisabled={true}>
                 Anterior
               </Button>
-              <Button size="sm" variant="solid"
-                color="type.bgbutton"
-                borderColor="type.bgbutton"
-                _hover={{ bg: "type.bgbutton", color: "type.cbutton" }}>
+              <Button size="sm" bgColor={'type.bgbutton'} color={'type.cbutton'} variant="solid">
                 1
               </Button>
               <Button size="sm" variant="outline"
-                color="type.bgbutton"
-                borderColor="type.bgbutton"
-                _hover={{ bg: "type.bgbutton", color: "type.cbutton" }}>
+                colorScheme={'type.bgbutton'}
+                isDisabled={true}>
                 Siguiente
               </Button>
             </HStack>

@@ -102,13 +102,13 @@ const SubGroup = () => {
       {/* Botones para alternar entre Muebles e Inmuebles */}
       <HStack spacing={4} mb={4}>
         <Button
-          colorScheme={activeType === 'muebles' ? 'blue' : 'gray'}
+          colorScheme={activeType === 'muebles' ? 'purple' : 'gray'}
           onClick={() => setActiveType('muebles')}
         >
           Muebles
         </Button>
         <Button
-          colorScheme={activeType === 'inmuebles' ? 'blue' : 'gray'}
+          colorScheme={activeType === 'inmuebles' ? 'purple' : 'gray'}
           onClick={() => setActiveType('inmuebles')}
         >
           Inmuebles

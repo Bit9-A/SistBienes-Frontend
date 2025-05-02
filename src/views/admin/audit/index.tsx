@@ -133,7 +133,8 @@ const AuditModule = () => {
             </Heading>
             <HStack spacing={4}>
               <Button
-                colorScheme="blue"
+                bgColor="type.bgbutton"
+                colorScheme="purple"
                 leftIcon={<FiDownload />}
                 onClick={exportToPDF}
               >
@@ -251,10 +252,10 @@ const AuditModule = () => {
                           log.tipo === "Autenticación"
                             ? "green"
                             : log.tipo === "Creación"
-                            ? "blue"
-                            : log.tipo === "Eliminación"
-                            ? "red"
-                            : "yellow"
+                              ? "blue"
+                              : log.tipo === "Eliminación"
+                                ? "red"
+                                : "yellow"
                         }
                         borderRadius="full"
                         px={2}
