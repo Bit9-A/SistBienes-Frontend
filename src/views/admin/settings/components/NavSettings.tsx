@@ -42,7 +42,7 @@ const NavSettings: React.FC<NavSettingsProps> = ({ activeTab, setActiveTab }) =>
         <Button
           key={tab.id}
           variant="ghost"
-          color={activeTab === tab.id ? "type.primary" : textColor}
+          color={activeTab === tab.id ? "type.textColor" : textColor}
           bg={activeTab === tab.id ? bgActive : "transparent"}
           borderBottom={activeTab === tab.id ? "2px solid" : "none"}
           borderColor={"type.primary"}
