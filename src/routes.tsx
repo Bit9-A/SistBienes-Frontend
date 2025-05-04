@@ -13,16 +13,16 @@ import {
 
 // Admin Imports
 import MainDashboard from 'views/admin/default';
-import NFTMarketplace from 'views/admin/marketplace';
+
 import Profile from 'views/admin/profile';
-import DataTables from 'views/admin/dataTables';
+
 import Inventory from 'views/admin/inventory';
 
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
 import UserManage from 'views/admin/user';
-import Marketplace from 'views/admin/marketplace';
+
 import Settings from 'views/admin/settings';
 import AssetManagementPage from 'views/admin/movements/index';
 import NotificationsHistory from 'views/admin/notifications';
