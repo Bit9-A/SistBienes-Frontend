@@ -8,7 +8,6 @@ import {
   ModalBody,
   ModalCloseButton,
   Stack,
-  Flex,
   FormControl,
   FormLabel,
   Input,
@@ -17,14 +16,26 @@ import {
   useToast,
 } from '@chakra-ui/react';
 
-interface UserFormProps {
+interface CreateUserFormProps {
   isOpen: boolean;
   onClose: () => void;
-  user?: any; // Usuario a editar (opcional)
-  onSave: (user: any) => void; // Función para guardar cambios
+  onSave: (user: any) => void; // Función para guardar el nuevo usuario
 }
 
-const UserForm: React.FC<UserFormProps> = ({ isOpen, onClose, user, onSave }) => {
+interface EditUserFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: any; // Usuario a editar
+  onSave: (user: any) => void; // Función para guardar los cambios
+}
+
+const isValidEmail = (email: string) => {
+  // Expresión regular para validar el formato del email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -33,26 +44,10 @@ const UserForm: React.FC<UserFormProps> = ({ isOpen, onClose, user, onSave }) =>
     telefono: '',
     tipo_usuario: '2',
     dept_id: '1',
+    password: '',
   });
-   
 
   const toast = useToast();
-   
-  useEffect(() => {
-    if (user) {
-      setFormData(user); // Carga los datos del usuario seleccionado
-    } else {
-      setFormData({
-        nombre: '',
-        apellido: '',
-        email: '',
-        cedula: '',
-        telefono: '',
-        tipo_usuario: '2',
-        dept_id: '1',
-      });
-    }
-  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -60,84 +55,201 @@ const UserForm: React.FC<UserFormProps> = ({ isOpen, onClose, user, onSave }) =>
   };
 
   const handleSubmit = () => {
+    if (!formData.nombre || !formData.apellido || !formData.email || !formData.password) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, completa todos los campos obligatorios.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    if (!isValidEmail(formData.email)) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, ingresa un email válido.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     onSave(formData);
     toast({
-      title: user ? 'Usuario actualizado' : 'Usuario creado',
-      description: user
-        ? 'Los datos del usuario se han actualizado correctamente.'
-        : 'El usuario se ha creado correctamente.',
-      status: 'success', // Tipo de notificación: success, error, warning, info
-      duration: 3000, // Duración en milisegundos
-      isClosable: true, // Permite cerrar la notificación manualmente
+      title: 'Usuario creado',
+      description: 'El usuario se ha creado correctamente.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
     });
-    onClose() // Llama a la función de guardado
+    onClose();
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{user ? 'Editar Usuario' : 'Crear Nuevo Usuario'}</ModalHeader>
+        <ModalHeader>Crear Nuevo Usuario</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Stack spacing={4}>
-            <Flex gap={4}>
-              <FormControl flex="1">
-                <FormLabel>Nombre</FormLabel>
-                <Input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" />
-              </FormControl>
-              <FormControl flex="1">
-                <FormLabel>Apellido</FormLabel>
-                <Input name="apellido" value={formData.apellido} onChange={handleChange} placeholder="Apellido" />
-              </FormControl>
-            </Flex>
-
+            <FormControl>
+              <FormLabel>Nombre</FormLabel>
+              <Input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Apellido</FormLabel>
+              <Input name="apellido" value={formData.apellido} onChange={handleChange} placeholder="Apellido" />
+            </FormControl>
             <FormControl>
               <FormLabel>Email</FormLabel>
               <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" type="email" />
             </FormControl>
-
             <FormControl>
               <FormLabel>Cédula</FormLabel>
               <Input name="cedula" value={formData.cedula} onChange={handleChange} placeholder="V-12345678" />
             </FormControl>
-
             <FormControl>
               <FormLabel>Teléfono</FormLabel>
               <Input name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono" />
             </FormControl>
-
-            <Flex gap={4}>
-              <FormControl flex="1">
-                <FormLabel>Tipo de Usuario</FormLabel>
-                <Select name="tipo_usuario" value={formData.tipo_usuario} onChange={handleChange}>
-                  <option value="1">Administrador</option>
-                  <option value="2">Usuario</option>
-                  <option value="3">Invitado</option>
-                </Select>
-              </FormControl>
-              <FormControl flex="1">
-                <FormLabel>Departamento</FormLabel>
-                <Select name="dept_id" value={formData.dept_id} onChange={handleChange}>
-                  <option value="1">Recursos Humanos</option>
-                  <option value="2">Tecnología</option>
-                  <option value="3">Finanzas</option>
-                  <option value="4">Marketing</option>
-                </Select>
-              </FormControl>
-            </Flex>
+            <FormControl>
+              <FormLabel>Contraseña</FormLabel>
+              <Input
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Contraseña"
+                type="password"
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Tipo de Usuario</FormLabel>
+              <Select name="tipo_usuario" value={formData.tipo_usuario} onChange={handleChange}>
+                <option value="1">Administrador</option>
+                <option value="2">Usuario</option>
+                <option value="3">Invitado</option>
+              </Select>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Departamento</FormLabel>
+              <Select name="dept_id" value={formData.dept_id} onChange={handleChange}>
+                <option value="1">Recursos Humanos</option>
+                <option value="2">Tecnología</option>
+                <option value="3">Finanzas</option>
+                <option value="4">Marketing</option>
+              </Select>
+            </FormControl>
           </Stack>
         </ModalBody>
-
         <ModalFooter>
-          <Button colorScheme="teal" mr={3} onClick={handleSubmit}>
-            {user ? 'Guardar Cambios' : 'Crear Usuario'}
+          <Button colorScheme={'purple'} bgColor={'type.primary'} mr={3} onClick={handleSubmit}>
+            Crear Usuario
           </Button>
-          <Button onClick={onClose}>Cancelar</Button>
+          <Button onClick={onClose} colorScheme='red'>Cancelar</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
   );
 };
 
-export default UserForm;
+
+const EditUserForm: React.FC<EditUserFormProps> = ({ isOpen, onClose, user, onSave }) => {
+  const [formData, setFormData] = useState(user);
+
+  const toast = useToast();
+
+  useEffect(() => {
+    if (user) {
+      setFormData(user); // Carga los datos del usuario seleccionado
+    }
+  }, [user]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev: typeof formData) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    if (!formData.nombre || !formData.apellido || !formData.email) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, completa todos los campos obligatorios.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    onSave(formData);
+    toast({
+      title: 'Usuario actualizado',
+      description: 'Los datos del usuario se han actualizado correctamente.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+    onClose();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Editar Usuario</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          <Stack spacing={4}>
+            <FormControl>
+              <FormLabel>Nombre</FormLabel>
+              <Input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Apellido</FormLabel>
+              <Input name="apellido" value={formData.apellido} onChange={handleChange} placeholder="Apellido" />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Email</FormLabel>
+              <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" type="email" />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Cédula</FormLabel>
+              <Input name="cedula" value={formData.cedula} onChange={handleChange} placeholder="V-12345678" />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Teléfono</FormLabel>
+              <Input name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono" />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Tipo de Usuario</FormLabel>
+              <Select name="tipo_usuario" value={formData.tipo_usuario} onChange={handleChange}>
+                <option value="1">Administrador</option>
+                <option value="2">Usuario</option>
+                <option value="3">Invitado</option>
+              </Select>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Departamento</FormLabel>
+              <Select name="dept_id" value={formData.dept_id} onChange={handleChange}>
+                <option value="1">Recursos Humanos</option>
+                <option value="2">Tecnología</option>
+                <option value="3">Finanzas</option>
+                <option value="4">Marketing</option>
+              </Select>
+            </FormControl>
+          </Stack>
+        </ModalBody>
+        <ModalFooter>
+          <Button colorScheme="teal" bgColor={'type.primary'} mr={3} onClick={handleSubmit}>
+            Guardar Cambios
+          </Button>
+          <Button onClick={onClose} colorScheme='red'>Cancelar</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+};
+
+export { CreateUserForm, EditUserForm };

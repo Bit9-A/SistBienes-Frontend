@@ -29,6 +29,12 @@ import {
   Select,
   HStack,
   useDisclosure,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import {
@@ -43,10 +49,10 @@ import {
   FiHash,
 } from 'react-icons/fi';
 
-import UserForm from './components/UserForm';
+import {CreateUserForm,EditUserForm} from './components/UserForm';
 
-import { getUsers, updateUser, deleteUser, User } from '../../../api/UserApi';
-import { filterUsers,handleDeleteUser,handleEditUser,handleUpdateUser} from "./variables/UserLogic"
+import { getUsers, updateUser, deleteUser, createUser,User } from '../../../api/UserApi';
+import { filterUsers,handleDeleteUser,handleEditUser,handleUpdateUser, handleSaveEditUser,handleCreateUser} from "./variables/UserLogic"
 
 
 const UserManage = () => {
@@ -59,23 +65,50 @@ const UserManage = () => {
   const [editingUser, setEditingUser] = useState(null); // Usuario seleccionado para editar
 
   const [users, setUsers] = useState([]);
+  const [userToDelete, setUserToDelete] = useState(null); // Usuario seleccionado para eliminar
+  const {
+    isOpen: isDeleteDialogOpen,
+    onOpen: onDeleteDialogOpen,
+    onClose: onDeleteDialogClose,
+  } = useDisclosure(); // Controla el estado del diálogo de confirmación
+
+
+
+
+  // Fetch users from API or state management
+  const fetchUsers = async () => {
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
 
   useEffect(() => {
-    // Fetch users from API or state management
-    const fetchUsers = async () => {
-      try {
-        const data = await getUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    };
-
     fetchUsers();
   }, []);
 
   const filteredUsers = filterUsers(users, searchQuery, selectedDept, selectedUserType);
+  
+  // Funciones para manejar la creación y edición de usuarios
+  const handleCreateUserWrapper = async (newUser:any) => {
+    await handleCreateUser(newUser, createUser, setUsers);
+    await fetchUsers(); // Refresca la lista de usuarios después de crear uno nuevo
+    onClose(); // Cierra el modal después de crear el usuario
+  };
 
+  const handleSaveEditUserWrapper = async (updatedUser:any) => {
+    handleSaveEditUser(updatedUser, updateUser, setUsers, onClose);
+    await fetchUsers(); // Refresca la lista de usuarios después de editar
+  };
+
+
+  // Funciones para manejar la eliminación de usuarios
+  const handleDeleteUserWrapper = async (id:number) => {
+    await handleDeleteUser(id, deleteUser, setUsers);
+    await fetchUsers(); // Refresca la lista de usuarios después de eliminar
+  }
 
   // Colors for theming
   const cardBg = useColorModeValue('white', 'gray.700');
@@ -106,7 +139,10 @@ const UserManage = () => {
               leftIcon={<Icon as={FiUserPlus as React.ElementType} />}
               colorScheme="purple"
               size="md"
-              onClick={onOpen}
+              onClick={() => {
+                setEditingUser(null);
+                onOpen(); // Abre el formulario de creación
+              }}
             >
               Nuevo Usuario
             </Button>
@@ -213,7 +249,9 @@ const UserManage = () => {
                           size="sm"
                           colorScheme="red"
                           variant="ghost"
-                          onClick={() => handleDeleteUser(user.id,deleteUser,setUsers)} // Elimina el usuario
+                          onClick={() => { 
+                            setUserToDelete(user);
+                            onDeleteDialogOpen();}}
                         />
                       </Flex>
                     </Td>
@@ -256,14 +294,57 @@ const UserManage = () => {
         </CardBody>
       </Card>
      
-      <UserForm
-        isOpen={isOpen}
-        onClose={onClose}
-        user={editingUser} // Pasa el usuario seleccionado al formulario
-        onSave={(user) => handleUpdateUser(user,updateUser,setUsers)} // Maneja la actualización o creación
-      />
+     {/* Renderiza el formulario correspondiente */}
+     {editingUser ? (
+        <EditUserForm
+          isOpen={isOpen}
+          onClose={onClose}
+          user={editingUser}
+          onSave={handleSaveEditUserWrapper} // Función para guardar cambios
+        />
+      ) : (
+        <CreateUserForm isOpen={isOpen} onClose={onClose} onSave={handleCreateUserWrapper} />
+      )}
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog
+        isCentered
+        isOpen={isDeleteDialogOpen}
+        leastDestructiveRef={undefined}
+        onClose={onDeleteDialogClose}
+        motionPreset="slideInBottom"
+        closeOnOverlayClick={false}
+        size="lg"
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirmar Eliminación
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              ¿Estás seguro de que deseas eliminar al usuario{' '}
+              <strong>{userToDelete?.nombre} {userToDelete?.apellido}</strong>? Esta acción no se puede deshacer.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button onClick={onDeleteDialogClose}>Cancelar</Button>
+              <Button
+                colorScheme="red"
+                onClick={async () => {
+                  await handleDeleteUserWrapper(userToDelete.id);
+                  onDeleteDialogClose();
+                }}
+                ml={3}
+              >
+                Eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 };
 
 export default UserManage;
+

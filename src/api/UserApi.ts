@@ -17,7 +17,7 @@ export const getUsers = async ():Promise<User[]> => {
   return response.data.users; 
 };
 export const createUser = async(userData: any) => {
-  const response = await axiosInstance.post("/user", userData);
+  const response = await axiosInstance.post("/auth/register", userData);
   return response.data; // Devuelve el usuario creado
 };
 // Actualizar un usuario existente
