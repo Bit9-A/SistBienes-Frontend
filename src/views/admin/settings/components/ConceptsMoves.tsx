@@ -109,7 +109,7 @@ const ConceptsMoves = () => {
         </Button>
       </HStack>
 
-      <Button colorScheme="purple" bgColor={'type.bgbutton'} onClick={onOpen} mb={4}>
+      <Button colorScheme="purple" bgColor={'type.primary'} onClick={onOpen} mb={4}>
         Agregar Concepto
       </Button>
       <TableContainer
@@ -182,7 +182,7 @@ const ConceptsMoves = () => {
           <ModalFooter>
             <Button
               colorScheme="purple"
-              bgColor={'type.bgbutton'}
+              bgColor={'type.primary'}
               mr={3}
               onClick={selectedConcept ? handleEdit : handleAdd}
             >

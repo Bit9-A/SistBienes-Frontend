@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useThemeColors } from "../../../theme/useThemeColors"; // Importa el hook de colores del tema
 import {
   Box,
   Button,
@@ -15,11 +16,11 @@ import DisposalsTable from "./Disposals/DisposalsTable";
 
 export default function AssetManagementPage() {
   const [activeTab, setActiveTab] = useState("incorporations");
+  const { cardBg, headerBg, textColor } = useThemeColors();
+ 
 
-  // Chakra UI color mode values
   const bg = useColorModeValue("white", "gray.800");
   const borderBottomColor = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.600", "gray.300");
   const bgActive = useColorModeValue("blue.50", "blue.900");
   const borderColor = useColorModeValue("blue.500", "blue.300");
   const hoverBg = useColorModeValue("gray.100", "gray.700");
@@ -33,6 +34,13 @@ export default function AssetManagementPage() {
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }} px={{ base: 4, md: 8 }} w="100%">
       <Card>
         <CardBody>
+          <CardHeader>
+            <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+              <Heading size="lg" fontWeight="bold" color={textColor}>
+                Gestión de Activos
+              </Heading>
+            </Flex>
+          </CardHeader>
           {/* Custom Tab Navigation */}
           <Flex
             direction="row"

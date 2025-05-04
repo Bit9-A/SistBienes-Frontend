@@ -115,7 +115,7 @@ const SubGroup = () => {
         </Button>
       </HStack>
 
-      <Button colorScheme="purple" bgColor={'type.bgbutton'} onClick={onOpen} mb={4}>
+      <Button colorScheme="purple" bgColor={'type.primary'} onClick={onOpen} mb={4}>
         Agregar Subgrupo
       </Button>
       <TableContainer
@@ -192,7 +192,7 @@ const SubGroup = () => {
           <ModalFooter>
             <Button
               colorScheme="purple"
-              bgColor={'type.bgbutton'}
+              bgColor={'type.primary'}
               mr={3}
               onClick={selectedSubGroup ? handleEdit : handleAdd}
             >

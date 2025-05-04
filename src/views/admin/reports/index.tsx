@@ -158,7 +158,7 @@ const MissingAssetsReport = () => {
               Reportar Bienes Faltantes
             </Heading>
             <Button
-              bgColor="type.bgbutton"
+              bgColor="type.primary"
               colorScheme="purple"
               leftIcon={<FiPlus />}
               onClick={onOpen}

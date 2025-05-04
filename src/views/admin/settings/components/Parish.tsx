@@ -87,7 +87,7 @@ const Parish = () => {
   return (
     <Box>
       <Button
-        bgColor={'type.bgbutton'}
+        bgColor={'type.primary'}
         leftIcon={<Icon as={FiHome as React.ElementType} />}
         colorScheme="purple"
         onClick={onOpen}
@@ -166,7 +166,7 @@ const Parish = () => {
           <ModalFooter>
             <Button
               colorScheme="purple"
-              bgColor={'type.bgbutton'}
+              bgColor={'type.primary'}
               mr={3}
               onClick={selectedParish ? handleEdit : handleAdd}
             >

@@ -321,7 +321,7 @@ export default function Inventory() {
               Inventario de Bienes
             </Heading>
             <Button
-              bgColor="type.bgbutton"
+              bgColor="type.primary"
               colorScheme="purple"
               size="md"
               leftIcon={<Icon as={BsBox2 as React.ElementType} />}
@@ -355,9 +355,9 @@ export default function Inventory() {
 
             <Button leftIcon={<Icon as={FiDownload as React.ElementType} />}
               variant="outline"
-              color="type.bgbutton"
-              borderColor="type.bgbutton"
-              _hover={{ bg: "type.bgbutton", color: "type.cbutton" }} >
+              color="type.primary"
+              borderColor="type.primary"
+              _hover={{ bg: "type.primary", color: "type.cbutton" }} >
               Exportar
             </Button>
           </Flex>
@@ -459,15 +459,15 @@ export default function Inventory() {
             <Text color="gray.600">Mostrando Bienes</Text>
             <HStack spacing={2}>
               <Button size="sm" variant="outline"
-                colorScheme={'type.bgbutton'}
+                colorScheme={'type.primary'}
                 isDisabled={true}>
                 Anterior
               </Button>
-              <Button size="sm" bgColor={'type.bgbutton'} color={'type.cbutton'} variant="solid">
+              <Button size="sm" bgColor={'type.primary'} color={'type.cbutton'} variant="solid">
                 1
               </Button>
               <Button size="sm" variant="outline"
-                colorScheme={'type.bgbutton'}
+                colorScheme={'type.primary'}
                 isDisabled={true}>
                 Siguiente
               </Button>
@@ -633,15 +633,15 @@ export default function Inventory() {
                 Cerrar
               </Button>
               <Button variant="solid"
-                bg={"type.bgbutton"}
-                color="type.bgbutton"
-                borderColor="type.bgbutton"
+                bg={"type.primary"}
+                color="type.primary"
+                borderColor="type.primary"
                 textColor="type.cbutton"
                 _hover={{
                   bg: "transparent",
-                  color: "type.bgbutton",
+                  color: "type.primary",
                   border: "0.5px solid",
-                  borderColor: "type.bgbutton",
+                  borderColor: "type.primary",
                 }}
                 onClick={() => { handleSubmit(); onClose() }}>
                 Agregar Bien
@@ -808,15 +808,15 @@ export default function Inventory() {
               Cerrar
             </Button>
             <Button variant="solid"
-              bg={"type.bgbutton"}
-              color="type.bgbutton"
-              borderColor="type.bgbutton"
+              bg={"type.primary"}
+              color="type.primary"
+              borderColor="type.primary"
               textColor="type.cbutton"
               _hover={{
                 bg: "transparent",
-                color: "type.bgbutton",
+                color: "type.primary",
                 border: "0.5px solid",
-                borderColor: "type.bgbutton",
+                borderColor: "type.primary",
               }} onClick={() => { onCloseEdit(); handleEdit() }}>
               Guardar Cambios
             </Button>
@@ -854,15 +854,15 @@ export default function Inventory() {
               Cerrar
             </Button>
             <Button variant="solid"
-              bg={"type.bgbutton"}
-              color="type.bgbutton"
-              borderColor="type.bgbutton"
+              bg={"type.primary"}
+              color="type.primary"
+              borderColor="type.primary"
               textColor="type.cbutton"
               _hover={{
                 bg: "transparent",
-                color: "type.bgbutton",
+                color: "type.primary",
                 border: "0.5px solid",
-                borderColor: "type.bgbutton",
+                borderColor: "type.primary",
               }} onClick={() => { handleDelete() }}>
               Eliminar Bien
             </Button>

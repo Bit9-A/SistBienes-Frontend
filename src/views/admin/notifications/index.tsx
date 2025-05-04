@@ -174,13 +174,13 @@ const NotificationsHistory = () => {
               Mostrando 1-{notifications.length} de {notifications.length} notificaciones
             </Text>
             <HStack spacing={2}>
-              <Button size="sm" isDisabled={true} colorScheme={'type.bgbutton'} variant="outline">
+              <Button size="sm" isDisabled={true} colorScheme={'type.primary'} variant="outline">
                 Anterior
               </Button>
-              <Button size="sm" bgColor={'type.bgbutton'} color={'type.cbutton'} variant="solid">
+              <Button size="sm" bgColor={'type.primary'} color={'type.cbutton'} variant="solid">
                 1
               </Button>
-              <Button size="sm" isDisabled={true} colorScheme={'type.bgbutton'} variant="outline">
+              <Button size="sm" isDisabled={true} colorScheme={'type.primary'} variant="outline">
                 Siguiente
               </Button>
             </HStack>

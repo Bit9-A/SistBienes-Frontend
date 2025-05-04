@@ -1,4 +1,4 @@
-"use client";
+import { useThemeColors } from "../../../theme/useThemeColors";
 
 import { useState } from "react";
 import {
@@ -75,12 +75,7 @@ const AuditModule = () => {
   const [selectedLog, setSelectedLog] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Colores para el tema
-  const cardBg = useColorModeValue("white", "gray.700");
-  const headerBg = useColorModeValue("gray.50", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
-  const textColor = useColorModeValue("type.title", "white");
+  const { cardBg, textColor, borderColor, headerBg, hoverBg } = useThemeColors();
 
   // Filtrar registros por tipo, departamento y búsqueda
   const filteredLogs = auditLogs.filter((log) => {
@@ -133,7 +128,7 @@ const AuditModule = () => {
             </Heading>
             <HStack spacing={4}>
               <Button
-                bgColor="type.bgbutton"
+                bgColor="type.primary"
                 colorScheme="purple"
                 leftIcon={<FiDownload />}
                 onClick={exportToPDF}

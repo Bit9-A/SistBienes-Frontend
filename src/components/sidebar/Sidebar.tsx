@@ -29,7 +29,7 @@ function Sidebar(props: { routes: RoutesType[]; setToggleSidebar: (value: boolea
   
 	const sidebarBg = useColorModeValue('white', 'navy.800');
 	const shadow = useColorModeValue('14px 17px 40px 4px rgba(112, 144, 176, 0.08)', 'unset');
-	const buttonBg = useColorModeValue('type.bgbutton', 'type.bgbutton'); // Color del botón
+	const buttonBg = useColorModeValue('type.primary', 'type.primary'); // Color del botón
   
 	const toggleSidebar = () => {
 	  const newState = !isOpen;

@@ -85,7 +85,7 @@ const Departaments = () => {
 
   return (
     <Box>
-      <Button bgColor={'type.bgbutton'} leftIcon={<Icon as={FiHome as React.ElementType} />} colorScheme="purple"  onClick={onOpen} mb={4}>
+      <Button bgColor={'type.primary'} leftIcon={<Icon as={FiHome as React.ElementType} />} colorScheme="purple"  onClick={onOpen} mb={4}>
               Agregar Departamento
      </Button>
 
@@ -153,7 +153,7 @@ const Departaments = () => {
             />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="purple" bgColor={'type.bgbutton'} mr={3} onClick={selectedDepartment ? handleEdit : handleAdd}>
+            <Button colorScheme="purple" bgColor={'type.primary'} mr={3} onClick={selectedDepartment ? handleEdit : handleAdd}>
               {selectedDepartment ? 'Guardar Cambios' : 'Agregar'}
             </Button>
             <Button variant="ghost" onClick={onClose}>

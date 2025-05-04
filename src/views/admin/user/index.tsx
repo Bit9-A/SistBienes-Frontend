@@ -120,7 +120,7 @@ const UserManage = () => {
               Usuarios
             </Heading>
             <Button
-              bgColor={'type.bgbutton'}
+              bgColor={'type.primary'}
               leftIcon={<Icon as={FiUserPlus as React.ElementType} />}
               colorScheme="purple"
               size="md" onClick={onOpen}>
@@ -169,7 +169,7 @@ const UserManage = () => {
               </Box>
             </HStack>
 
-            <Button color={'type.title'} leftIcon={<Icon as={FiDownload as React.ElementType} />} variant="outline" colorScheme={'type.bgbutton'} size="md">
+            <Button color={'type.title'} leftIcon={<Icon as={FiDownload as React.ElementType} />} variant="outline" colorScheme={'type.primary'} size="md">
               Exportar
             </Button>
           </Flex>
@@ -278,13 +278,13 @@ const UserManage = () => {
           <Flex justify="space-between" align="center" mt={4}>
             <Text color="gray.600">Mostrando 1-3 de 3 usuarios</Text>
             <HStack spacing={2}>
-              <Button size="sm" isDisabled={true} colorScheme={'type.bgbutton'} variant="outline">
+              <Button size="sm" isDisabled={true} colorScheme={'type.primary'} variant="outline">
                 Anterior
               </Button>
-              <Button size="sm" bgColor={'type.bgbutton'} color={'type.cbutton'} variant="solid">
+              <Button size="sm" bgColor={'type.primary'} color={'type.cbutton'} variant="solid">
                 1
               </Button>
-              <Button size="sm" isDisabled={true} colorScheme={'type.bgbutton'} variant="outline">
+              <Button size="sm" isDisabled={true} colorScheme={'type.primary'} variant="outline">
                 Siguiente
               </Button>
             </HStack>
