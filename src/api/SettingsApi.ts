@@ -53,3 +53,55 @@ export const deleteDepartment = async (id: number) => {
     } 
 };
 
+//SubGrupos Muebles
+// Definición de la interfaz para un subgrupo
+
+export interface SubGroup {
+  id: number;
+  nombre: string;
+}
+
+export const getSubGroupsM = async (): Promise<SubGroup[]> => {
+    try {
+        const response = await axiosInstance.get('/subgroup/muebles');
+        return response.data.subgrupos; // Asegúrate de que la respuesta tenga esta estructura
+    } catch (error) {
+        console.error('Error fetching subgroups:', error);
+        throw error;
+    }   
+    };
+
+// Crear un nuevo subgrupo
+export const createSubGroupM = async (subgroupData: any) => {
+    try {
+        const response = await axiosInstance.post('/subgroup/muebles', subgroupData);
+        return response.data; // Devuelve el subgrupo creado
+    } catch (error) {
+        console.error('Error creating subgroup:', error);
+        throw error;
+    } 
+};
+// Actualizar un subgrupo existente
+export const updateSubGroupM = async (id: number, subgroupData: any) => {
+    try {
+        const response = await axiosInstance.put(`/subgroup/muebles/${id}`, subgroupData);
+        return response.data; // Devuelve el subgrupo actualizado
+    } catch (error) {
+        console.error('Error updating subgroup:', error);
+        throw error;
+    } 
+};
+
+// Eliminar un subgrupo existente
+export const deleteSubGroupM = async (id: number) => {
+    try {
+        const response = await axiosInstance.delete(`/subgroup/muebles/${id}`);
+        return response.data; // Devuelve el subgrupo eliminado
+    } catch (error) {
+        console.error('Error deleting subgroup:', error);
+        throw error;
+    } 
+};
+
+//Tipos de usuario
+

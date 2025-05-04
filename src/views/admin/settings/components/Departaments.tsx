@@ -36,6 +36,8 @@ import {
   handleEditDepartment,
   handleDeleteDepartment,
 } from '../utils/DeptsUtils';
+import { v4 as uuidv4 } from 'uuid'; // Asegúrate de instalar uuid si no lo tienes
+
 
 interface Department {
   id: number;
@@ -99,15 +101,17 @@ const Departaments = () => {
         <Table variant="simple" size="md">
           <Thead bg={headerBg}>
             <Tr>
-              <Th>ID</Th>
+              <Th>N°</Th>
               <Th>Nombre</Th>
               <Th textAlign="center">Acciones</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {departments.map((department) => (
-              <Tr key={department.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
-                <Td>{department.id}</Td>
+            {departments.map((department, index) => (
+              <Tr key={uuidv4()} 
+              _hover={{ bg: hoverBg }} 
+              transition="background 0.2s">
+                <Td>{index + 1}</Td>
                 <Td>
                   <Text fontWeight="medium">{department.nombre}</Text>
                 </Td>
