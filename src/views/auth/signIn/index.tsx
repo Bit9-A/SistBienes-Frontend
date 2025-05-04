@@ -89,7 +89,7 @@ const SignIn = () => {
         <Flex
           alignItems="center"
           justifyContent="center"
-          bgColor="type.bgbutton"
+          bgColor="type.primary"
           display={{ base: "none", md: "flex" }}
         >
           <Image src={banner} alt="Banner Alcaldía" objectFit="contain" />
@@ -108,7 +108,7 @@ const SignIn = () => {
             <Input
               type="email"
               placeholder="correo@ejemplo.com"
-              focusBorderColor="type.bgbutton"
+              focusBorderColor="type.primary"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -119,7 +119,7 @@ const SignIn = () => {
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="********"
-                focusBorderColor="type.bgbutton"
+                focusBorderColor="type.primary"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -139,9 +139,9 @@ const SignIn = () => {
             </InputGroup>
           </FormControl>
           <Button w="100%"
-            bg="type.bgbutton"
+            bg="type.primary"
             color="white"
-            _hover={{ bg: "type.bgbutton", opacity: 0.9 }}
+            _hover={{ bg: "type.primary", opacity: 0.9 }}
             mb={4}
             onClick={handleSubmit}>
             Iniciar Sesión

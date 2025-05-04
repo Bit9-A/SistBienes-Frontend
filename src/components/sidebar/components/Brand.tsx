@@ -14,7 +14,7 @@ export function SidebarBrand() {
 
 	return (
 		<>
-		<Flex alignItems='center' flexDirection='column' bgColor={'#310493'}>
+		<Flex alignItems='center' flexDirection='column' bgColor={'type.primary'} >
 			<Image src={BannerAlcadia}></Image>
 			<Text fontFamily={'Roboto'} fontSize={'2xl'} textAlign={'center'} color={textColor}>{titleDepartament}</Text>
 			<HSeparator mb='20px' />

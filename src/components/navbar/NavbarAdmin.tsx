@@ -64,7 +64,7 @@ export default function AdminNavbar(props: {
 	<Box
 	  position="absolute"
 	  boxShadow="none"
-	  bg={useColorModeValue('#310493', '#310493')}
+	  bg={useColorModeValue('type.primary', '#310493')}
 	  borderColor="transparent"
 	  filter="none"
 	  backdropFilter="blur(20px)"
