@@ -44,9 +44,10 @@ import {
 } from 'react-icons/fi';
 
 import UserForm from './components/UserForm';
-import { getUsers, updateUser, deleteUser, User } from './variables/data';
 
-// Sample user data for display purposes only
+import { getUsers, updateUser, deleteUser, User } from '../../../api/UserApi';
+import { filterUsers,handleDeleteUser,handleEditUser,handleUpdateUser} from "./variables/UserLogic"
+
 
 const UserManage = () => {
   // State for UI elements only (no functionality)
@@ -73,47 +74,8 @@ const UserManage = () => {
     fetchUsers();
   }, []);
 
-  // Filtrar usuarios por búsqueda, departamento y tipo de usuario
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.apellido.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredUsers = filterUsers(users, searchQuery, selectedDept, selectedUserType);
 
-    const matchesDept =
-      selectedDept === 'all' || user.dept_id.toString() === selectedDept;
-
-    const matchesUserType =
-      selectedUserType === 'all' ||
-      user.tipo_usuario.toString() === selectedUserType;
-
-    return matchesSearch && matchesDept && matchesUserType;
-  });
-
-  // Manejar la eliminación de un usuario
-  const handleDeleteUser = async (id: number) => {
-    try {
-      await deleteUser(id);
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-    } catch (error) {
-      console.error('Error al eliminar el usuario:', error);
-    }
-  };
-  const handleUpdateUser = async (user: any) => {
-    try {
-      const { id, ...userData } = user;
-      await updateUser(id, userData);
-      setUsers((prevUsers) =>
-        prevUsers.map((u) => (u.id === id ? { ...u, ...userData } : u))
-      );
-    } catch (error) {
-      console.error('Error al actualizar el usuario:', error);
-    }
-  };
-  const handleEditUser = (user: User) => {
-    setEditingUser(user); // Establece el usuario seleccionado
-    onOpen(); // Abre el modal
-  };
 
   // Colors for theming
   const cardBg = useColorModeValue('white', 'gray.700');
@@ -243,7 +205,7 @@ const UserManage = () => {
                           size="sm"
                           colorScheme="blue"
                           variant="ghost"
-                          onClick={() => handleEditUser(user)} // Abre el formulario de edición
+                          onClick={() => handleEditUser(user,setEditingUser,onOpen)} // Abre el formulario de edición
                         />
                         <IconButton
                           aria-label="Eliminar usuario"
@@ -251,7 +213,7 @@ const UserManage = () => {
                           size="sm"
                           colorScheme="red"
                           variant="ghost"
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => handleDeleteUser(user.id,deleteUser,setUsers)} // Elimina el usuario
                         />
                       </Flex>
                     </Td>
@@ -298,7 +260,7 @@ const UserManage = () => {
         isOpen={isOpen}
         onClose={onClose}
         user={editingUser} // Pasa el usuario seleccionado al formulario
-        onSave={handleUpdateUser} // Maneja la actualización o creación
+        onSave={(user) => handleUpdateUser(user,updateUser,setUsers)} // Maneja la actualización o creación
       />
     </Box>
   );

@@ -1,4 +1,4 @@
-import axiosInstance from "../../../../utils/axiosInstance";
+import axiosInstance from "../utils/axiosInstance";
 
 export interface User {
     id: number;
@@ -9,20 +9,22 @@ export interface User {
     dept_id: number;
     tipo_usuario: number;
     cedula: string;
+    password?: string;
   }
-
 // Obtener todos los usuarios
 export const getUsers = async ():Promise<User[]> => {
   const response = await axiosInstance.get("/user");
   return response.data.users; 
 };
-
+export const createUser = async(userData: any) => {
+  const response = await axiosInstance.post("/user", userData);
+  return response.data; // Devuelve el usuario creado
+};
 // Actualizar un usuario existente
 export const updateUser = async (id: number, userData: any) => {
   const response = await axiosInstance.put(`/user/${id}`, userData);
   return response.data;
 };
-
 // Eliminar un usuario
 export const deleteUser = async (id: number) => {
   const response = await axiosInstance.delete(`/user/${id}`);
