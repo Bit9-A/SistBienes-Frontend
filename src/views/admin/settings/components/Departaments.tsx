@@ -19,12 +19,23 @@ import {
   useDisclosure,
   TableContainer,
   Flex,
-  IconButton,
   Text,
   useColorModeValue,
-    Icon,
+  Icon,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from '@chakra-ui/react';
-import { FiEdit, FiTrash2, FiHome} from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiHome } from 'react-icons/fi';
+import { getDepartments } from '../../../../api/SettingsApi';
+import {
+  handleAddDepartment,
+  handleEditDepartment,
+  handleDeleteDepartment,
+} from '../utils/DeptsUtils';
 
 interface Department {
   id: number;
@@ -37,57 +48,45 @@ const Departaments = () => {
   const [newDepartmentName, setNewDepartmentName] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const [departmentToDelete, setDepartmentToDelete] = useState<Department | null>(null);
+  const {
+    isOpen: isDeleteDialogOpen,
+    onOpen: onDeleteDialogOpen,
+    onClose: onDeleteDialogClose,
+  } = useDisclosure();
+
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('gray.100', 'gray.800');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
 
-  // Simulación de datos iniciales
-  useEffect(() => {
-    setDepartments([
-      { id: 1, nombre: 'Recursos Humanos' },
-      { id: 2, nombre: 'Finanzas' },
-    ]);
-  }, []);
-
-  const handleAdd = () => {
-    if (newDepartmentName.trim() === '') return;
-    const newDepartment = {
-      id: departments.length + 1,
-      nombre: newDepartmentName,
-    };
-    setDepartments([...departments, newDepartment]);
-    setNewDepartmentName('');
-    onClose();
-  };
-
-  const handleEdit = () => {
-    if (selectedDepartment && newDepartmentName.trim() !== '') {
-      setDepartments((prev) =>
-        prev.map((dept) =>
-          dept.id === selectedDepartment.id ? { ...dept, nombre: newDepartmentName } : dept
-        )
-      );
-      setSelectedDepartment(null);
-      setNewDepartmentName('');
-      onClose();
+  const fetchDepartments = async () => {
+    try {
+      const data = await getDepartments();
+      setDepartments(data);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
     }
   };
 
-  const handleDelete = (id: number) => {
-    setDepartments((prev) => prev.filter((dept) => dept.id !== id));
-  };
-
-  const openEditModal = (department: Department) => {
-    setSelectedDepartment(department);
-    setNewDepartmentName(department.nombre);
-    onOpen();
-  };
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   return (
     <Box>
-      <Button bgColor={'type.primary'} leftIcon={<Icon as={FiHome as React.ElementType} />} colorScheme="purple"  onClick={onOpen} mb={4}>
-              Agregar Departamento
-     </Button>
+      <Button
+        bgColor={'type.primary'}
+        leftIcon={<Icon as={FiHome as React.ElementType} />}
+        colorScheme="purple"
+        onClick={() => {
+          setSelectedDepartment(null);
+          setNewDepartmentName('');
+          onOpen();
+        }}
+        mb={4}
+      >
+        Agregar Departamento
+      </Button>
 
       <TableContainer
         border="1px"
@@ -120,15 +119,26 @@ const Departaments = () => {
                       size="sm"
                       colorScheme="blue"
                       variant="outline"
-                      onClick={() => openEditModal(department)}
-                    >Editar</Button>
+                      onClick={() => {
+                        setSelectedDepartment(department);
+                        setNewDepartmentName(department.nombre);
+                        onOpen();
+                      }}
+                    >
+                      Editar
+                    </Button>
                     <Button
                       aria-label="Eliminar departamento"
                       leftIcon={<FiTrash2 />}
                       size="sm"
                       colorScheme="red"
-                      onClick={() => handleDelete(department.id)}
-                    >Eliminar</Button>
+                      onClick={() => {
+                        setDepartmentToDelete(department);
+                        onDeleteDialogOpen();
+                      }}
+                    >
+                      Eliminar
+                    </Button>
                   </Flex>
                 </Td>
               </Tr>
@@ -153,7 +163,27 @@ const Departaments = () => {
             />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="purple" bgColor={'type.primary'} mr={3} onClick={selectedDepartment ? handleEdit : handleAdd}>
+            <Button
+              colorScheme="purple"
+              bgColor={'type.primary'}
+              mr={3}
+              onClick={async () =>{
+                selectedDepartment
+                  ? await handleEditDepartment(
+                      selectedDepartment,
+                      newDepartmentName,
+                      setDepartments,
+                      onClose
+                    )
+                  : await handleAddDepartment(
+                      newDepartmentName,
+                      setDepartments,
+                      onClose
+                    )
+                    await fetchDepartments();   
+              }
+              }
+            >
               {selectedDepartment ? 'Guardar Cambios' : 'Agregar'}
             </Button>
             <Button variant="ghost" onClick={onClose}>
@@ -162,6 +192,43 @@ const Departaments = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog
+        isOpen={isDeleteDialogOpen}
+        leastDestructiveRef={undefined}
+        onClose={onDeleteDialogClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirmar Eliminación
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              ¿Estás seguro de que deseas eliminar el departamento{' '}
+              <strong>{departmentToDelete?.nombre}</strong>? Esta acción no se puede deshacer.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button onClick={onDeleteDialogClose}>Cancelar</Button>
+              <Button
+                colorScheme="red"
+                onClick={async () => {
+                  await handleDeleteDepartment(
+                    departmentToDelete!.id,
+                    setDepartments
+                  );
+                  onDeleteDialogClose();
+                }}
+                ml={3}
+              >
+                Eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 };

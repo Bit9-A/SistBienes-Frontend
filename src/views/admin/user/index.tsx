@@ -52,7 +52,7 @@ import {
 import {CreateUserForm,EditUserForm} from './components/UserForm';
 
 import { getUsers, updateUser, deleteUser, createUser,User } from '../../../api/UserApi';
-import { filterUsers,handleDeleteUser,handleEditUser,handleUpdateUser, handleSaveEditUser,handleCreateUser} from "./variables/UserLogic"
+import { filterUsers,handleDeleteUser,handleEditUser,handleUpdateUser, handleSaveEditUser,handleCreateUser} from "./utils/UserLogic"
 
 
 const UserManage = () => {
@@ -298,7 +298,10 @@ const UserManage = () => {
      {editingUser ? (
         <EditUserForm
           isOpen={isOpen}
-          onClose={onClose}
+          onClose={()=>{
+            setEditingUser(null);
+            onClose(); // Cierra el modal después de editar
+          }}
           user={editingUser}
           onSave={handleSaveEditUserWrapper} // Función para guardar cambios
         />
