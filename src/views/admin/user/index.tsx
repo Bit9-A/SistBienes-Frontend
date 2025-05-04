@@ -1,6 +1,4 @@
-"use client"
-
-import { useState } from "react"
+import { useState, useEffect } from 'react';
 import {
   Icon,
   Box,
@@ -31,8 +29,8 @@ import {
   Select,
   HStack,
   useDisclosure,
-} from "@chakra-ui/react"
-import { SearchIcon } from "@chakra-ui/icons"
+} from '@chakra-ui/react';
+import { SearchIcon } from '@chakra-ui/icons';
 import {
   FiEdit,
   FiTrash2,
@@ -43,76 +41,98 @@ import {
   FiUser,
   FiMail,
   FiHash,
-} from "react-icons/fi"
+} from 'react-icons/fi';
 
-import UserForm from "./components/UserForm"
-
-
-const userTypes = {
-  1: { name: "Administrador", color: "green" },
-  2: { name: "Usuario", color: "blue" },
-  3: { name: "Invitado", color: "orange" },
-}
-
-// Map for departments - for dropdown options
-const departments = {
-  1: "Recursos Humanos",
-  2: "Tecnología",
-  3: "Finanzas",
-  4: "Marketing",
-}
+import UserForm from './components/UserForm';
+import { getUsers, updateUser, deleteUser, User } from './variables/data';
 
 // Sample user data for display purposes only
-const sampleUsers = [
-  {
-    id: 1,
-    nombre: "Juan",
-    apellido: "Pérez",
-    email: "juan.perez@example.com",
-    telefono: "123-456-7890",
-    tipo_usuario: 1,
-    dept_id: 1,
-    cedula: "V-12345678",
-  },
-  {
-    id: 2,
-    nombre: "María",
-    apellido: "Gómez",
-    email: "maria.gomez@example.com",
-    telefono: "987-654-3210",
-    tipo_usuario: 2,
-    dept_id: 2,
-    cedula: "V-87654321",
-  },
-  {
-    id: 3,
-    nombre: "Carlos",
-    apellido: "Rodríguez",
-    email: "carlos.rodriguez@example.com",
-    telefono: "555-123-4567",
-    tipo_usuario: 3,
-    dept_id: 3,
-    cedula: "V-23456789",
-  },
-]
 
 const UserManage = () => {
   // State for UI elements only (no functionality)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedDept, setSelectedDept] = useState<string>("all")
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDept, setSelectedDept] = useState('all');
+  const [selectedUserType, setSelectedUserType] = useState('all');
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [editingUser, setEditingUser] = useState(null); // Usuario seleccionado para editar
+
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    // Fetch users from API or state management
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Filtrar usuarios por búsqueda, departamento y tipo de usuario
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.apellido.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesDept =
+      selectedDept === 'all' || user.dept_id.toString() === selectedDept;
+
+    const matchesUserType =
+      selectedUserType === 'all' ||
+      user.tipo_usuario.toString() === selectedUserType;
+
+    return matchesSearch && matchesDept && matchesUserType;
+  });
+
+  // Manejar la eliminación de un usuario
+  const handleDeleteUser = async (id: number) => {
+    try {
+      await deleteUser(id);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+    } catch (error) {
+      console.error('Error al eliminar el usuario:', error);
+    }
+  };
+  const handleUpdateUser = async (user: any) => {
+    try {
+      const { id, ...userData } = user;
+      await updateUser(id, userData);
+      setUsers((prevUsers) =>
+        prevUsers.map((u) => (u.id === id ? { ...u, ...userData } : u))
+      );
+    } catch (error) {
+      console.error('Error al actualizar el usuario:', error);
+    }
+  };
+  const handleEditUser = (user: User) => {
+    setEditingUser(user); // Establece el usuario seleccionado
+    onOpen(); // Abre el modal
+  };
 
   // Colors for theming
-  const cardBg = useColorModeValue("white", "gray.700")
-  const headerBg = useColorModeValue("gray.50", "gray.800")
-  const borderColor = useColorModeValue("gray.200", "gray.600")
-  const hoverBg = useColorModeValue("gray.50", "gray.700")
-  const textColor = useColorModeValue("type.title", "white")
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const headerBg = useColorModeValue('gray.50', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const hoverBg = useColorModeValue('gray.50', 'gray.700');
+  const textColor = useColorModeValue('type.title', 'white');
 
   return (
-    <Box pt={{ base: "130px", md: "80px", xl: "80px" }} >
+    <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
       {/* Main Card Container */}
-      <Card bg={cardBg} boxShadow="sm" borderRadius="xl" border="1px" borderColor={borderColor} mb={6}>
+      <Card
+        bg={cardBg}
+        boxShadow="sm"
+        borderRadius="xl"
+        border="1px"
+        borderColor={borderColor}
+        mb={6}
+      >
         {/* Card Header with Title and New User Button */}
         <CardHeader>
           <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
@@ -123,7 +143,9 @@ const UserManage = () => {
               bgColor={'type.primary'}
               leftIcon={<Icon as={FiUserPlus as React.ElementType} />}
               colorScheme="purple"
-              size="md" onClick={onOpen}>
+              size="md"
+              onClick={onOpen}
+            >
               Nuevo Usuario
             </Button>
           </Flex>
@@ -132,14 +154,14 @@ const UserManage = () => {
         <CardBody>
           {/* Filters and Search */}
           <Flex
-            direction={{ base: "column", md: "row" }}
+            direction={{ base: 'column', md: 'row' }}
             justify="space-between"
-            align={{ base: "stretch", md: "center" }}
+            align={{ base: 'stretch', md: 'center' }}
             mb={6}
             gap={4}
           >
             <HStack spacing={4} flex={{ md: 2 }}>
-              <InputGroup maxW={{ md: "320px" }}>
+              <InputGroup maxW={{ md: '320px' }}>
                 <InputLeftElement pointerEvents="none">
                   <SearchIcon color="gray.400" />
                 </InputLeftElement>
@@ -157,115 +179,80 @@ const UserManage = () => {
                   value={selectedDept}
                   onChange={(e) => setSelectedDept(e.target.value)}
                   borderRadius="md"
-                  w={{ base: "full", md: "auto" }}
+                  w={{ base: 'full', md: 'auto' }}
                 >
                   <option value="all">Todos los departamentos</option>
-                  {Object.entries(departments).map(([id, name]) => (
+                  {/*Object.entries(departments).map(([id, name]) => (
                     <option key={id} value={id}>
                       {name}
-                    </option>
-                  ))}
+                   </option>
+                  ))*/}
                 </Select>
               </Box>
             </HStack>
 
-            <Button color={'type.title'} leftIcon={<Icon as={FiDownload as React.ElementType} />} variant="outline" colorScheme={'type.primary'} size="md">
+            <Button
+              color={'type.title'}
+              leftIcon={<Icon as={FiDownload as React.ElementType} />}
+              variant="outline"
+              colorScheme={'type.primary'}
+              size="md"
+            >
               Exportar
             </Button>
           </Flex>
 
-          {/* Users Table */}
-          <TableContainer
-            border="1px"
-            borderColor={borderColor}
-            borderRadius="lg"
-            boxShadow="sm"
-            overflow="auto"
-            mb={4}
-          >
+          <TableContainer border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="auto" mb={4}>
             <Table variant="simple" size="md">
               <Thead bg={headerBg}>
                 <Tr>
                   <Th>Usuario</Th>
                   <Th>Tipo</Th>
-                  <Th display={{ base: "none", md: "table-cell" }}>Email</Th>
-                  <Th display={{ base: "none", lg: "table-cell" }}>Teléfono</Th>
-                  <Th display={{ base: "none", lg: "table-cell" }}>Departamento</Th>
-                  <Th display={{ base: "none", md: "table-cell" }}>Cédula</Th>
+                  <Th>Email</Th>
+                  <Th>Teléfono</Th>
+                  <Th>Departamento</Th>
+                  <Th>Cédula</Th>
                   <Th textAlign="center">Acciones</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {sampleUsers.map((user) => (
+                {filteredUsers.map((user) => (
                   <Tr key={user.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
                     <Td>
-                      <Flex align="center">
-                        <Box
-                          bg="blue.100"
-                          color="blue.700"
-                          borderRadius="full"
-                          p={2}
-                          mr={3}
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                        >
-                          <Icon as={FiUser as React.ElementType} />
-                        </Box>
-                        <Box>
-                          <Text fontWeight="medium">{`${user.nombre} ${user.apellido}`}</Text>
-                          <Text fontSize="sm" color="gray.500" display={{ base: "block", md: "none" }}>
-                            {user.email}
-                          </Text>
-                        </Box>
-                      </Flex>
+                      <Text fontWeight="medium">{`${user.nombre} ${user.apellido}`}</Text>
                     </Td>
                     <Td>
                       <Badge
-                        colorScheme={"gray"}
+                        colorScheme={user.tipo_usuario?.color || 'gray'}
                         borderRadius="full"
                         px={2}
                         py={1}
                       >
-                        {"Desconocido"}
+                        {user.tipo_usuario?.name || 'Desconocido'}
                       </Badge>
                     </Td>
-                    <Td display={{ base: "none", md: "table-cell" }}>{user.email}</Td>
-                    <Td display={{ base: "none", lg: "table-cell" }}>{user.telefono || "N/A"}</Td>
-                    <Td display={{ base: "none", lg: "table-cell" }}>{"N/A"}</Td>
-                    <Td display={{ base: "none", md: "table-cell" }}>{user.cedula}</Td>
+                    <Td>{user.email}</Td>
+                    <Td>{user.telefono || 'N/A'}</Td>
+                    <Td>{user.dept_id || 'N/A'}</Td>
+                    <Td>{user.cedula}</Td>
                     <Td>
                       <Flex justify="center" gap={2}>
                         <IconButton
                           aria-label="Editar usuario"
-                          icon={<Icon as={FiEdit as React.ElementType} />}
+                          icon={<FiEdit />}
                           size="sm"
                           colorScheme="blue"
                           variant="ghost"
-                          onClick={() => { }}
+                          onClick={() => handleEditUser(user)} // Abre el formulario de edición
                         />
                         <IconButton
                           aria-label="Eliminar usuario"
-                          icon={<Icon as={FiTrash2 as React.ElementType} />}
+                          icon={<FiTrash2 />}
                           size="sm"
                           colorScheme="red"
                           variant="ghost"
-                          onClick={() => { }}
+                          onClick={() => handleDeleteUser(user.id)}
                         />
-                        <Menu>
-                          <MenuButton
-                            as={IconButton}
-                            aria-label="Más opciones"
-                            icon={<Icon as={FiMoreVertical as React.ElementType} />}
-                            variant="ghost"
-                            size="sm"
-                          />
-                          <MenuList>
-                            <MenuItem icon={<Icon as={FiUser as React.ElementType} />}>Ver perfil</MenuItem>
-                            <MenuItem icon={<Icon as={FiMail as React.ElementType} />}>Enviar correo</MenuItem>
-                            <MenuItem icon={<Icon as={FiHash as React.ElementType} />}>Restablecer contraseña</MenuItem>
-                          </MenuList>
-                        </Menu>
                       </Flex>
                     </Td>
                   </Tr>
@@ -278,22 +265,43 @@ const UserManage = () => {
           <Flex justify="space-between" align="center" mt={4}>
             <Text color="gray.600">Mostrando 1-3 de 3 usuarios</Text>
             <HStack spacing={2}>
-              <Button size="sm" isDisabled={true} colorScheme={'type.primary'} variant="outline">
+              <Button
+                size="sm"
+                isDisabled={true}
+                colorScheme={'type.primary'}
+                variant="outline"
+              >
                 Anterior
               </Button>
-              <Button size="sm" bgColor={'type.primary'} color={'type.cbutton'} variant="solid">
+              <Button
+                size="sm"
+                bgColor={'type.primary'}
+                color={'type.cbutton'}
+                variant="solid"
+              >
                 1
               </Button>
-              <Button size="sm" isDisabled={true} colorScheme={'type.primary'} variant="outline">
+              <Button
+                size="sm"
+                isDisabled={true}
+                colorScheme={'type.primary'}
+                variant="outline"
+              >
                 Siguiente
               </Button>
             </HStack>
           </Flex>
         </CardBody>
       </Card>
-      <UserForm isOpen={isOpen} onClose={onClose} userTypes={userTypes} departments={departments} />
+     
+      <UserForm
+        isOpen={isOpen}
+        onClose={onClose}
+        user={editingUser} // Pasa el usuario seleccionado al formulario
+        onSave={handleUpdateUser} // Maneja la actualización o creación
+      />
     </Box>
-  )
-}
+  );
+};
 
-export default UserManage
+export default UserManage;
