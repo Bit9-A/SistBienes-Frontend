@@ -16,6 +16,10 @@ import {
   useToast,
 } from '@chakra-ui/react';
 
+import { getDepartments,Department} from 'api/SettingsApi';
+import { getUserRoles, UserRole } from 'api/UserRoleApi';
+
+
 interface CreateUserFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,13 +53,48 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
 
   const toast = useToast();
 
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await getDepartments();
+      setDepartments(response);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
+  }
+  const fetchUserRoles = async () => {
+    try {
+      const response = await getUserRoles();
+      setUserRoles(response);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+    }
+  }
+
+
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchUserRoles();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
-    if (!formData.nombre || !formData.apellido || !formData.email || !formData.password) {
+    if (
+      !formData.nombre ||
+      !formData.apellido ||
+      !formData.email ||
+      !formData.password ||
+      !formData.tipo_usuario ||
+      !formData.dept_id
+    ) {
       toast({
         title: 'Error',
         description: 'Por favor, completa todos los campos obligatorios.',
@@ -127,18 +166,23 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
             <FormControl>
               <FormLabel>Tipo de Usuario</FormLabel>
               <Select name="tipo_usuario" value={formData.tipo_usuario} onChange={handleChange}>
-                <option value="1">Administrador</option>
-                <option value="2">Usuario</option>
-                <option value="3">Invitado</option>
+                <option value="">Seleccione un tipo de usuario</option>
+                {userRoles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.nombre}
+                  </option>
+                ))}
               </Select>
             </FormControl>
             <FormControl>
               <FormLabel>Departamento</FormLabel>
               <Select name="dept_id" value={formData.dept_id} onChange={handleChange}>
-                <option value="1">Recursos Humanos</option>
-                <option value="2">Tecnología</option>
-                <option value="3">Finanzas</option>
-                <option value="4">Marketing</option>
+                <option value="">Seleccione un departamento</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.nombre}
+                  </option>
+                ))}
               </Select>
             </FormControl>
           </Stack>
@@ -156,11 +200,36 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
 
 
 const EditUserForm: React.FC<EditUserFormProps> = ({ isOpen, onClose, user, onSave }) => {
-  const [formData, setFormData] = useState(user);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    apellido: '',
+    email: '',
+    cedula: '',
+    telefono: '',
+    tipo_usuario: '',
+    dept_id: '',
+  });
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
 
   const toast = useToast();
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [departmentsData, userRolesData] = await Promise.all([
+          getDepartments(),
+          getUserRoles(),
+        ]);
+        setDepartments(departmentsData);
+        setUserRoles(userRolesData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+
     if (user) {
       setFormData(user); // Carga los datos del usuario seleccionado
     }
@@ -168,7 +237,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ isOpen, onClose, user, onSa
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev: typeof formData) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
@@ -225,27 +294,34 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ isOpen, onClose, user, onSa
             <FormControl>
               <FormLabel>Tipo de Usuario</FormLabel>
               <Select name="tipo_usuario" value={formData.tipo_usuario} onChange={handleChange}>
-                <option value="1">Administrador</option>
-                <option value="2">Usuario</option>
-                <option value="3">Invitado</option>
+                <option value="">Seleccione un tipo de usuario</option>
+                {userRoles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.nombre}
+                  </option>
+                ))}
               </Select>
             </FormControl>
             <FormControl>
               <FormLabel>Departamento</FormLabel>
               <Select name="dept_id" value={formData.dept_id} onChange={handleChange}>
-                <option value="1">Recursos Humanos</option>
-                <option value="2">Tecnología</option>
-                <option value="3">Finanzas</option>
-                <option value="4">Marketing</option>
+                <option value="">Seleccione un departamento</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.nombre}
+                  </option>
+                ))}
               </Select>
             </FormControl>
           </Stack>
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme="teal" bgColor={'type.primary'} mr={3} onClick={handleSubmit}>
+          <Button colorScheme={'purple'} bgColor={'type.primary'} mr={3} onClick={handleSubmit}>
             Guardar Cambios
           </Button>
-          <Button onClick={onClose} colorScheme='red'>Cancelar</Button>
+          <Button onClick={onClose} colorScheme="red">
+            Cancelar
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

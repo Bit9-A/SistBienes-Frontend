@@ -47,20 +47,37 @@ import {
   FiUser,
   FiMail,
   FiHash,
+  FiCheck,
 } from 'react-icons/fi';
 
-import {CreateUserForm,EditUserForm} from './components/UserForm';
+import { CreateUserForm, EditUserForm } from './components/UserForm';
 
-import { getUsers, updateUser, deleteUser, createUser,User } from '../../../api/UserApi';
-import { filterUsers,handleDeleteUser,handleEditUser,handleUpdateUser, handleSaveEditUser,handleCreateUser} from "./utils/UserLogic"
-
+import {
+  getUsers,
+  updateUser,
+  deleteUser,
+  createUser,
+  User,
+} from '../../../api/UserApi';
+import {
+  filterUsers,
+  handleDeleteUser,
+  handleEditUser,
+  handleUpdateUser,
+  handleSaveEditUser,
+  handleCreateUser,
+} from './utils/UserLogic';
+import { getDepartments } from '../../../api/SettingsApi';
+import { getUserRoles } from '../../../api/UserRoleApi'; // Asegúrate de importar la función correcta para obtener los roles de usuario
 
 const UserManage = () => {
   // State for UI elements only (no functionality)
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('all');
   const [selectedUserType, setSelectedUserType] = useState('all');
+  const [departments, setDepartments] = useState([]); // Lista de departamentos
 
+  const [userRoles, setUserRoles] = useState([]); // Lista de roles de usuario
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingUser, setEditingUser] = useState(null); // Usuario seleccionado para editar
 
@@ -72,10 +89,23 @@ const UserManage = () => {
     onClose: onDeleteDialogClose,
   } = useDisclosure(); // Controla el estado del diálogo de confirmación
 
+  const fetchDepartments = async () => {
+    try {
+      const data = await getDepartments();
+      setDepartments(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const fetchUserRoles = async () => {
+    try {
+      const data = await getUserRoles();
+      setUserRoles(data);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+    }
+  };
 
-
-
-  // Fetch users from API or state management
   const fetchUsers = async () => {
     try {
       const data = await getUsers();
@@ -86,29 +116,35 @@ const UserManage = () => {
   };
 
   useEffect(() => {
+    fetchUserRoles(); // Carga los roles de usuario al inicio
+    fetchDepartments(); // Carga los departamentos al inicio
     fetchUsers();
   }, []);
 
-  const filteredUsers = filterUsers(users, searchQuery, selectedDept, selectedUserType);
-  
+  const filteredUsers = filterUsers(
+    users,
+    searchQuery,
+    selectedDept,
+    selectedUserType,
+  );
+
   // Funciones para manejar la creación y edición de usuarios
-  const handleCreateUserWrapper = async (newUser:any) => {
+  const handleCreateUserWrapper = async (newUser: any) => {
     await handleCreateUser(newUser, createUser, setUsers);
     await fetchUsers(); // Refresca la lista de usuarios después de crear uno nuevo
     onClose(); // Cierra el modal después de crear el usuario
   };
 
-  const handleSaveEditUserWrapper = async (updatedUser:any) => {
+  const handleSaveEditUserWrapper = async (updatedUser: any) => {
     handleSaveEditUser(updatedUser, updateUser, setUsers, onClose);
     await fetchUsers(); // Refresca la lista de usuarios después de editar
   };
 
-
   // Funciones para manejar la eliminación de usuarios
-  const handleDeleteUserWrapper = async (id:number) => {
+  const handleDeleteUserWrapper = async (id: number) => {
     await handleDeleteUser(id, deleteUser, setUsers);
     await fetchUsers(); // Refresca la lista de usuarios después de eliminar
-  }
+  };
 
   // Colors for theming
   const cardBg = useColorModeValue('white', 'gray.700');
@@ -158,8 +194,8 @@ const UserManage = () => {
             mb={6}
             gap={4}
           >
-            <HStack spacing={4} flex={{ md: 2 }}>
-              <InputGroup maxW={{ md: '320px' }}>
+            <HStack spacing={4} flex={{ md: 2 }} w="100%">
+              <InputGroup maxW={{ base: '100%', md: '320px' }}>
                 <InputLeftElement pointerEvents="none">
                   <SearchIcon color="gray.400" />
                 </InputLeftElement>
@@ -171,22 +207,52 @@ const UserManage = () => {
                 />
               </InputGroup>
 
-              <Box>
-                <Select
-                  icon={<Icon as={FiFilter as React.ElementType} />}
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                  borderRadius="md"
-                  w={{ base: 'full', md: 'auto' }}
+              <Menu placement="bottom-end" isLazy>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<Icon as={FiFilter} />}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                  _focus={{ boxShadow: 'outline' }}
+                  color={textColor}
+                  borderWidth="1px"
+                  w={{ base: '100%', md: 'auto' }} // Botón ocupa todo el ancho en pantallas pequeñas
+                  textAlign="left"
                 >
-                  <option value="all">Todos los departamentos</option>
-                  {/*Object.entries(departments).map(([id, name]) => (
-                    <option key={id} value={id}>
-                      {name}
-                   </option>
-                  ))*/}
-                </Select>
-              </Box>
+                  Filtrar
+                </MenuButton>
+                <MenuList
+                  maxW={{ base: '100%', md: '300px' }} // Menú ocupa todo el ancho en pantallas pequeñas
+                  overflow="auto" // Permite scroll si hay muchos departamentos
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                >
+                  <MenuItem
+                    onClick={() => setSelectedDept('all')}
+                    fontWeight={selectedDept === 'all' ? 'bold' : 'normal'}
+                    color={selectedDept === 'all' ? 'type.primary' : 'inherit'}
+                  >
+                    {selectedDept === 'all' && <Icon as={FiCheck} mr={2} />}{' '}
+                    {/* Icono para la opción seleccionada */}
+                    Todos los Departamentos
+                  </MenuItem>
+                  {departments.map((dept) => (
+                    <MenuItem
+                      key={dept.id}
+                      onClick={() => setSelectedDept(dept.id)}
+                      fontWeight={selectedDept === dept.id ? 'bold' : 'normal'}
+                      color={
+                        selectedDept === dept.id ? 'type.primary' : 'inherit'
+                      }
+                    >
+                      {selectedDept === dept.id && <Icon as={FiCheck} mr={2} />}{' '}
+                      {/* Icono para la opción seleccionada */}
+                      {dept.nombre}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
             </HStack>
 
             <Button
@@ -200,7 +266,14 @@ const UserManage = () => {
             </Button>
           </Flex>
 
-          <TableContainer border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="auto" mb={4}>
+          <TableContainer
+            border="1px"
+            borderColor={borderColor}
+            borderRadius="lg"
+            boxShadow="sm"
+            overflow="auto"
+            mb={4}
+          >
             <Table variant="simple" size="md">
               <Thead bg={headerBg}>
                 <Tr>
@@ -215,7 +288,11 @@ const UserManage = () => {
               </Thead>
               <Tbody>
                 {filteredUsers.map((user) => (
-                  <Tr key={user.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
+                  <Tr
+                    key={user.id}
+                    _hover={{ bg: hoverBg }}
+                    transition="background 0.2s"
+                  >
                     <Td>
                       <Text fontWeight="medium">{`${user.nombre} ${user.apellido}`}</Text>
                     </Td>
@@ -226,12 +303,23 @@ const UserManage = () => {
                         px={2}
                         py={1}
                       >
-                        {user.tipo_usuario?.name || 'Desconocido'}
+                        {
+                          // Muestra el nombre del rol o 'N/A' si no está disponible
+                          userRoles.find((role) => String(role.id) === String(user.tipo_usuario))?.nombre || 'N/A'
+                        }
                       </Badge>
                     </Td>
                     <Td>{user.email}</Td>
                     <Td>{user.telefono || 'N/A'}</Td>
-                    <Td>{user.dept_id || 'N/A'}</Td>
+                    <Td>
+                      {
+                        // Muestra el nombre del departamento o 'N/A' si no está disponible
+                        departments.find((dept) => dept.id === user.dept_id)
+                          ?.nombre ||
+                          user.dept_id ||
+                          'N/A'
+                      }
+                    </Td>
                     <Td>{user.cedula}</Td>
                     <Td>
                       <Flex justify="center" gap={2}>
@@ -241,7 +329,9 @@ const UserManage = () => {
                           size="sm"
                           colorScheme="blue"
                           variant="ghost"
-                          onClick={() => handleEditUser(user,setEditingUser,onOpen)} // Abre el formulario de edición
+                          onClick={() =>
+                            handleEditUser(user, setEditingUser, onOpen)
+                          } // Abre el formulario de edición
                         />
                         <IconButton
                           aria-label="Eliminar usuario"
@@ -249,9 +339,10 @@ const UserManage = () => {
                           size="sm"
                           colorScheme="red"
                           variant="ghost"
-                          onClick={() => { 
+                          onClick={() => {
                             setUserToDelete(user);
-                            onDeleteDialogOpen();}}
+                            onDeleteDialogOpen();
+                          }}
                         />
                       </Flex>
                     </Td>
@@ -293,12 +384,12 @@ const UserManage = () => {
           </Flex>
         </CardBody>
       </Card>
-     
-     {/* Renderiza el formulario correspondiente */}
-     {editingUser ? (
+
+      {/* Renderiza el formulario correspondiente */}
+      {editingUser ? (
         <EditUserForm
           isOpen={isOpen}
-          onClose={()=>{
+          onClose={() => {
             setEditingUser(null);
             onClose(); // Cierra el modal después de editar
           }}
@@ -306,7 +397,11 @@ const UserManage = () => {
           onSave={handleSaveEditUserWrapper} // Función para guardar cambios
         />
       ) : (
-        <CreateUserForm isOpen={isOpen} onClose={onClose} onSave={handleCreateUserWrapper} />
+        <CreateUserForm
+          isOpen={isOpen}
+          onClose={onClose}
+          onSave={handleCreateUserWrapper}
+        />
       )}
       {/* Diálogo de confirmación para eliminar */}
       <AlertDialog
@@ -326,7 +421,10 @@ const UserManage = () => {
 
             <AlertDialogBody>
               ¿Estás seguro de que deseas eliminar al usuario{' '}
-              <strong>{userToDelete?.nombre} {userToDelete?.apellido}</strong>? Esta acción no se puede deshacer.
+              <strong>
+                {userToDelete?.nombre} {userToDelete?.apellido}
+              </strong>
+              ? Esta acción no se puede deshacer.
             </AlertDialogBody>
 
             <AlertDialogFooter>
@@ -350,4 +448,3 @@ const UserManage = () => {
 };
 
 export default UserManage;
-
