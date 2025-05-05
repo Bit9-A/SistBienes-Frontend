@@ -155,3 +155,99 @@ export const deleteParroquia = async (id: number) =>
     };
 
 
+//Conceptos de Movimiento
+
+// Definición de la interfaz para un concepto de movimiento
+export interface ConceptoMovimiento {
+    id: number;
+    nombre: string;
+    codigo: string;
+}
+// Obtener todos los conceptos de movimiento Incorporación
+export const getConceptosMovimientoIncorporacion = async () =>
+    {
+        try {
+            const response = await axiosInstance.get('/concepto/movimiento/incorporacion');
+            return response.data.conceptos; // Asegúrate de que la respuesta tenga esta estructura
+        } catch (error) {
+            console.error('Error fetching conceptos de movimiento:', error);
+            throw error;
+        } 
+    }
+// Crear un nuevo concepto de movimiento Incorporación
+export const createConceptoMovimientoIncorporacion = async (conceptoData: any) => {
+    try {
+        const response = await axiosInstance.post('/concepto/movimiento/incorporacion', conceptoData);
+        return response.data; // Devuelve el concepto creado
+    } catch (error) {
+        console.error('Error creating concepto de movimiento:', error);
+        throw error;
+    } 
+};
+// Actualizar un concepto de movimiento existente Incorporación
+export const updateConceptoMovimientoIncorporacion = async (id: number, conceptoData: any) => {
+    try {
+        const response = await axiosInstance.put(`/concepto/movimiento/incorporacion/${id}`, conceptoData);
+        return response.data; // Devuelve el concepto actualizado
+    } catch (error) {
+        console.error('Error updating concepto de movimiento:', error);
+        throw error;
+    } 
+};
+// Eliminar un concepto de movimiento existente Incorporación
+export const deleteConceptoMovimientoIncorporacion = async (id: number) => {
+    try {
+        const response = await axiosInstance.delete(`/concepto/movimiento/incorporacion/${id}`);
+        return response.data; // Devuelve el concepto eliminado
+    } catch (error) {
+        console.error('Error deleting concepto de movimiento:', error);
+        throw error;
+    } 
+};
+
+// Obtener todos los conceptos de movimiento Desincorporación
+export const getConceptosMovimientoDesincorporacion = async () =>
+    {
+        try {
+            const response = await axiosInstance.get('/concepto/movimiento/desincorporacion');
+            return response.data.conceptos; // Asegúrate de que la respuesta tenga esta estructura
+        } catch (error) {
+            console.error('Error fetching conceptos de movimiento:', error);
+            throw error;
+        } 
+    }
+// Crear un nuevo concepto de movimiento Desincorporación
+export const createConceptoMovimientoDesincorporacion = async (conceptoData: any) => {
+    try {
+        const response = await axiosInstance.post('/concepto/movimiento/desincorporacion', conceptoData);
+        return response.data; // Devuelve el concepto creado
+    } catch (error) {
+        console.error('Error creating concepto de movimiento:', error);
+        throw error;
+    } 
+};
+// Actualizar un concepto de movimiento existente Desincorporación
+export const updateConceptoMovimientoDesincorporacion = async (id: number, conceptoData: any) => {
+    try {
+        const response = await axiosInstance.put(`/concepto/movimiento/desincorporacion/${id}`, conceptoData);
+        return response.data; // Devuelve el concepto actualizado
+    } catch (error) {
+        console.error('Error updating concepto de movimiento:', error);
+        throw error;
+    } 
+};
+// Eliminar un concepto de movimiento existente Desincorporación
+export const deleteConceptoMovimientoDesincorporacion = async (id: number) => {
+    try {
+        const response = await axiosInstance.delete(`/concepto/movimiento/desincorporacion/${id}`);
+        return response.data; // Devuelve el concepto eliminado
+    } catch (error) {
+        console.error('Error deleting concepto de movimiento:', error);
+        throw error;
+    } 
+}
+
+
+
+
+
