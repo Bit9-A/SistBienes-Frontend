@@ -80,12 +80,12 @@ const Inventory: React.FC = () => {
   }
 
   const handleEditSubmit = () => {
-    if (selectedAsset && updateAsset(selectedAsset.id, newAsset)) {
-      setSelectedAsset(null)
-      setNewAsset({})
-      setIsEditModalOpen(false)
+    if (selectedAsset && updateAsset(selectedAsset.numero_serial, newAsset)) {
+      setSelectedAsset(null);
+      setNewAsset({});
+      setIsEditModalOpen(false);
     }
-  }
+  };
 
   const handleDeleteClick = (asset: MovableAsset) => {
     setSelectedAsset(asset)
@@ -94,13 +94,16 @@ const Inventory: React.FC = () => {
   }
 
   const handleDeleteSubmit = () => {
-    if (selectedAsset && deleteConfirmation.trim().toLowerCase() === selectedAsset.nombre.trim().toLowerCase()) {
-      deleteAsset(selectedAsset.nombre)
-      setSelectedAsset(null)
-      setDeleteConfirmation("")
-      setIsDeleteModalOpen(false)
+    if (
+      selectedAsset &&
+      deleteConfirmation.trim().toLowerCase() === selectedAsset.numero_serial.trim().toLowerCase()
+    ) {
+      deleteAsset(selectedAsset.numero_serial);
+      setSelectedAsset(null);
+      setDeleteConfirmation("");
+      setIsDeleteModalOpen(false);
     }
-  }
+  };
 
   // UI colors
   const cardBg = useColorModeValue("white", "gray.700")

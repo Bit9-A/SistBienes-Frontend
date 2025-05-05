@@ -48,12 +48,12 @@ export const DeleteAssetModal: React.FC<DeleteAssetModalProps> = ({
                 <ModalCloseButton />
                 <ModalBody>
                     <Text mt={2}>
-                        ¿Deseas eliminar este bien? Escribe <Badge colorScheme="red">{asset?.nombre}</Badge> para confirmar la
+                        ¿Deseas eliminar este bien? Escribe <Badge colorScheme="red">{asset?.numero_serial}</Badge> para confirmar la
                         eliminación.
                     </Text>
                     <Input
                         mt={2}
-                        placeholder="Escribe el nombre del bien para confirmar"
+                        placeholder="Escribe el serial del bien para confirmar"
                         value={confirmationText}
                         onChange={(e) => onConfirmationChange(e.target.value)}
                     />

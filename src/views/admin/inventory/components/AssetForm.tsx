@@ -34,8 +34,15 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                 <Input name="numero_serial" value={asset.numero_serial || ""} onChange={onChange} placeholder="Serial" />
             </FormControl>
             <FormControl>
-                <FormLabel>Nombre</FormLabel>
-                <Input name="nombre" value={asset.nombre || ""} onChange={onChange} placeholder="Nombre del bien" />
+                <FormLabel>Nombre & Descripcion</FormLabel>
+                <Textarea
+                    name="descripcion"
+                    value={asset.descripcion || ""}
+                    onChange={onChange}
+                    placeholder="Nombre & Descripcion"
+                    resize="none"
+                    rows={1}
+                />
             </FormControl>
 
             <FormControl>
@@ -104,16 +111,6 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                         </option>
                     ))}
                 </Select>
-            </FormControl>
-
-            <FormControl gridColumn={{ base: "span 1", md: "span 2" }}>
-                <FormLabel>Descripción</FormLabel>
-                <Textarea
-                    name="descripcion"
-                    value={asset.descripcion || ""}
-                    onChange={onChange}
-                    placeholder="Descripción del bien"
-                />
             </FormControl>
         </SimpleGrid>
     )
