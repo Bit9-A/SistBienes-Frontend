@@ -167,8 +167,8 @@ export interface ConceptoMovimiento {
 export const getConceptosMovimientoIncorporacion = async () =>
     {
         try {
-            const response = await axiosInstance.get('/concepto/movimiento/incorporacion');
-            return response.data.conceptos; // Asegúrate de que la respuesta tenga esta estructura
+            const response = await axiosInstance.get('/concept-incorp');
+            return response.data.conceptInc; // Asegúrate de que la respuesta tenga esta estructura
         } catch (error) {
             console.error('Error fetching conceptos de movimiento:', error);
             throw error;
@@ -177,7 +177,7 @@ export const getConceptosMovimientoIncorporacion = async () =>
 // Crear un nuevo concepto de movimiento Incorporación
 export const createConceptoMovimientoIncorporacion = async (conceptoData: any) => {
     try {
-        const response = await axiosInstance.post('/concepto/movimiento/incorporacion', conceptoData);
+        const response = await axiosInstance.post('/concept-incorp', conceptoData);
         return response.data; // Devuelve el concepto creado
     } catch (error) {
         console.error('Error creating concepto de movimiento:', error);
@@ -187,7 +187,7 @@ export const createConceptoMovimientoIncorporacion = async (conceptoData: any) =
 // Actualizar un concepto de movimiento existente Incorporación
 export const updateConceptoMovimientoIncorporacion = async (id: number, conceptoData: any) => {
     try {
-        const response = await axiosInstance.put(`/concepto/movimiento/incorporacion/${id}`, conceptoData);
+        const response = await axiosInstance.put(`/concept-incorp/${id}`, conceptoData);
         return response.data; // Devuelve el concepto actualizado
     } catch (error) {
         console.error('Error updating concepto de movimiento:', error);
@@ -197,7 +197,7 @@ export const updateConceptoMovimientoIncorporacion = async (id: number, concepto
 // Eliminar un concepto de movimiento existente Incorporación
 export const deleteConceptoMovimientoIncorporacion = async (id: number) => {
     try {
-        const response = await axiosInstance.delete(`/concepto/movimiento/incorporacion/${id}`);
+        const response = await axiosInstance.delete(`/concept-incorp/${id}`);
         return response.data; // Devuelve el concepto eliminado
     } catch (error) {
         console.error('Error deleting concepto de movimiento:', error);
@@ -209,8 +209,8 @@ export const deleteConceptoMovimientoIncorporacion = async (id: number) => {
 export const getConceptosMovimientoDesincorporacion = async () =>
     {
         try {
-            const response = await axiosInstance.get('/concepto/movimiento/desincorporacion');
-            return response.data.conceptos; // Asegúrate de que la respuesta tenga esta estructura
+            const response = await axiosInstance.get('/concept-desincorp');
+            return response.data.conceptDes; // Asegúrate de que la respuesta tenga esta estructura
         } catch (error) {
             console.error('Error fetching conceptos de movimiento:', error);
             throw error;
@@ -219,7 +219,7 @@ export const getConceptosMovimientoDesincorporacion = async () =>
 // Crear un nuevo concepto de movimiento Desincorporación
 export const createConceptoMovimientoDesincorporacion = async (conceptoData: any) => {
     try {
-        const response = await axiosInstance.post('/concepto/movimiento/desincorporacion', conceptoData);
+        const response = await axiosInstance.post('/concept-desincorp', conceptoData);
         return response.data; // Devuelve el concepto creado
     } catch (error) {
         console.error('Error creating concepto de movimiento:', error);
@@ -229,7 +229,7 @@ export const createConceptoMovimientoDesincorporacion = async (conceptoData: any
 // Actualizar un concepto de movimiento existente Desincorporación
 export const updateConceptoMovimientoDesincorporacion = async (id: number, conceptoData: any) => {
     try {
-        const response = await axiosInstance.put(`/concepto/movimiento/desincorporacion/${id}`, conceptoData);
+        const response = await axiosInstance.put(`/concept-desincorp/${id}`, conceptoData);
         return response.data; // Devuelve el concepto actualizado
     } catch (error) {
         console.error('Error updating concepto de movimiento:', error);
@@ -239,7 +239,7 @@ export const updateConceptoMovimientoDesincorporacion = async (id: number, conce
 // Eliminar un concepto de movimiento existente Desincorporación
 export const deleteConceptoMovimientoDesincorporacion = async (id: number) => {
     try {
-        const response = await axiosInstance.delete(`/concepto/movimiento/desincorporacion/${id}`);
+        const response = await axiosInstance.delete(`/concept-desincorp/${id}`);
         return response.data; // Devuelve el concepto eliminado
     } catch (error) {
         console.error('Error deleting concepto de movimiento:', error);
