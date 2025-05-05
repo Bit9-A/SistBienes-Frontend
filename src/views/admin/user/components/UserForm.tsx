@@ -14,11 +14,18 @@ import {
   Select,
   Button,
   useToast,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  useColorModeValue,
+  useDisclosure,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 
-import { getDepartments,Department} from 'api/SettingsApi';
+import { ChevronDownIcon } from '@chakra-ui/icons';
+import { getDepartments, Department } from 'api/SettingsApi';
 import { getUserRoles, UserRole } from 'api/UserRoleApi';
-
 
 interface CreateUserFormProps {
   isOpen: boolean;
@@ -39,7 +46,11 @@ const isValidEmail = (email: string) => {
   return emailRegex.test(email);
 };
 
-const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave }) => {
+const CreateUserForm: React.FC<CreateUserFormProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+}) => {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -56,7 +67,6 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
   const [departments, setDepartments] = useState<Department[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
 
-
   const fetchDepartments = async () => {
     try {
       const response = await getDepartments();
@@ -64,7 +74,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
-  }
+  };
   const fetchUserRoles = async () => {
     try {
       const response = await getUserRoles();
@@ -72,16 +82,16 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
     } catch (error) {
       console.error('Error fetching user roles:', error);
     }
-  }
-
-
+  };
 
   useEffect(() => {
     fetchDepartments();
     fetchUserRoles();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -135,23 +145,49 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
           <Stack spacing={4}>
             <FormControl>
               <FormLabel>Nombre</FormLabel>
-              <Input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" />
+              <Input
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                placeholder="Nombre"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Apellido</FormLabel>
-              <Input name="apellido" value={formData.apellido} onChange={handleChange} placeholder="Apellido" />
+              <Input
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                placeholder="Apellido"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Email</FormLabel>
-              <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" type="email" />
+              <Input
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                type="email"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Cédula</FormLabel>
-              <Input name="cedula" value={formData.cedula} onChange={handleChange} placeholder="V-12345678" />
+              <Input
+                name="cedula"
+                value={formData.cedula}
+                onChange={handleChange}
+                placeholder="V-12345678"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Teléfono</FormLabel>
-              <Input name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono" />
+              <Input
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleChange}
+                placeholder="Teléfono"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Contraseña</FormLabel>
@@ -165,41 +201,105 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ isOpen, onClose, onSave
             </FormControl>
             <FormControl>
               <FormLabel>Tipo de Usuario</FormLabel>
-              <Select name="tipo_usuario" value={formData.tipo_usuario} onChange={handleChange}>
-                <option value="">Seleccione un tipo de usuario</option>
-                {userRoles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.nombre}
-                  </option>
-                ))}
-              </Select>
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<ChevronDownIcon />}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                  _focus={{ boxShadow: 'outline' }}
+                  w="100%"
+                  textAlign="left"
+                >
+                  {userRoles.find(
+                    (role) => role.id === Number(formData.tipo_usuario),
+                  )?.nombre || 'Seleccione un tipo de usuario'}
+                </MenuButton>
+                <MenuList
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                >
+                  {userRoles.map((role) => (
+                    <MenuItem
+                      key={role.id}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          tipo_usuario: role.id.toString(),
+                        }))
+                      }
+                    >
+                      {role.nombre}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
             </FormControl>
+
             <FormControl>
               <FormLabel>Departamento</FormLabel>
-              <Select name="dept_id" value={formData.dept_id} onChange={handleChange}>
-                <option value="">Seleccione un departamento</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.nombre}
-                  </option>
-                ))}
-              </Select>
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<ChevronDownIcon />}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                  _focus={{ boxShadow: 'outline' }}
+                  w="100%"
+                  textAlign="left"
+                >
+                  {departments.find(
+                    (dept) => dept.id === Number(formData.dept_id),
+                  )?.nombre || 'Seleccione un departamento'}
+                </MenuButton>
+                <MenuList
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                >
+                  {departments.map((dept) => (
+                    <MenuItem
+                      key={dept.id}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          dept_id: dept.id.toString(),
+                        }))
+                      }
+                    >
+                      {dept.nombre}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
             </FormControl>
           </Stack>
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme={'purple'} bgColor={'type.primary'} mr={3} onClick={handleSubmit}>
+          <Button
+            colorScheme={'purple'}
+            bgColor={'type.primary'}
+            mr={3}
+            onClick={handleSubmit}
+          >
             Crear Usuario
           </Button>
-          <Button onClick={onClose} colorScheme='red'>Cancelar</Button>
+          <Button onClick={onClose} colorScheme="red">
+            Cancelar
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
   );
 };
 
-
-const EditUserForm: React.FC<EditUserFormProps> = ({ isOpen, onClose, user, onSave }) => {
+const EditUserForm: React.FC<EditUserFormProps> = ({
+  isOpen,
+  onClose,
+  user,
+  onSave,
+}) => {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -235,7 +335,9 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ isOpen, onClose, user, onSa
     }
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -273,50 +375,134 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ isOpen, onClose, user, onSa
           <Stack spacing={4}>
             <FormControl>
               <FormLabel>Nombre</FormLabel>
-              <Input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" />
+              <Input
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                placeholder="Nombre"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Apellido</FormLabel>
-              <Input name="apellido" value={formData.apellido} onChange={handleChange} placeholder="Apellido" />
+              <Input
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                placeholder="Apellido"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Email</FormLabel>
-              <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" type="email" />
+              <Input
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                type="email"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Cédula</FormLabel>
-              <Input name="cedula" value={formData.cedula} onChange={handleChange} placeholder="V-12345678" />
+              <Input
+                name="cedula"
+                value={formData.cedula}
+                onChange={handleChange}
+                placeholder="V-12345678"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Teléfono</FormLabel>
-              <Input name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono" />
+              <Input
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleChange}
+                placeholder="Teléfono"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Tipo de Usuario</FormLabel>
-              <Select name="tipo_usuario" value={formData.tipo_usuario} onChange={handleChange}>
-                <option value="">Seleccione un tipo de usuario</option>
-                {userRoles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.nombre}
-                  </option>
-                ))}
-              </Select>
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<ChevronDownIcon />}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                  _focus={{ boxShadow: 'outline' }}
+                  w="100%"
+                  textAlign="left"
+                >
+                  {userRoles.find(
+                    (role) => role.id === Number(formData.tipo_usuario),
+                  )?.nombre || 'Seleccione un tipo de usuario'}
+                </MenuButton>
+                <MenuList
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                >
+                  {userRoles.map((role) => (
+                    <MenuItem
+                      key={role.id}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          tipo_usuario: role.id.toString(),
+                        }))
+                      }
+                    >
+                      {role.nombre}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
             </FormControl>
+
             <FormControl>
               <FormLabel>Departamento</FormLabel>
-              <Select name="dept_id" value={formData.dept_id} onChange={handleChange}>
-                <option value="">Seleccione un departamento</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.nombre}
-                  </option>
-                ))}
-              </Select>
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<ChevronDownIcon />}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                  _focus={{ boxShadow: 'outline' }}
+                  w="100%"
+                  textAlign="left"
+                >
+                  {departments.find(
+                    (dept) => dept.id === Number(formData.dept_id),
+                  )?.nombre || 'Seleccione un departamento'}
+                </MenuButton>
+                <MenuList
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={useColorModeValue('gray.300', 'gray.600')}
+                >
+                  {departments.map((dept) => (
+                    <MenuItem
+                      key={dept.id}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          dept_id: dept.id.toString(),
+                        }))
+                      }
+                    >
+                      {dept.nombre}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
             </FormControl>
           </Stack>
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme={'purple'} bgColor={'type.primary'} mr={3} onClick={handleSubmit}>
+          <Button
+            colorScheme={'purple'}
+            bgColor={'type.primary'}
+            mr={3}
+            onClick={handleSubmit}
+          >
             Guardar Cambios
           </Button>
           <Button onClick={onClose} colorScheme="red">
