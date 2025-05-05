@@ -39,8 +39,10 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
             <Table variant="simple" size="md">
                 <Thead bg={headerBg}>
                     <Tr>
-                        <Th display={{ base: "none", md: "table-cell" }}>Serial</Th>
+                        <Th display={{ base: "none", md: "table-cell" }}>N°</Th>
+                        <Th display={{ base: "none", md: "table-cell" }}>Identificación</Th>
                         <Th display={{ base: "none", lg: "table-cell" }}>Descripción</Th>
+                        <Th display={{ base: "none", sm: "table-cell" }}>Serial</Th>
                         <Th display={{ base: "none", md: "table-cell" }}>Marca</Th>
                         <Th display={{ base: "none", md: "table-cell" }}>Modelo</Th>
                         <Th display={{ base: "none", sm: "table-cell" }}>Cantidad</Th>
@@ -51,8 +53,8 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
                     </Tr>
                 </Thead>
                 <Tbody>
-                    {assets.map((asset) => (
-                        <Tr key={asset.numero_serial} _hover={{ bg: hoverBg }} transition="background 0.2s">
+                    {assets.map((asset, index) => (
+                        <Tr key={asset.numero_identificacion} _hover={{ bg: hoverBg }} transition="background 0.2s">
                             <Td>
                                 <Flex align="center">
                                     <Box
@@ -68,20 +70,20 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
                                         <Icon as={BsBoxSeam} />
                                     </Box>
                                     <Box>
-                                        <Text fontWeight="medium">{asset.numero_serial}</Text>
-                                        <Text fontSize="sm" color="gray.500" display={{ base: "block", md: "none" }}>
-                                            {asset.descripcion}
-                                        </Text>
+                                        <Text fontWeight="medium">{index + 1}</Text>
                                     </Box>
                                 </Flex>
                             </Td>
+                            <Td display={{ base: "none", md: "table-cell" }}>{asset.numero_identificacion}</Td>
                             <Td display={{ base: "none", lg: "table-cell" }}>{asset.descripcion}</Td>
+                            <Td display={{ base: "none", sm: "table-cell" }}>{asset.numero_serial}</Td>
                             <Td display={{ base: "none", md: "table-cell" }}>{asset.marca}</Td>
                             <Td display={{ base: "none", md: "table-cell" }}>{asset.modelo}</Td>
                             <Td display={{ base: "none", sm: "table-cell" }}>{asset.cantidad}</Td>
                             <Td display={{ base: "none", sm: "table-cell" }}>{asset.valor_unitario}</Td>
                             <Td display={{ base: "none", sm: "table-cell" }}>{asset.valor_total}</Td>
                             <Td display={{ base: "none", lg: "table-cell" }}>{asset.fecha}</Td>
+
                             <Td>
                                 <Flex justify="center" gap={2}>
                                     <IconButton

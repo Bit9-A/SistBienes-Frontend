@@ -1,6 +1,7 @@
-// Define all types in a separate file for better organization and reuse
 
 export interface MovableAsset {
+    id: number
+    numero_identificacion: string
     numero_serial: string
     grupo: number
     subgrupo: string

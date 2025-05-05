@@ -30,19 +30,25 @@ export const AssetForm: React.FC<AssetFormProps> = ({
     return (
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing="20px">
             <FormControl>
-                <FormLabel>Serial</FormLabel>
-                <Input name="numero_serial" value={asset.numero_serial || ""} onChange={onChange} placeholder="Serial" />
+                <FormLabel>Numero de Identificación</FormLabel>
+                <Input name="Numero_de_Identificacion" type="numero_identificacion" value={asset.numero_identificacion || ""} onChange={onChange} placeholder="Numero de Identificación" />
             </FormControl>
+
             <FormControl>
-                <FormLabel>Nombre & Descripcion</FormLabel>
+                <FormLabel>Nombre & Descripción</FormLabel>
                 <Textarea
                     name="descripcion"
                     value={asset.descripcion || ""}
                     onChange={onChange}
-                    placeholder="Nombre & Descripcion"
+                    placeholder="Nombre & Descripción"
                     resize="none"
                     rows={1}
                 />
+            </FormControl>
+
+            <FormControl>
+                <FormLabel>Serial</FormLabel>
+                <Input name="numero_serial" value={asset.numero_serial || ""} onChange={onChange} placeholder="Serial" />
             </FormControl>
 
             <FormControl>
@@ -101,7 +107,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                     ))}
                 </Select>
             </FormControl>
-            <FormControl>
+            <FormControl gridColumn="span 2">
                 <FormLabel>Parroquia Perteneciente</FormLabel>
                 <Select name="id_Parroquia" value={asset.id_Parroquia || ""} onChange={onChange} borderRadius="md">
                     <option value="">Parroquia...</option>
@@ -112,6 +118,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                     ))}
                 </Select>
             </FormControl>
+
         </SimpleGrid>
     )
 }
