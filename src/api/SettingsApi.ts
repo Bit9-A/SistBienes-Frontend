@@ -7,6 +7,7 @@ import axiosInstance from "../utils/axiosInstance";
 export interface Department {
   id: number;
   nombre: string;
+  codigo: string;
 }
 // Obtener todos los departamentos
 export const getDepartments = async (): Promise<Department[]> => {
@@ -59,6 +60,7 @@ export const deleteDepartment = async (id: number) => {
 export interface SubGroup {
   id: number;
   nombre: string;
+  codigo: string;
 }
 
 export const getSubGroupsM = async (): Promise<SubGroup[]> => {
@@ -103,5 +105,53 @@ export const deleteSubGroupM = async (id: number) => {
     } 
 };
 
-//Tipos de usuario
+//Parroquias
+
+// Definición de la interfaz para una parroquia
+export interface Parroquia {
+    id: number;
+    nombre: string;
+}
+// Obtener todas las parroquias
+export const getParroquias = async (): Promise<Parroquia[]> => {
+    try {
+        const response = await axiosInstance.get('/parish');
+        return response.data.parishes; // Asegúrate de que la respuesta tenga esta estructura
+    } catch (error) {
+        console.error('Error fetching parroquias:', error);
+        throw error;
+    }   
+    }
+// Crear una nueva parroquia
+export const createParroquia = async (parroquiaData: any) => {
+    try {
+        const response = await axiosInstance.post('/parish', parroquiaData);
+        return response.data; // Devuelve la parroquia creada
+    } catch (error) {
+        console.error('Error creating parroquia:', error);
+        throw error;
+    } 
+};
+// Actualizar una parroquia existente
+export const updateParroquia = async (id: number, parroquiaData: any)=> {
+        try {
+            const response = await axiosInstance.put(`/parish/${id}`, parroquiaData);
+            return response.data; // Devuelve la parroquia actualizada
+        } catch (error) {
+            console.error('Error updating parroquia:', error);
+            throw error;
+        } 
+    }
+// Eliminar una parroquia existente
+export const deleteParroquia = async (id: number) =>
+    {
+        try {
+            const response = await axiosInstance.delete(`/parish/${id}`);
+            return response.data; // Devuelve la parroquia eliminada
+        } catch (error) {
+            console.error('Error deleting parroquia:', error);
+            throw error;
+        } 
+    };
+
 

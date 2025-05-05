@@ -19,12 +19,26 @@ import {
   useDisclosure,
   TableContainer,
   Flex,
-  IconButton,
   Text,
   useColorModeValue,
   Icon,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  useToast,
 } from '@chakra-ui/react';
 import { FiEdit, FiTrash2, FiHome } from 'react-icons/fi';
+import {
+  handleAddParroquia,
+  handleEditParroquia,
+  handleDeleteParroquia,
+  openEditParroquiaModal,
+} from '../utils/ParishUtils';
+import { getParroquias } from 'api/SettingsApi';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Parish {
   id: number;
@@ -37,52 +51,31 @@ const Parish = () => {
   const [newParishName, setNewParishName] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const [parishToDelete, setParishToDelete] = useState<Parish | null>(null);
+  const {
+    isOpen: isDeleteDialogOpen,
+    onOpen: onDeleteDialogOpen,
+    onClose: onDeleteDialogClose,
+  } = useDisclosure();
+
+  const toast = useToast();
+
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('gray.100', 'gray.800');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
 
-  // Simulación de datos iniciales
-  useEffect(() => {
-    setParishes([
-      { id: 1, nombre: 'Tariba' },
-      { id: 2, nombre: 'Amenodoro Rangel Lamús' },
-      { id: 3, nombre: 'La Florida' },
-    ]);
-  }, []);
-
-  const handleAdd = () => {
-    if (newParishName.trim() === '') return;
-    const newParish = {
-      id: parishes.length + 1,
-      nombre: newParishName,
-    };
-    setParishes([...parishes, newParish]);
-    setNewParishName('');
-    onClose();
-  };
-
-  const handleEdit = () => {
-    if (selectedParish && newParishName.trim() !== '') {
-      setParishes((prev) =>
-        prev.map((parish) =>
-          parish.id === selectedParish.id ? { ...parish, nombre: newParishName } : parish
-        )
-      );
-      setSelectedParish(null);
-      setNewParishName('');
-      onClose();
+  const fetchParishes = async () => {
+    try {
+      const data = await getParroquias();
+      setParishes(data);
+    } catch (error) {
+      console.error('Error fetching parishes:', error);
     }
   };
 
-  const handleDelete = (id: number) => {
-    setParishes((prev) => prev.filter((parish) => parish.id !== id));
-  };
-
-  const openEditModal = (parish: Parish) => {
-    setSelectedParish(parish);
-    setNewParishName(parish.nombre);
-    onOpen();
-  };
+  useEffect(() => {
+    fetchParishes();
+  }, []);
 
   return (
     <Box>
@@ -90,7 +83,11 @@ const Parish = () => {
         bgColor={'type.primary'}
         leftIcon={<Icon as={FiHome as React.ElementType} />}
         colorScheme="purple"
-        onClick={onOpen}
+        onClick={() => {
+          setSelectedParish(null);
+          setNewParishName('');
+          onOpen();
+        }}
         mb={4}
       >
         Agregar Parroquia
@@ -107,15 +104,19 @@ const Parish = () => {
         <Table variant="simple" size="md">
           <Thead bg={headerBg}>
             <Tr>
-              <Th>ID</Th>
+              <Th>N°</Th>
               <Th>Nombre</Th>
               <Th textAlign="center">Acciones</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {parishes.map((parish) => (
-              <Tr key={parish.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
-                <Td>{parish.id}</Td>
+            {parishes.map((parish, index) => (
+              <Tr
+                key={uuidv4()}
+                _hover={{ bg: hoverBg }}
+                transition="background 0.2s"
+              >
+                <Td>{index + 1}</Td>
                 <Td>
                   <Text fontWeight="medium">{parish.nombre}</Text>
                 </Td>
@@ -127,7 +128,14 @@ const Parish = () => {
                       size="sm"
                       colorScheme="blue"
                       variant="outline"
-                      onClick={() => openEditModal(parish)}
+                      onClick={() =>
+                        openEditParroquiaModal(
+                          parish,
+                          setSelectedParish,
+                          setNewParishName,
+                          onOpen
+                        )
+                      }
                     >
                       Editar
                     </Button>
@@ -136,7 +144,10 @@ const Parish = () => {
                       leftIcon={<FiTrash2 />}
                       size="sm"
                       colorScheme="red"
-                      onClick={() => handleDelete(parish.id)}
+                      onClick={() => {
+                        setParishToDelete(parish);
+                        onDeleteDialogOpen();
+                      }}
                     >
                       Eliminar
                     </Button>
@@ -168,7 +179,36 @@ const Parish = () => {
               colorScheme="purple"
               bgColor={'type.primary'}
               mr={3}
-              onClick={selectedParish ? handleEdit : handleAdd}
+              onClick={async () => {
+                selectedParish
+                  ? await(handleEditParroquia(
+                      selectedParish,
+                      newParishName,
+                      setParishes,
+                      onClose
+                    ),
+                    toast({
+                      title: 'Parroquia editada con éxito',
+                      description: 'La parroquia ha sido editada exitosamente.',
+                      status: 'success',
+                      duration: 3000,
+                      isClosable: true,
+                    })
+              
+                  ): await (handleAddParroquia(
+                      newParishName,
+                      setParishes,
+                      onClose
+                    ),
+                    toast({
+                      title: 'Parroquia creada con éxito',
+                      description: 'La parroquia ha sido creada exitosamente.',
+                      status: 'success',
+                      duration: 3000,
+                      isClosable: true,
+                    })); 
+                fetchParishes();
+              }}
             >
               {selectedParish ? 'Guardar Cambios' : 'Agregar'}
             </Button>
@@ -178,6 +218,47 @@ const Parish = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog
+        isOpen={isDeleteDialogOpen}
+        leastDestructiveRef={undefined}
+        onClose={onDeleteDialogClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirmar Eliminación
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              ¿Estás seguro de que deseas eliminar la parroquia{' '}
+              <strong>{parishToDelete?.nombre}</strong>? Esta acción no se puede
+              deshacer.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button onClick={onDeleteDialogClose}>Cancelar</Button>
+              <Button
+                colorScheme="red"
+                onClick={async () => {
+                  if (parishToDelete) {
+                    await handleDeleteParroquia(
+                      parishToDelete.id,
+                      setParishes
+                    );
+                    fetchParishes();
+                  }
+                  onDeleteDialogClose();
+                }}
+                ml={3}
+              >
+                Eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 };

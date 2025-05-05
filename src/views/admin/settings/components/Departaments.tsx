@@ -38,19 +38,22 @@ import {
 } from '../utils/DeptsUtils';
 import { v4 as uuidv4 } from 'uuid'; // Asegúrate de instalar uuid si no lo tienes
 
-
 interface Department {
   id: number;
   nombre: string;
+  codigo: string;
 }
 
 const Departaments = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+  const [selectedDepartment, setSelectedDepartment] =
+    useState<Department | null>(null);
   const [newDepartmentName, setNewDepartmentName] = useState('');
+  const [newDepartmentCode, setNewDepartmentCode] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [departmentToDelete, setDepartmentToDelete] = useState<Department | null>(null);
+  const [departmentToDelete, setDepartmentToDelete] =
+    useState<Department | null>(null);
   const {
     isOpen: isDeleteDialogOpen,
     onOpen: onDeleteDialogOpen,
@@ -102,16 +105,20 @@ const Departaments = () => {
           <Thead bg={headerBg}>
             <Tr>
               <Th>N°</Th>
+              <Th>Codigo</Th>
               <Th>Nombre</Th>
               <Th textAlign="center">Acciones</Th>
             </Tr>
           </Thead>
           <Tbody>
             {departments.map((department, index) => (
-              <Tr key={uuidv4()} 
-              _hover={{ bg: hoverBg }} 
-              transition="background 0.2s">
+              <Tr
+                key={uuidv4()}
+                _hover={{ bg: hoverBg }}
+                transition="background 0.2s"
+              >
                 <Td>{index + 1}</Td>
+                <Td>{department.codigo}</Td>
                 <Td>
                   <Text fontWeight="medium">{department.nombre}</Text>
                 </Td>
@@ -153,49 +160,56 @@ const Departaments = () => {
 
       {/* Modal para agregar/editar */}
       <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {selectedDepartment ? 'Editar Departamento' : 'Agregar Departamento'}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Input
-              placeholder="Nombre del Departamento"
-              value={newDepartmentName}
-              onChange={(e) => setNewDepartmentName(e.target.value)}
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="purple"
-              bgColor={'type.primary'}
-              mr={3}
-              onClick={async () =>{
-                selectedDepartment
-                  ? await handleEditDepartment(
-                      selectedDepartment,
-                      newDepartmentName,
-                      setDepartments,
-                      onClose
-                    )
-                  : await handleAddDepartment(
-                      newDepartmentName,
-                      setDepartments,
-                      onClose
-                    )
-                    await fetchDepartments();   
-              }
-              }
-            >
-              {selectedDepartment ? 'Guardar Cambios' : 'Agregar'}
-            </Button>
-            <Button variant="ghost" onClick={onClose}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>
+      {selectedDepartment ? 'Editar Departamento' : 'Agregar Departamento'}
+    </ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      <Input
+        placeholder="Nombre del Departamento"
+        value={newDepartmentName}
+        onChange={(e) => setNewDepartmentName(e.target.value)}
+      />
+      <Input
+        mt={4}
+        placeholder="Código del Departamento"
+        value={newDepartmentCode}
+        onChange={(e) => setNewDepartmentCode(e.target.value)}
+      />
+    </ModalBody>
+    <ModalFooter>
+      <Button
+        colorScheme="purple"
+        bgColor={'type.primary'}
+        mr={3}
+        onClick={async () => {
+          selectedDepartment
+            ? await handleEditDepartment(
+                selectedDepartment,
+                newDepartmentName,
+                newDepartmentCode,
+                setDepartments,
+                onClose
+              )
+            : await handleAddDepartment(
+                newDepartmentName,
+                newDepartmentCode,
+                setDepartments,
+                onClose
+              );
+          fetchDepartments();
+        }}
+      >
+        {selectedDepartment ? 'Guardar Cambios' : 'Agregar'}
+      </Button>
+      <Button variant="ghost" onClick={onClose}>
+        Cancelar
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
 
       {/* Diálogo de confirmación para eliminar */}
       <AlertDialog
@@ -211,7 +225,8 @@ const Departaments = () => {
 
             <AlertDialogBody>
               ¿Estás seguro de que deseas eliminar el departamento{' '}
-              <strong>{departmentToDelete?.nombre}</strong>? Esta acción no se puede deshacer.
+              <strong>{departmentToDelete?.nombre}</strong>? Esta acción no se
+              puede deshacer.
             </AlertDialogBody>
 
             <AlertDialogFooter>
@@ -221,7 +236,7 @@ const Departaments = () => {
                 onClick={async () => {
                   await handleDeleteDepartment(
                     departmentToDelete!.id,
-                    setDepartments
+                    setDepartments,
                   );
                   onDeleteDialogClose();
                 }}

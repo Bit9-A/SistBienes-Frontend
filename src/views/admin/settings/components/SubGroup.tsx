@@ -35,12 +35,14 @@ import {
   handleAddSubGroup,
   handleEditSubGroup,
   handleDeleteSubGroup,
+  openEditSubGroupModal,
 } from '../utils/SubGroupUtils';
 
 import { v4 as uuidv4 } from 'uuid'; // Asegúrate de instalar uuid si no lo tienes
 interface SubGroup {
   id: number;
   nombre: string;
+  codigo: string; // Agregado para incluir el código
 }
 
 const SubGroup = () => {
@@ -55,6 +57,7 @@ const SubGroup = () => {
   const [activeType, setActiveType] = useState<'muebles' | 'inmuebles'>(
     'muebles',
   );
+  const [newSubGroupCode, setNewSubGroupCode] = useState('');
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -81,8 +84,8 @@ const SubGroup = () => {
       fetchSubGroups();
     } else {
       setSubGroups([
-        { id: 1, nombre: 'Edificios' },
-        { id: 2, nombre: 'Terrenos' },
+        { id: 1, nombre: 'Edificios', codigo: 'ED' },
+        { id: 2, nombre: 'Terrenos', codigo: 'TE' },
       ]);
     }
   }, [activeType]);
@@ -111,6 +114,7 @@ const SubGroup = () => {
         onClick={() => {
           setSelectedSubGroup(null);
           setNewSubGroupName('');
+          setNewSubGroupCode(''); // Limpia el código
           onOpen();
         }}
         mb={4}
@@ -130,6 +134,7 @@ const SubGroup = () => {
           <Thead bg={headerBg}>
             <Tr>
               <Th>N°</Th>
+              <Th>Codigo</Th>
               <Th>Nombre</Th>
               <Th textAlign="center">Acciones</Th>
             </Tr>
@@ -137,11 +142,12 @@ const SubGroup = () => {
           <Tbody>
             {subGroups.map((subGroup, index) => (
               <Tr
-                key={uuidv4()} // Usa un key único
+                key={uuidv4()}
                 _hover={{ bg: hoverBg }}
                 transition="background 0.2s"
               >
                 <Td>{index + 1}</Td>
+                <Td>{subGroup.codigo}</Td>
                 <Td>
                   <Text fontWeight="medium">{subGroup.nombre}</Text>
                 </Td>
@@ -153,11 +159,15 @@ const SubGroup = () => {
                       size="sm"
                       colorScheme="blue"
                       variant="outline"
-                      onClick={() => {
-                        setSelectedSubGroup(subGroup);
-                        setNewSubGroupName(subGroup.nombre);
-                        onOpen();
-                      }}
+                      onClick={() =>
+                        openEditSubGroupModal(
+                          subGroup,
+                          setSelectedSubGroup,
+                          setNewSubGroupName,
+                          setNewSubGroupCode,
+                          onOpen,
+                        )
+                      }
                     >
                       Editar
                     </Button>
@@ -180,7 +190,6 @@ const SubGroup = () => {
           </Tbody>
         </Table>
       </TableContainer>
-
       {/* Modal para agregar/editar */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -195,6 +204,12 @@ const SubGroup = () => {
               value={newSubGroupName}
               onChange={(e) => setNewSubGroupName(e.target.value)}
             />
+            <Input
+              mt={4}
+              placeholder="Código del Subgrupo"
+              value={newSubGroupCode}
+              onChange={(e) => setNewSubGroupCode(e.target.value)}
+            />
           </ModalBody>
           <ModalFooter>
             <Button
@@ -206,21 +221,22 @@ const SubGroup = () => {
                   ? await handleEditSubGroup(
                       selectedSubGroup,
                       newSubGroupName,
+                      newSubGroupCode,
                       setSubGroups,
                       onClose,
                     )
                   : await handleAddSubGroup(
                       newSubGroupName,
+                      newSubGroupCode,
                       setSubGroups,
                       onClose,
                     );
                 fetchSubGroups();
-                setNewSubGroupName('');
               }}
             >
               {selectedSubGroup ? 'Guardar Cambios' : 'Agregar'}
             </Button>
-            <Button variant="outline" colorScheme="red" onClick={onClose}>
+            <Button variant="ghost" onClick={onClose}>
               Cancelar
             </Button>
           </ModalFooter>

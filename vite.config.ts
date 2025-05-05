@@ -16,7 +16,8 @@ export default defineConfig({
       assets: path.resolve(__dirname, './src/assets'), // Alias para assets
       hooks: path.resolve(__dirname, './src/hooks'), // Alias para hooks
       types: path.resolve(__dirname, './src/types'), // Alias para types
-      themes: path.resolve(__dirname, './src/themes'), // Alias para themes
+      themes: path.resolve(__dirname, './src/themes'),
+      api: path.resolve(__dirname, './src/api'), 
     },
   },
   server: {
