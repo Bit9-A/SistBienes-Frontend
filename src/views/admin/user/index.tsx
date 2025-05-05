@@ -233,21 +233,20 @@ const UserManage = () => {
                     fontWeight={selectedDept === 'all' ? 'bold' : 'normal'}
                     color={selectedDept === 'all' ? 'type.primary' : 'inherit'}
                   >
-                    {selectedDept === 'all' && <Icon as={FiCheck} mr={2} />}{' '}
-                    {/* Icono para la opción seleccionada */}
+                    {selectedDept === 'all' && <Icon as={FiCheck} mr={2} />}
                     Todos los Departamentos
                   </MenuItem>
                   {departments.map((dept) => (
                     <MenuItem
                       key={dept.id}
-                      onClick={() => setSelectedDept(dept.id)}
+                      onClick={() => setSelectedDept(String(dept.id))}
                       fontWeight={selectedDept === dept.id ? 'bold' : 'normal'}
                       color={
                         selectedDept === dept.id ? 'type.primary' : 'inherit'
                       }
                     >
-                      {selectedDept === dept.id && <Icon as={FiCheck} mr={2} />}{' '}
-                      {/* Icono para la opción seleccionada */}
+                    
+                      {selectedDept === String(dept.id) && <Icon as={FiCheck} mr={2} />}
                       {dept.nombre}
                     </MenuItem>
                   ))}
@@ -305,20 +304,20 @@ const UserManage = () => {
                       >
                         {
                           // Muestra el nombre del rol o 'N/A' si no está disponible
-                          userRoles.find((role) => String(role.id) === String(user.tipo_usuario))?.nombre || 'N/A'
+                          userRoles.find(
+                            (role) =>
+                              String(role.id) === String(user.tipo_usuario),
+                          )?.nombre || 'N/A'
                         }
                       </Badge>
                     </Td>
                     <Td>{user.email}</Td>
                     <Td>{user.telefono || 'N/A'}</Td>
                     <Td>
-                      {
-                        // Muestra el nombre del departamento o 'N/A' si no está disponible
-                        departments.find((dept) => dept.id === user.dept_id)
-                          ?.nombre ||
-                          user.dept_id ||
-                          'N/A'
-                      }
+                    {
+          departments.find((dept) => String(dept.id) === String(user.dept_id))
+            ?.nombre || 'N/A'
+        }
                     </Td>
                     <Td>{user.cedula}</Td>
                     <Td>

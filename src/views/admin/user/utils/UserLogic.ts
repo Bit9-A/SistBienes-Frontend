@@ -5,17 +5,27 @@ export const filterUsers = (
   selectedUserType: string
 ) => {
   return users.filter((user) => {
-    const matchesSearch =
-      (user.nombre?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (user.apellido?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (user.email?.toLowerCase().includes(searchQuery.toLowerCase()) || '');
+    const query = searchQuery.toLowerCase();
 
+    // Extrae la parte local del email (antes del @)
+    const emailLocalPart = user.email?.split('@')[0]?.toLowerCase() || '';
+
+    // Verifica si el usuario coincide con la búsqueda
+    const matchesSearch =
+      user.cedula?.toLowerCase().includes(query) || // Busca por cédula
+      user.nombre?.toLowerCase().includes(query) || // Busca por nombre
+      user.apellido?.toLowerCase().includes(query) || // Busca por apellido
+      emailLocalPart.includes(query); // Busca por la parte local del email
+
+    // Verifica si el usuario pertenece al departamento seleccionado
     const matchesDept =
       selectedDept === 'all' || user.dept_id?.toString() === selectedDept;
 
+    // Verifica si el usuario tiene el tipo de usuario seleccionado
     const matchesUserType =
       selectedUserType === 'all' || user.tipo_usuario?.toString() === selectedUserType;
 
+    // Retorna true si el usuario cumple con todos los filtros
     return matchesSearch && matchesDept && matchesUserType;
   });
 };
