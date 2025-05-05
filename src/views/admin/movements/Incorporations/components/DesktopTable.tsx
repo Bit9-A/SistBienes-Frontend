@@ -1,6 +1,6 @@
 "use client"
 
-import { Table, Thead, Tbody, Tr, Th, Td, Button, Flex, TableContainer } from "@chakra-ui/react"
+import { Table, Thead, Tbody, Tr, Th, Td, Button, Flex, TableContainer, IconButton, Icon } from "@chakra-ui/react"
 import { FiEdit, FiTrash2 } from "react-icons/fi"
 import type { Incorporation } from "../variables/Incorporations"
 
@@ -50,18 +50,20 @@ export default function DesktopTable({
               <Td>{item.cantidad}</Td>
               <Td>
                 <Flex justify="center" gap={2}>
-                  <Button
+                  <IconButton
+                    aria-label="Editar Incorporación"
+                    icon={<Icon as={FiEdit} />}
                     size="sm"
                     colorScheme="blue"
-                    variant="outline"
-                    leftIcon={<FiEdit />}
+                    variant="ghost"
                     onClick={() => onEdit(item)}
-                  >
-                    Editar
-                  </Button>
-                  <Button size="sm" colorScheme="red" leftIcon={<FiTrash2 />} onClick={() => onDelete(item.id)}>
-                    Eliminar
-                  </Button>
+                  />
+                  <IconButton
+                    aria-label="Eliminar Incorporación"
+                    icon={<Icon as={FiTrash2} />}
+                    size="sm"
+                    colorScheme="red"
+                    variant="ghost" onClick={() => onDelete(item.id)} />
                 </Flex>
               </Td>
             </Tr>
