@@ -48,7 +48,7 @@ export const DeleteAssetModal: React.FC<DeleteAssetModalProps> = ({
                 <ModalCloseButton />
                 <ModalBody>
                     <Text mt={2}>
-                        ¿Deseas eliminar este bien? Escribe <Badge colorScheme="red">{asset?.numero_serial}</Badge> para confirmar la
+                        ¿Deseas eliminar este bien? Escribe <Badge colorScheme="red">{asset?.numero_identificacion}</Badge> para confirmar la
                         eliminación.
                     </Text>
                     <Input

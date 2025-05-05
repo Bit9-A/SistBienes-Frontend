@@ -68,7 +68,6 @@ const Inventory: React.FC = () => {
 
     if (addAsset(assetToAdd)) {
       setNewAsset({});
-      console.log("Asset added successfully", assetToAdd);
       setIsAddModalOpen(false);
     }
   };
@@ -80,7 +79,7 @@ const Inventory: React.FC = () => {
   }
 
   const handleEditSubmit = () => {
-    if (selectedAsset && updateAsset(selectedAsset.numero_serial, newAsset)) {
+    if (selectedAsset && updateAsset(selectedAsset.numero_identificacion, newAsset)) {
       setSelectedAsset(null);
       setNewAsset({});
       setIsEditModalOpen(false);
@@ -96,9 +95,9 @@ const Inventory: React.FC = () => {
   const handleDeleteSubmit = () => {
     if (
       selectedAsset &&
-      deleteConfirmation.trim().toLowerCase() === selectedAsset.numero_serial.trim().toLowerCase()
+      deleteConfirmation.trim().toLowerCase() === selectedAsset.numero_identificacion.trim().toLowerCase()
     ) {
-      deleteAsset(selectedAsset.numero_serial);
+      deleteAsset(selectedAsset.numero_identificacion);
       setSelectedAsset(null);
       setDeleteConfirmation("");
       setIsDeleteModalOpen(false);

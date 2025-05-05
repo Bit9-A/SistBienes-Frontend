@@ -24,6 +24,8 @@ export const useInventoryData = () => {
         // Simulated data fetch
         const initialAssets = [
             {
+                id: 1,
+                numero_identificacion: "0002",
                 numero_serial: "1234ABC",
                 grupo: 1,
                 subgrupo: "2-01",
@@ -39,6 +41,8 @@ export const useInventoryData = () => {
                 id_Parroquia: 1,
             },
             {
+                id: 2,
+                numero_identificacion: "0001",
                 numero_serial: "12345ABC",
                 grupo: 1,
                 subgrupo: "2-01",
@@ -149,7 +153,7 @@ export const useInventoryData = () => {
         if (query) {
             filtered = filtered.filter(
                 (item) =>
-                    item.numero_serial.toLowerCase().includes(query.toLowerCase()) ||
+                    item.numero_identificacion.toLowerCase().includes(query.toLowerCase()) ||
                     item.descripcion.toLowerCase().includes(query.toLowerCase()) ||
                     item.marca.toLowerCase().includes(query.toLowerCase()) ||
                     item.modelo.toLowerCase().includes(query.toLowerCase()) ||
@@ -161,8 +165,17 @@ export const useInventoryData = () => {
 
     // CRUD operations
     const addAsset = (newAsset: Partial<MovableAsset>) => {
-        if (newAsset.numero_serial && newAsset.cantidad) {
-            const updatedAssets = [...assets, newAsset as MovableAsset];
+        // Calcula el siguiente id auto-incremental
+        const maxId = assets.reduce((max, asset) => asset.id > max ? asset.id : max, 0);
+        const nextId = maxId + 1;
+
+        const assetToAdd = {
+            ...newAsset,
+            id: nextId,
+        };
+
+        if (assetToAdd.numero_identificacion && assetToAdd.cantidad) {
+            const updatedAssets = [...assets, assetToAdd as MovableAsset];
             setAssets(updatedAssets);
             setFilteredAssets(updatedAssets);
             return true;
@@ -170,10 +183,10 @@ export const useInventoryData = () => {
         return false;
     };
 
-    const updateAsset = (numero_serial: string, updatedAsset: Partial<MovableAsset>) => {
-        if (updatedAsset.numero_serial && updatedAsset.cantidad) {
+    const updateAsset = (numero_identificacion: string, updatedAsset: Partial<MovableAsset>) => {
+        if (updatedAsset.numero_identificacion && updatedAsset.cantidad) {
             const updatedAssets = assets.map((asset) =>
-                asset.numero_serial === numero_serial ? { ...asset, ...updatedAsset } : asset
+                asset.numero_identificacion === numero_identificacion ? { ...asset, ...updatedAsset } : asset
             );
             setAssets(updatedAssets);
             setFilteredAssets(updatedAssets);
@@ -182,8 +195,8 @@ export const useInventoryData = () => {
         return false;
     };
 
-    const deleteAsset = (numero_serial: string) => {
-        const updatedAssets = assets.filter((asset) => asset.numero_serial !== numero_serial);
+    const deleteAsset = (numero_identificacion: string) => {
+        const updatedAssets = assets.filter((asset) => asset.numero_identificacion !== numero_identificacion);
         setAssets(updatedAssets);
         setFilteredAssets(updatedAssets);
     };
