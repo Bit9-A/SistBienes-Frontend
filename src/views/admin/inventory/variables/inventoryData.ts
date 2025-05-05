@@ -24,15 +24,13 @@ export const useInventoryData = () => {
         // Simulated data fetch
         const initialAssets = [
             {
-                id: 1,
+                numero_serial: "1234ABC",
                 grupo: 1,
                 subgrupo: "2-01",
                 cantidad: 10,
-                nombre: "Silla",
                 descripcion: "Silla de oficina ergonómica",
                 marca: "ErgoChair",
                 modelo: "X200",
-                numero_serial: "12345ABC",
                 valor_unitario: 150.0,
                 valor_total: 1500.0,
                 fecha: "2025-04-08",
@@ -41,15 +39,13 @@ export const useInventoryData = () => {
                 id_Parroquia: 1,
             },
             {
-                id: 2,
+                numero_serial: "12345ABC",
                 grupo: 1,
                 subgrupo: "2-01",
                 cantidad: 10,
-                nombre: "Mesa",
                 descripcion: "Mesa de oficina ergonómica",
                 marca: "ErgoTable",
                 modelo: "X200",
-                numero_serial: "12345ABC",
                 valor_unitario: 150.0,
                 valor_total: 1500.0,
                 fecha: "2025-04-08",
@@ -153,7 +149,7 @@ export const useInventoryData = () => {
         if (query) {
             filtered = filtered.filter(
                 (item) =>
-                    item.nombre.toLowerCase().includes(query.toLowerCase()) ||
+                    item.numero_serial.toLowerCase().includes(query.toLowerCase()) ||
                     item.descripcion.toLowerCase().includes(query.toLowerCase()) ||
                     item.marca.toLowerCase().includes(query.toLowerCase()) ||
                     item.modelo.toLowerCase().includes(query.toLowerCase()) ||
@@ -165,32 +161,32 @@ export const useInventoryData = () => {
 
     // CRUD operations
     const addAsset = (newAsset: Partial<MovableAsset>) => {
-        if (newAsset.nombre && newAsset.cantidad) {
-            const newId = assets.length + 1
-            const assetWithId = { ...newAsset, id: newId } as MovableAsset
-            const updatedAssets = [...assets, assetWithId]
-            setAssets(updatedAssets)
-            setFilteredAssets(updatedAssets)
-            return true
+        if (newAsset.numero_serial && newAsset.cantidad) {
+            const updatedAssets = [...assets, newAsset as MovableAsset];
+            setAssets(updatedAssets);
+            setFilteredAssets(updatedAssets);
+            return true;
         }
-        return false
-    }
+        return false;
+    };
 
-    const updateAsset = (id: number, updatedAsset: Partial<MovableAsset>) => {
-        if (updatedAsset.nombre && updatedAsset.cantidad) {
-            const updatedAssets = assets.map((asset) => (asset.id === id ? { ...asset, ...updatedAsset } : asset))
-            setAssets(updatedAssets)
-            setFilteredAssets(updatedAssets)
-            return true
+    const updateAsset = (numero_serial: string, updatedAsset: Partial<MovableAsset>) => {
+        if (updatedAsset.numero_serial && updatedAsset.cantidad) {
+            const updatedAssets = assets.map((asset) =>
+                asset.numero_serial === numero_serial ? { ...asset, ...updatedAsset } : asset
+            );
+            setAssets(updatedAssets);
+            setFilteredAssets(updatedAssets);
+            return true;
         }
-        return false
-    }
+        return false;
+    };
 
-    const deleteAsset = (assetName: string) => {
-        const updatedAssets = assets.filter((asset) => asset.nombre !== assetName)
-        setAssets(updatedAssets)
-        setFilteredAssets(updatedAssets)
-    }
+    const deleteAsset = (numero_serial: string) => {
+        const updatedAssets = assets.filter((asset) => asset.numero_serial !== numero_serial);
+        setAssets(updatedAssets);
+        setFilteredAssets(updatedAssets);
+    };
 
     return {
         assets,

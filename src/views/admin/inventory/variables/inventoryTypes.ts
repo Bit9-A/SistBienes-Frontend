@@ -1,15 +1,13 @@
 // Define all types in a separate file for better organization and reuse
 
 export interface MovableAsset {
-    id: number
+    numero_serial: string
     grupo: number
     subgrupo: string
     cantidad: number
-    nombre: string
     descripcion: string
     marca: string
     modelo: string
-    numero_serial: string
     valor_unitario: number
     valor_total: number
     fecha: string

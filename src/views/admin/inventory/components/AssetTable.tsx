@@ -39,7 +39,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
             <Table variant="simple" size="md">
                 <Thead bg={headerBg}>
                     <Tr>
-                        <Th display={{ base: "none", md: "table-cell" }}>Nombre</Th>
+                        <Th display={{ base: "none", md: "table-cell" }}>Serial</Th>
                         <Th display={{ base: "none", lg: "table-cell" }}>Descripción</Th>
                         <Th display={{ base: "none", md: "table-cell" }}>Marca</Th>
                         <Th display={{ base: "none", md: "table-cell" }}>Modelo</Th>
@@ -52,7 +52,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
                 </Thead>
                 <Tbody>
                     {assets.map((asset) => (
-                        <Tr key={asset.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
+                        <Tr key={asset.numero_serial} _hover={{ bg: hoverBg }} transition="background 0.2s">
                             <Td>
                                 <Flex align="center">
                                     <Box
@@ -68,7 +68,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
                                         <Icon as={BsBoxSeam} />
                                     </Box>
                                     <Box>
-                                        <Text fontWeight="medium">{asset.nombre}</Text>
+                                        <Text fontWeight="medium">{asset.numero_serial}</Text>
                                         <Text fontSize="sm" color="gray.500" display={{ base: "block", md: "none" }}>
                                             {asset.descripcion}
                                         </Text>
