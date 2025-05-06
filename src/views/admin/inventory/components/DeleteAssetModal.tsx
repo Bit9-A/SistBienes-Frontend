@@ -16,7 +16,7 @@ import {
     useColorModeValue,
 } from "@chakra-ui/react"
 import { HSeparator } from "components/separator/Separator"
-import type { MovableAsset } from "../variables/inventoryTypes"
+import type { MovableAsset } from "../../../../api/AssetsApi"
 
 interface DeleteAssetModalProps {
     isOpen: boolean
