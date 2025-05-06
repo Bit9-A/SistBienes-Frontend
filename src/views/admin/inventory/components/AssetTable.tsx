@@ -41,7 +41,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
                     <Tr>
                         <Th display={{ base: "none", md: "table-cell" }}>N°</Th>
                         <Th display={{ base: "none", md: "table-cell" }}>Identificación</Th>
-                        <Th display={{ base: "none", lg: "table-cell" }}>Descripción</Th>
+                        <Th display={{ base: "none", lg: "table-cell" }}>Nombre y Descripcion</Th>
                         <Th display={{ base: "none", sm: "table-cell" }}>Serial</Th>
                         <Th display={{ base: "none", md: "table-cell" }}>Marca</Th>
                         <Th display={{ base: "none", md: "table-cell" }}>Modelo</Th>
