@@ -1,95 +1,73 @@
-"use client";
-
 import React from "react";
 import {
   Box,
-  Icon,
-  Flex,
   Table,
   Thead,
   Tbody,
-  Text,
   Tr,
   Th,
   Td,
   TableContainer,
+  Flex,
+  Text,
   IconButton,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Menu,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { BsBoxSeam } from "react-icons/bs";
-import { FiEdit, FiTrash2, FiMoreVertical, FiArchive } from "react-icons/fi";
-import type { MovableAsset } from "../../../../api/AssetsApi";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 interface AssetTableProps {
-  assets: MovableAsset[];
-  onEdit: (asset: MovableAsset) => void;
-  onDelete: (id: number) => void; // Cambiado para aceptar el ID del bien
+  assets: any[]; // Cambia `any` por la interfaz de bienes si está definida
+  onEdit: (asset: any) => void;
+  onDelete: (asset: any) => void;
 }
 
 export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete }) => {
-  const headerBg = useColorModeValue("gray.50", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const headerBg = useColorModeValue("gray.100", "gray.800");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+  }; 
+
+
   return (
-    <TableContainer border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="auto" mb={4}>
+    <TableContainer border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="auto">
       <Table variant="simple" size="md">
         <Thead bg={headerBg}>
           <Tr>
-            <Th display={{ base: "none", md: "table-cell" }}>N°</Th>
-            <Th display={{ base: "none", md: "table-cell" }}>Identificación</Th>
-            <Th display={{ base: "none", lg: "table-cell" }}>Nombre y Descripción</Th>
-            <Th display={{ base: "none", sm: "table-cell" }}>Serial</Th>
-            <Th display={{ base: "none", md: "table-cell" }}>Marca</Th>
-            <Th display={{ base: "none", md: "table-cell" }}>Modelo</Th>
-            <Th display={{ base: "none", sm: "table-cell" }}>Cantidad</Th>
-            <Th display={{ base: "none", sm: "table-cell" }}>Valor Unitario</Th>
-            <Th display={{ base: "none", sm: "table-cell" }}>Valor Total</Th>
-            <Th display={{ base: "none", lg: "table-cell" }}>Fecha</Th>
-            <Th display={{ base: "none", lg: "table-cell" }}>Acciones</Th>
+            <Th>N°</Th>
+            <Th>Identificación</Th>
+            <Th>Descripción</Th>
+            <Th>Serial</Th>
+            <Th>Marca</Th>
+            <Th>Modelo</Th>
+            <Th>Cantidad</Th>
+            <Th>Valor Unitario</Th>
+            <Th>Valor Total</Th>
+            <Th>Fecha</Th>
+            <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
           {assets.map((asset, index) => (
             <Tr key={asset.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
-              <Td>
-                <Flex align="center">
-                  <Box
-                    bg="blue.100"
-                    color="blue.700"
-                    borderRadius="full"
-                    p={2}
-                    mr={3}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <Icon as={BsBoxSeam} />
-                  </Box>
-                  <Box>
-                    <Text fontWeight="medium">{index + 1}</Text>
-                  </Box>
-                </Flex>
-              </Td>
-              <Td display={{ base: "none", md: "table-cell" }}>{asset.numero_identificacion}</Td>
-              <Td display={{ base: "none", lg: "table-cell" }}>{asset.descripcion}</Td>
-              <Td display={{ base: "none", sm: "table-cell" }}>{asset.numero_serial}</Td>
-              <Td display={{ base: "none", md: "table-cell" }}>{asset.marca_id}</Td>
-              <Td display={{ base: "none", md: "table-cell" }}>{asset.modelo_id}</Td>
-              <Td display={{ base: "none", sm: "table-cell" }}>{asset.cantidad}</Td>
-              <Td display={{ base: "none", sm: "table-cell" }}>{asset.valor_unitario}</Td>
-              <Td display={{ base: "none", sm: "table-cell" }}>{asset.valor_total}</Td>
-              <Td display={{ base: "none", lg: "table-cell" }}>{asset.fecha}</Td>
-
+              <Td>{index + 1}</Td>
+              <Td>{asset.numero_identificacion}</Td>
+              <Td>{asset.nombre_descripcion}</Td>
+              <Td>{asset.numero_serial}</Td>
+              <Td>{asset.marca_id}</Td>
+              <Td>{asset.modelo_id}</Td>
+              <Td>{asset.cantidad}</Td>
+              <Td>{asset.valor_unitario}</Td>
+              <Td>{asset.valor_total}</Td>
+              <Td>{formatDate(asset.fecha)}</Td> 
               <Td>
                 <Flex justify="center" gap={2}>
                   <IconButton
                     aria-label="Editar bien"
-                    icon={<Icon as={FiEdit} />}
+                    icon={<FiEdit />}
                     size="sm"
                     colorScheme="blue"
                     variant="ghost"
@@ -97,24 +75,12 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
                   />
                   <IconButton
                     aria-label="Eliminar bien"
-                    icon={<Icon as={FiTrash2} />}
+                    icon={<FiTrash2 />}
                     size="sm"
                     colorScheme="red"
                     variant="ghost"
-                    onClick={() => onDelete(asset.id)} // Pasa el ID del bien
+                    onClick={() => onDelete(asset)}
                   />
-                  <Menu>
-                    <MenuButton
-                      as={IconButton}
-                      aria-label="Más opciones"
-                      icon={<Icon as={FiMoreVertical} />}
-                      variant="ghost"
-                      size="sm"
-                    />
-                    <MenuList>
-                      <MenuItem icon={<Icon as={FiArchive} />}>Más Detalles</MenuItem>
-                    </MenuList>
-                  </Menu>
                 </Flex>
               </Td>
             </Tr>
