@@ -27,6 +27,7 @@ export interface marca{
 export interface modelo{
     id: number;
     nombre: string;
+    idmarca: number;
 }
 
 // Obtener todos los activos
@@ -46,8 +47,8 @@ export const createAsset = async (assetData: MovableAsset) => {
         console.log("Datos enviados al servidor:", assetData); // Agregar esta líne
         const response = await axiosInstance.post('/furniture', assetData);
         return response.data; // Devuelve el activo creado
-    } catch (error) {
-        console.error('Error creating asset:', error);
+    } catch (error:any) {
+        console.error('Error creating asset:', error.response?.data || error.message); // Imprime el mensaje del servidor
         throw error;
     } 
 }
@@ -78,8 +79,8 @@ export const getMarcas = async (): Promise<marca[]> => {
     try {
         const response = await axiosInstance.get('/api/marcas');
         return response.data.marcas; // Asegúrate de que la respuesta tenga esta estructura
-    } catch (error) {
-        console.error('Error fetching marcas:', error);
+    } catch (error:any) {
+        console.error('Error fetching marcas:', error.response?.data || error.message); // Imprime el mensaje del servidor
         throw error;
     }   
 }
@@ -87,6 +88,7 @@ export const getMarcas = async (): Promise<marca[]> => {
 export const createMarca = async (marcaData: any) => {
     try {
         const response = await axiosInstance.post('/api/marcas', marcaData);
+        console.log("Respuesta de la API al crear marca:", response.data); // Depuración
         return response.data; // Devuelve la marca creada
     } catch (error) {
         console.error('Error creating marca:', error);
@@ -127,6 +129,7 @@ export const getModelos = async (): Promise<modelo[]> => {
 export const createModelo = async (modeloData: any) => {
     try {
         const response = await axiosInstance.post('/api/modelos', modeloData);
+        console.log("Respuesta de la API al crear modelo:", response.data); // Depuración
         return response.data; // Devuelve el modelo creado
     } catch (error) {
         console.error('Error creating modelo:', error);
@@ -152,4 +155,16 @@ export const deleteModelo = async (id: number) => {
         console.error('Error deleting modelo:', error);
         throw error;
     } 
+}
+
+//obetener modelos por marca api/modelos/marca/:idmarca
+
+export const getModelosByMarca = async (idMarca: number) => {
+    try {
+        const response = await axiosInstance.get(`/api/modelos/marca/${idMarca}`);
+        return response.data.modelos; // Asegúrate de que la respuesta tenga esta estructura
+    } catch (error) {
+        console.error('Error fetching modelos by marca:', error);
+        throw error;
+    }   
 }

@@ -14,6 +14,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { v4 as uuidv4 } from "uuid"; // Asegúrate de instalar uuid si no lo tienes
 
 interface AssetTableProps {
   assets: any[]; // Cambia `any` por la interfaz de bienes si está definida
@@ -26,9 +27,17 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
   const headerBg = useColorModeValue("gray.100", "gray.800");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) {
+      return "Fecha no disponible"; // Manejar fechas no definidas
+    }
+  
     const date = new Date(dateString);
-    return date.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+    if (isNaN(date.getTime())) {
+      return "Fecha inválida"; // Manejar fechas inválidas
+    }
+  
+    return date.toISOString().split("T")[0]; // Formatear la fecha al formato 'YYYY-MM-DD'
   }; 
 
 
@@ -52,13 +61,13 @@ export const AssetTable: React.FC<AssetTableProps> = ({ assets, onEdit, onDelete
         </Thead>
         <Tbody>
           {assets.map((asset, index) => (
-            <Tr key={asset.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
+            <Tr key={uuidv4()} _hover={{ bg: hoverBg }} transition="background 0.2s">
               <Td>{index + 1}</Td>
               <Td>{asset.numero_identificacion}</Td>
               <Td>{asset.nombre_descripcion}</Td>
               <Td>{asset.numero_serial}</Td>
-              <Td>{asset.marca_id}</Td>
-              <Td>{asset.modelo_id}</Td>
+              <Td>{asset.marca_id || "Sin Marca"}</Td>
+              <Td>{asset.modelo_id || "Sin Modelo"}</Td>
               <Td>{asset.cantidad}</Td>
               <Td>{asset.valor_unitario}</Td>
               <Td>{asset.valor_total}</Td>

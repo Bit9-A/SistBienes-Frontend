@@ -60,18 +60,18 @@ import {
     }
   };
   
-  // Manejo de Marcas
-  export const handleAddMarca = async (
-    newMarca: Partial<marca>,
-    setMarcas: React.Dispatch<React.SetStateAction<marca[]>>,
-    onClose: () => void
-  ) => {
+  export const handleAddMarca = async (newMarca: Partial<marca>): Promise<marca> => {
     try {
-      const createdMarca = await createMarca(newMarca);
-      setMarcas((prev) => [...prev, createdMarca]); // Agrega la nueva marca al estado
-      onClose(); // Cierra el modal
+      const response = await createMarca(newMarca); // Llama a la API para crear la marca
+      console.log("Respuesta de la API al crear marca:", response); // Depuración
+      const createdMarca = response.marca; // Accede a la propiedad 'marca' dentro de la respuesta
+      if (!createdMarca || typeof createdMarca.nombre !== "string" || createdMarca.nombre.trim() === "") {
+        throw new Error("La marca creada no tiene un nombre válido.");
+      }
+      return createdMarca; // Devuelve la marca creada
     } catch (error) {
       console.error("Error al crear la marca:", error);
+      throw error;
     }
   };
   
@@ -105,17 +105,26 @@ import {
   };
   
   // Manejo de Modelos
-  export const handleAddModelo = async (
-    newModelo: Partial<modelo>,
-    setModelos: React.Dispatch<React.SetStateAction<modelo[]>>,
-    onClose: () => void
-  ) => {
+  export const handleAddModelo = async (newModelo: Partial<modelo>): Promise<modelo> => {
     try {
-      const createdModelo = await createModelo(newModelo);
-      setModelos((prev) => [...prev, createdModelo]); // Agrega el nuevo modelo al estado
-      onClose(); // Cierra el modal
+      const response = await createModelo(newModelo); // Llama a la API para crear el modelo
+      console.log("Respuesta de la API al crear modelo:", response); // Depuración
+      const createdModelo = response.modelo;
+  
+      // Mapear idmarca a marca_id para mantener consistencia en el frontend
+      if (createdModelo && createdModelo.idmarca) {
+        createdModelo.marca_id = createdModelo.idmarca;
+        delete createdModelo.idmarca; // Elimina la propiedad idmarca si no es necesaria
+      }
+  
+      if (!createdModelo || !createdModelo.nombre) {
+        throw new Error("El modelo creado no tiene un nombre válido.");
+      }
+  
+      return createdModelo; // Devuelve el modelo creado
     } catch (error) {
       console.error("Error al crear el modelo:", error);
+      throw error;
     }
   };
   

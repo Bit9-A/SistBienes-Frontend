@@ -6,6 +6,11 @@ import {
   Heading,
   useDisclosure,
   useColorModeValue,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Text,
 } from "@chakra-ui/react";
 import { BsBox2 } from "react-icons/bs";
 import { AssetTable } from "./components/AssetTable";
@@ -36,6 +41,7 @@ const Inventory = () => {
   const { isOpen: isFormOpen, onOpen: onFormOpen, onClose: onFormClose } = useDisclosure();
 
   const cardBg = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
 
   // Fetch data
   useEffect(() => {
@@ -89,12 +95,13 @@ const Inventory = () => {
 
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-      
-      <Flex justify="space-between" align="center" wrap="wrap" gap={4} mb={6}>
-        <Heading size="lg" fontWeight="bold" color="type.title">
-          Inventario de Bienes
-        </Heading>
-        <Button
+      <Card bg={cardBg} boxShadow="sm" borderRadius="xl" border="1px" borderColor={borderColor} mb={6}>
+        <CardHeader>
+          <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+            <Heading size="lg" fontWeight="bold" color="type.title">
+              Inventario de Bienes
+            </Heading>
+            <Button
           bgColor="type.primary"
           colorScheme="purple"
           size="md"
@@ -107,8 +114,9 @@ const Inventory = () => {
         >
           Agregar Bien
         </Button>
-      </Flex>
-
+          </Flex>
+        </CardHeader>
+       <CardBody>
       <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="sm">
         <AssetTable
           assets={assets}
@@ -122,19 +130,22 @@ const Inventory = () => {
       </Box>
 
       {isFormOpen && (
-        <AssetForm
-          isOpen={isFormOpen}
-          onClose={onFormClose}
-          onSubmit={handleFormSubmit}
-          asset={selectedAsset}
-          departments={departments}
-          subgroups={subgroups}
-          marcas={marcas}
-          modelos={modelos}
-          parroquias={parroquias}
-        />
-      )}
+  <AssetForm
+    isOpen={isFormOpen}
+    onClose={onFormClose}
+    onSubmit={handleFormSubmit} // Función para manejar el envío del formulario
+    asset={selectedAsset} // Bien seleccionado para editar o vacío para agregar
+    departments={departments} // Lista de departamentos
+    subgroups={subgroups} // Lista de subgrupos
+    marcas={marcas} // Lista de marcas
+    modelos={modelos} // Lista de modelos
+    parroquias={parroquias} // Lista de parroquias
+  />
+)}
+      </CardBody>
+      </Card>
     </Box>
+    
   );
 };
 
