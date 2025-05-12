@@ -31,6 +31,8 @@ import {
 } from '../../../../api/AssetsApi';
 import { handleAddMarca, handleAddModelo } from '../utils/inventoryUtils';
 
+import AddMarcaModeloModal from './BrandModal';
+
 interface AssetFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -61,18 +63,11 @@ export const AssetForm: React.FC<AssetFormProps> = ({
   const [isMultiple, setIsMultiple] = useState(false); // Estado para controlar la opción seleccionada
 
   const toast = useToast();
+const [isMarcaModalOpen, setIsMarcaModalOpen] = useState(false);
+  const [isModeloModalOpen, setIsModeloModalOpen] = useState(false);
 
-  const {
-    isOpen: isMarcaModalOpen,
-    onOpen: onMarcaModalOpen,
-    onClose: onMarcaModalClose,
-  } = useDisclosure();
-
-  const {
-    isOpen: isModeloModalOpen,
-    onOpen: onModeloModalOpen,
-    onClose: onModeloModalClose,
-  } = useDisclosure();
+  
+  
 
   const [newMarca, setNewMarca] = useState('');
   const [newModelo, setNewModelo] = useState('');
@@ -192,76 +187,13 @@ export const AssetForm: React.FC<AssetFormProps> = ({
     onSubmit(formData);
   };
 
-  const handleAddMarcaForm = async () => {
-    try {
-      const createdMarca = await handleAddMarca({ nombre: newMarca });
-      console.log('Marca creada:', createdMarca); // Depuración
-      setLocalMarcas((prev) => [...prev, createdMarca]); // Actualiza las marcas locales
-      toast({
-        title: 'Marca agregada',
-        description: `La marca "${createdMarca.nombre}" se agregó correctamente.`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-      setNewMarca(''); // Limpia el campo de entrada
-      onMarcaModalClose(); // Cierra el modal
-    } catch (error) {
-      console.error('Error al agregar la marca:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudo agregar la marca.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+  const handleAddMarcaSuccess = (createdMarca: any) => {
+    setLocalMarcas((prev) => [...prev, createdMarca]);
   };
 
-  const handleAddModeloForm = async () => {
-    if (formData.marca_id) {
-      try {
-        console.log('Datos enviados al servidor:', {
-          nombre: newModelo,
-          idmarca: formData.marca_id,
-        }); // Depuración
-
-        const createdModelo = await handleAddModelo({
-          nombre: newModelo,
-          idmarca: formData.marca_id,
-        }); // Llama a la función de inventoryUtils
-        setFilteredModelos((prev) => [...prev, createdModelo]); // Actualiza los modelos filtrados
-        setLocalModelos((prev) => [...prev, createdModelo]); // Actualiza los modelos locales
-
-        toast({
-          title: 'Modelo agregado',
-          description: `El modelo "${createdModelo.nombre}" se agregó correctamente.`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-
-        setNewModelo(''); // Limpia el campo de entrada
-        onModeloModalClose(); // Cierra el modal
-      } catch (error) {
-        console.error('Error al agregar el modelo:', error);
-        toast({
-          title: 'Error',
-          description: 'No se pudo agregar el modelo.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } else {
-      toast({
-        title: 'Error',
-        description: 'Seleccione una marca antes de agregar un modelo.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+  const handleAddModeloSuccess = (createdModelo: any) => {
+    setFilteredModelos((prev) => [...prev, createdModelo]);
+    setLocalModelos((prev) => [...prev, createdModelo]);
   };
 
   return (
@@ -347,61 +279,61 @@ export const AssetForm: React.FC<AssetFormProps> = ({
             </FormControl>
 
             <FormControl>
-              <FormLabel>Marca</FormLabel>
-              <Flex>
-                <Select
-                  name="marca_id"
-                  value={formData.marca_id || ''}
-                  onChange={handleMarcaChange} // Llama a handleMarcaChange
-                  placeholder="Seleccione una marca"
-                >
-                  <option value="">Ninguna</option>
-                  {localMarcas.map((marca) => (
-                    <option key={marca.id} value={marca.id}>
-                      {marca.nombre}
-                    </option>
-                  ))}
-                </Select>
-                <Button
-                  aria-label="Agregar Marca"
-                  color="white"
-                  bgColor="type.primary"
-                  ml={2}
-                  onClick={onMarcaModalOpen}
-                >
-                  Agregar Marca
-                </Button>
-              </Flex>
-            </FormControl>
+        <FormLabel>Marca</FormLabel>
+        <Flex>
+          <Select
+            name="marca_id"
+            value={formData.marca_id || ''}
+            onChange={handleMarcaChange}
+            placeholder="Seleccione una marca"
+          >
+            <option value="">Ninguna</option>
+            {localMarcas.map((marca) => (
+              <option key={marca.id} value={marca.id}>
+                {marca.nombre}
+              </option>
+            ))}
+          </Select>
+          <Button
+            aria-label="Agregar Marca"
+            color="white"
+            bgColor="type.primary"
+            ml={2}
+            onClick={() => setIsMarcaModalOpen(true)}
+          >
+            Agregar Marca
+          </Button>
+        </Flex>
+      </FormControl>
 
-            <FormControl>
-              <FormLabel>Modelo</FormLabel>
-              <Flex>
-                <Select
-                  name="modelo_id"
-                  value={formData.modelo_id || ''}
-                  onChange={handleChange}
-                  placeholder="Seleccione un modelo"
-                  isDisabled={!formData.marca_id} // Deshabilitar si no hay marca seleccionada
-                >
-                  <option value="">Ninguno</option>
-                  {filteredModelos.map((modelo) => (
-                    <option key={modelo.id} value={modelo.id}>
-                      {modelo.nombre}
-                    </option>
-                  ))}
-                </Select>
-                <Button
-                  aria-label="Agregar Modelo"
-                  color="white"
-                  bgColor="type.primary"
-                  ml={2}
-                  onClick={onModeloModalOpen}
-                >
-                  Agregar Modelo
-                </Button>
-              </Flex>
-            </FormControl>
+      <FormControl>
+        <FormLabel>Modelo</FormLabel>
+        <Flex>
+          <Select
+            name="modelo_id"
+            value={formData.modelo_id || ''}
+            onChange={handleChange}
+            placeholder="Seleccione un modelo"
+            isDisabled={!formData.marca_id}
+          >
+            <option value="">Ninguno</option>
+            {filteredModelos.map((modelo) => (
+              <option key={modelo.id} value={modelo.id}>
+                {modelo.nombre}
+              </option>
+            ))}
+          </Select>
+          <Button
+            aria-label="Agregar Modelo"
+            color="white"
+            bgColor="type.primary"
+            ml={2}
+            onClick={() => setIsModeloModalOpen(true)}
+          >
+            Agregar Modelo
+          </Button>
+        </Flex>
+      </FormControl>
             <FormControl>
               <FormLabel>Condición</FormLabel>
               <Select
@@ -501,60 +433,23 @@ export const AssetForm: React.FC<AssetFormProps> = ({
           </Button>
         </ModalFooter>
       </ModalContent>
-
-      {/* Modal para agregar nueva marca */}
-      <Modal isOpen={isMarcaModalOpen} onClose={onMarcaModalClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Agregar Nueva Marca</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Nombre de la Marca</FormLabel>
-              <Input
-                value={newMarca}
-                onChange={(e) => setNewMarca(e.target.value)}
-                placeholder="Ingrese el nombre de la marca"
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleAddMarcaForm}>
-              Agregar
-            </Button>
-            <Button variant="ghost" onClick={onMarcaModalClose}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+  {/* Modal para agregar nueva marca */}
+      <AddMarcaModeloModal
+        isOpen={isMarcaModalOpen}
+        onClose={() => setIsMarcaModalOpen(false)}
+        type="marca"
+        onAddSuccess={handleAddMarcaSuccess}
+      />
 
       {/* Modal para agregar nuevo modelo */}
-      <Modal isOpen={isModeloModalOpen} onClose={onModeloModalClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Agregar Nuevo Modelo</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Nombre del Modelo</FormLabel>
-              <Input
-                value={newModelo}
-                onChange={(e) => setNewModelo(e.target.value)}
-                placeholder="Ingrese el nombre del modelo"
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleAddModeloForm}>
-              Agregar
-            </Button>
-            <Button variant="ghost" onClick={onModeloModalClose}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <AddMarcaModeloModal
+        isOpen={isModeloModalOpen}
+        onClose={() => setIsModeloModalOpen(false)}
+        type="modelo"
+        marcaId={formData.marca_id}
+        onAddSuccess={handleAddModeloSuccess}
+      />
+     
     </Modal>
   );
 };
