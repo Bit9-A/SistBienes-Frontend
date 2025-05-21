@@ -18,6 +18,7 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom"; // Importa useNavigate
 import banner from "assets/img/banner.png";
+import { handleLogin } from "../signIn/utils/authUtils"; // Asegúrate de que la ruta sea correcta
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -34,38 +35,38 @@ const SignIn = () => {
     password: "123456",
   };
 
-  const handleSubmit = () => {
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Por favor, completa todos los campos.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+ const handleSubmit = async () => {
+  if (!email || !password) {
+    toast({
+      title: "Error",
+      description: "Por favor, completa todos los campos.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
 
-    if (email === predefinedUser.email && password === predefinedUser.password) {
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido al sistema.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      navigate("/admin/default"); // Redirige al dashboard
-    } else {
-      toast({
-        title: "Error",
-        description: "Correo o contraseña incorrectos.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
+  try {
+    await handleLogin(email, password);
+    toast({
+      title: "Inicio de sesión exitoso",
+      description: "Bienvenido al sistema.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+    navigate("/admin/default");
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description: error.message,
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
   // Chakra color mode
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecondary = useColorModeValue("gray.400", "gray.400");

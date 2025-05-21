@@ -31,3 +31,8 @@ export const deleteUser = async (id: number) => {
   return response.data;
 };
 
+//Iniciar Sesión
+export const login = async (userData: any) => {
+  const response = await axiosInstance.post("/auth/login", userData);
+  return response.data; // Devuelve el usuario creado
+}
