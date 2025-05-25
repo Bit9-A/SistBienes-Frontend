@@ -14,6 +14,11 @@ export default function AdminNavbar(props: {
 	onOpen: (...args: any[]) => any;
 }) {
 	const [ scrolled, setScrolled ] = useState(false);
+	
+	//Trar nombre completo del usuario desde el localStorage logeado
+	const user = localStorage.getItem('user');
+	const userData = user ? JSON.parse(user) : null;
+	
 
 	useEffect(() => {
 		window.addEventListener('scroll', changeNavbar);
@@ -22,6 +27,8 @@ export default function AdminNavbar(props: {
 			window.removeEventListener('scroll', changeNavbar);
 		};
 	});
+
+
 
 	const { secondary, brandText, toggleSidebar } = props;
 	// Here are all the props that may change depending on navbar's type or state.(secondary, variant, scrolled)
@@ -140,9 +147,7 @@ export default function AdminNavbar(props: {
 		</Box>
 		<Box ms="auto" w={{ sm: '100%', md: 'unset' }}>
 		  <AdminNavbarLinks
-			onOpen={props.onOpen}
-			secondary={props.secondary}
-			fixed={props.fixed}
+			secondary={secondary}
 		  />
 		</Box>
 	  </Flex>

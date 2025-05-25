@@ -30,6 +30,10 @@ import Transfer from 'views/admin/transfers';
 
 import AuditModule from 'views/admin/audit';
 import MissingAssetsReport from 'views/admin/reports';
+
+
+
+
 const routes = [
   {
     name: 'Inicio',
