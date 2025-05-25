@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // chakra imports
 import {
 	IconButton,
@@ -25,16 +24,21 @@ import { IoMenuOutline } from 'react-icons/io5';
 function Sidebar(props: { routes: RoutesType[]; setToggleSidebar: (value: boolean) => void }) {
 	const { routes, setToggleSidebar } = props;
   
-	const [isOpen, setIsOpen] = useState(false); // Estado interno del Sidebar
+	const [isOpen, setIsOpen] = useState(true); // Estado inicial siempre abierto
   
 	const sidebarBg = useColorModeValue('white', 'navy.800');
 	const shadow = useColorModeValue('14px 17px 40px 4px rgba(112, 144, 176, 0.08)', 'unset');
 	const buttonBg = useColorModeValue('type.primary', 'type.primary'); // Color del botón
   
+	useEffect(() => {
+		setIsOpen(true); // Forzar que siempre esté abierto al inicio
+		setToggleSidebar(true);
+	}, []);
+
 	const toggleSidebar = () => {
-	  const newState = !isOpen;
-	  setIsOpen(newState);
-	  setToggleSidebar(newState); // Actualiza el estado global del Sidebar
+		const newState = !isOpen;
+		setIsOpen(newState);
+		setToggleSidebar(newState);
 	};
   
 	return (

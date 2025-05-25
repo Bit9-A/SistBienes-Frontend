@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Chakra Imports
-import { Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink, Flex, Link, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Breadcrumb, BreadcrumbItem, Flex, Text, useColorModeValue } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import AdminNavbarLinks from 'components/navbar/NavbarLinksAdmin';
+import { UserProfile } from '../../api/UserApi';
+import { Link as RouterLink } from 'react-router-dom';
 
 export default function AdminNavbar(props: {
 	secondary: boolean;
@@ -12,13 +14,9 @@ export default function AdminNavbar(props: {
 	fixed: boolean;
 	toggleSidebar: boolean;
 	onOpen: (...args: any[]) => any;
+	user: UserProfile;
 }) {
 	const [ scrolled, setScrolled ] = useState(false);
-	
-	//Trar nombre completo del usuario desde el localStorage logeado
-	const user = localStorage.getItem('user');
-	const userData = user ? JSON.parse(user) : null;
-	
 
 	useEffect(() => {
 		window.addEventListener('scroll', changeNavbar);
@@ -28,9 +26,7 @@ export default function AdminNavbar(props: {
 		};
 	});
 
-
-
-	const { secondary, brandText, toggleSidebar } = props;
+	const { secondary, brandText, toggleSidebar, user } = props;
 	// Here are all the props that may change depending on navbar's type or state.(secondary, variant, scrolled)
 	let mainText = useColorModeValue('#fff', 'white');
 	let secondaryText = useColorModeValue('#fff', 'white');
@@ -51,7 +47,6 @@ export default function AdminNavbar(props: {
 		}
 	};
 	
-	;
   // Aquí ajustamos dinámicamente el ancho y margen de la Navbar
   const navbarWidth = toggleSidebar
     ?{
@@ -65,7 +60,6 @@ export default function AdminNavbar(props: {
 		 xl: 'calc(100vw - 8%)' }
 
   const navbarMarginLeft = toggleSidebar ? '0px' : '300px'; // Ajustar margen izquierdo
-
 
   return (
 	<Box
@@ -114,40 +108,31 @@ export default function AdminNavbar(props: {
 		<Box mb={{ sm: '8px', md: '0px' }}>
 		  <Breadcrumb>
 			<BreadcrumbItem color="white" fontSize="sm" mb="5px">
-			  <BreadcrumbLink href="#" color="white">
+			  <Text color="white">
 				Pages
-			  </BreadcrumbLink>
+			  </Text>
 			</BreadcrumbItem>
   
 			<BreadcrumbItem color="white" fontSize="sm">
-			  <BreadcrumbLink href="#" color="white">
+			  <Text color="white">
 				{brandText}
-			  </BreadcrumbLink>
+			  </Text>
 			</BreadcrumbItem>
 		  </Breadcrumb>
-		  <Link
+		  <Text
 			color="white"
-			href="#"
 			bg="inherit"
 			borderRadius="inherit"
 			fontWeight="bold"
 			fontSize="34px"
-			_hover={{ color: 'white' }}
-			_active={{
-			  bg: 'inherit',
-			  transform: 'none',
-			  borderColor: 'transparent',
-			}}
-			_focus={{
-			  boxShadow: 'none',
-			}}
 		  >
 			{brandText}
-		  </Link>
+		  </Text>
 		</Box>
 		<Box ms="auto" w={{ sm: '100%', md: 'unset' }}>
 		  <AdminNavbarLinks
 			secondary={secondary}
+			user={user}
 		  />
 		</Box>
 	  </Flex>
