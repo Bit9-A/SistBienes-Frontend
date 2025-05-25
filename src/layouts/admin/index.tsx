@@ -6,9 +6,9 @@ import Navbar from 'components/navbar/NavbarAdmin';
 import Sidebar from 'components/sidebar/Sidebar';
 import { SidebarContext } from 'contexts/SidebarContext';
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { Route } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import routes, { getFilteredRoutes } from '../../routes';
+import { useLocation } from 'react-router-dom';
 import { getProfile, UserProfile } from '../../api/UserApi';
 
 // Custom Chakra theme
@@ -53,7 +53,7 @@ export default function Dashboard(props: { [x: string]: any }) {
       } catch (error) {
         console.error('Error al obtener el perfil:', error);
         // Si hay error de autenticación, redirigir al login
-        navigate('/auth/sign-in', { replace: true });
+        navigate('/auth/sign-in');
       } finally {
         setIsLoading(false);
       }
@@ -70,15 +70,9 @@ export default function Dashboard(props: { [x: string]: any }) {
   // Obtener las rutas filtradas según el rol
   const filteredRoutes = getFilteredRoutes(isAdmin());
 
-  // Actualizar el título de la página basado en la ruta actual
   useEffect(() => {
-    const currentRoute = routes.find(
-      route => location.pathname === route.layout + route.path
-    );
-    if (currentRoute) {
-      setBrandText(currentRoute.name);
-    }
-  }, [location.pathname]);
+    setBrandText(getActiveRoute(filteredRoutes));
+  }, [location, filteredRoutes]);
 
   const getRoute = () => {
     return window.location.pathname !== '/admin/full-screen-maps';
@@ -125,6 +119,7 @@ export default function Dashboard(props: { [x: string]: any }) {
   };
 
   document.documentElement.dir = 'ltr';
+  const { onOpen } = useDisclosure();
 
   // Si está cargando, mostrar spinner
   if (isLoading) {
@@ -145,7 +140,7 @@ export default function Dashboard(props: { [x: string]: any }) {
       <SidebarContext.Provider
         value={{
           toggleSidebar,
-          setToggleSidebar
+          setToggleSidebar: handleToggleSidebar
         }}
       >
         <Sidebar routes={filteredRoutes} setToggleSidebar={handleToggleSidebar} {...rest} />
@@ -169,11 +164,11 @@ export default function Dashboard(props: { [x: string]: any }) {
           <Portal>
             <Box>
               <Navbar
-                onOpen={useDisclosure().onOpen}
+                onOpen={onOpen}
                 logoText={''}
                 brandText={brandText}
-                secondary={false}
-                message={brandText}
+                secondary={getActiveNavbar(filteredRoutes)}
+                message={getActiveNavbarText(filteredRoutes)}
                 fixed={fixed}
                 toggleSidebar={toggleSidebar}
                 user={userProfile}
@@ -190,7 +185,10 @@ export default function Dashboard(props: { [x: string]: any }) {
               minH="100vh"
               pt="50px"
             >
-              <Outlet />
+              <Routes>
+                {getRoutes(filteredRoutes)}
+                <Route path="/" element={<Navigate to="/admin/default" replace />} />
+              </Routes>
             </Box>
           ) : null}
           <Box>

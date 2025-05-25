@@ -13,19 +13,26 @@ import {
 
 // Admin Imports
 import MainDashboard from 'views/admin/default';
+
 import Profile from 'views/admin/profile';
+
 import Inventory from 'views/admin/inventory';
+
+
+// Auth Imports
 import SignInCentered from 'views/auth/signIn';
 import UserManage from 'views/admin/user';
+
 import Settings from 'views/admin/settings';
 import AssetManagementPage from 'views/admin/movements/index';
 import NotificationsHistory from 'views/admin/notifications';
 import Transfer from 'views/admin/transfers';
+
 import AuditModule from 'views/admin/audit';
 import MissingAssetsReport from 'views/admin/reports';
-import Dashboard from 'layouts/admin';
-import { Navigate } from 'react-router-dom';
-import AuthLayout from 'layouts/auth';
+
+
+
 
 // Define las rutas con sus permisos
 const routes = [
@@ -34,7 +41,7 @@ const routes = [
     layout: '/admin',
     path: '/default',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-    component: MainDashboard,
+    component: <MainDashboard />,
     adminOnly: true,
   },
   {
@@ -42,7 +49,7 @@ const routes = [
     layout: '/admin',
     path: '/user-management',
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-    component: UserManage,
+    component: <UserManage />,
     adminOnly: true,
   },
   {
@@ -50,7 +57,7 @@ const routes = [
     layout: '/admin',
     path: '/asset-management',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-    component: Inventory,
+    component: <Inventory />,
     adminOnly: false,
   },
   {
@@ -58,7 +65,7 @@ const routes = [
     layout: '/admin',
     path: '/incorporations',
     icon: <Icon as={MdOutlineShoppingCart} width="20px" height="20px" color="inherit" />,
-    component: AssetManagementPage,
+    component: <AssetManagementPage />,
     adminOnly: false,
   },
   {
@@ -66,7 +73,7 @@ const routes = [
     layout: '/admin',
     path: '/transfers',
     icon: <Icon as={MdHistory} width="20px" height="20px" color="inherit" />,
-    component: Transfer,
+    component: <Transfer />,
     adminOnly: false,
   },
   {
@@ -74,7 +81,7 @@ const routes = [
     layout: '/admin',
     path: '/audit',
     icon: <Icon as={MdAssignment} width="20px" height="20px" color="inherit" />,
-    component: AuditModule,
+    component: <AuditModule />,
     adminOnly: false,
   },
   {
@@ -82,7 +89,7 @@ const routes = [
     layout: '/admin',
     path: '/reports',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-    component: MissingAssetsReport,
+    component: <MissingAssetsReport />,
     adminOnly: false,
   },
   {
@@ -90,7 +97,7 @@ const routes = [
     layout: '/admin',
     path: '/settings',
     icon: <Icon as={MdSettings} width="20px" height="20px" color="inherit" />,
-    component: Settings,
+    component: <Settings />,
     adminOnly: true,
   },
   {
@@ -98,7 +105,7 @@ const routes = [
     layout: '/admin',
     path: '/notifications',
     icon: <Icon as={MdNotifications} width="20px" height="20px" color="inherit" />,
-    component: NotificationsHistory,
+    component: <NotificationsHistory />,
     adminOnly: true,
   },
   {
@@ -106,7 +113,7 @@ const routes = [
     layout: '/auth',
     path: '/sign-in',
     icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-    component: SignInCentered,
+    component: <SignInCentered />,
     adminOnly: false,
   },
 ];
@@ -114,40 +121,6 @@ const routes = [
 // Función para filtrar rutas según el rol del usuario
 export const getFilteredRoutes = (isAdmin: boolean) => {
   return routes.filter(route => !route.adminOnly || isAdmin);
-};
-
-// Función para generar las rutas anidadas
-export const getRouteConfig = () => {
-  return [
-    {
-      path: '/admin',
-      element: <Dashboard />,
-      children: routes
-        .filter(route => route.layout === '/admin')
-        .map(route => ({
-          path: route.path.replace('/', ''),
-          element: <route.component />,
-        })),
-    },
-    {
-      path: '/auth',
-      element: <AuthLayout />,
-      children: routes
-        .filter(route => route.layout === '/auth')
-        .map(route => ({
-          path: route.path.replace('/', ''),
-          element: <route.component />,
-        })),
-    },
-    {
-      path: '/',
-      element: <Navigate to="/admin/default" replace />,
-    },
-    {
-      path: '*',
-      element: <Navigate to="/admin/default" replace />,
-    },
-  ];
 };
 
 export default routes;

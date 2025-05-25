@@ -88,8 +88,8 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
           isClosable: true,
         })
 
-        // Redirigir al login usando navigate con replace para evitar historial
-        navigate("/auth/sign-in", { replace: true })
+        // Redirigir al login usando navigate
+        navigate("/auth/sign-in")
       }
     } catch (error) {
       console.error("Error al cerrar sesión:", error)
@@ -97,7 +97,7 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
       localStorage.removeItem("user")
       localStorage.removeItem("token")
       localStorage.removeItem("sidebarState")
-      navigate("/auth/sign-in", { replace: true })
+      navigate("/auth/sign-in")
     }
   }
 
@@ -105,17 +105,9 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
     if (onProfileClick) {
       onProfileClick()
     } else {
-      // Lógica por defecto para abrir perfil usando navigate
-      navigate("/admin/profile", { replace: false })
+      // Lógica por defecto para abrir perfil
+      navigate("/admin/profile")
     }
-  }
-
-  const handleSettingsClick = () => {
-    navigate("/admin/settings", { replace: false })
-  }
-
-  const handleNotificationsClick = () => {
-    navigate("/admin/notifications", { replace: false })
   }
 
   // Valores del usuario
@@ -268,7 +260,6 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
               _focus={{ bg: "none" }}
               borderRadius="8px"
               px="14px"
-              onClick={handleSettingsClick}
             >
               <Icon as={FiSettings} me="8px" />
               <Text fontSize="sm">Configuración</Text>
