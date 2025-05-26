@@ -29,6 +29,7 @@ import routes from "routes"
 import { logout as logoutApi, type UserProfile } from "../../api/UserApi"
 import { useNavigate } from "react-router-dom"
 
+
 interface HeaderLinksProps {
   secondary: boolean
   onProfileClick?: () => void
@@ -52,19 +53,6 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
   const hoverBg = useColorModeValue("gray.50", "whiteAlpha.100")
   const subtitleColor = useColorModeValue("gray.600", "gray.400")
 
-  // Obtener el rol del usuario basado en tipo_usuario
-  const getUserRole = (tipoUsuario: number): string => {
-    switch (tipoUsuario) {
-      case 1:
-        return "Administrador"
-      case 2:
-        return "Usuario"
-      case 3:
-        return "Supervisor"
-      default:
-        return "Usuario"
-    }
-  }
 
   const handleLogout = async () => {
     try {
@@ -112,7 +100,7 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
 
   // Valores del usuario
   const userName = user.nombre_completo
-  const userRole = getUserRole(user.tipo_usuario)
+  const userRole = user.nombre_tipo_usuario
   const userEmail = user.email
 
   return (

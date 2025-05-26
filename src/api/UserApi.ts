@@ -16,6 +16,7 @@ export interface User {
 export interface UserProfile {
   id: number
   tipo_usuario: number
+  nombre_tipo_usuario: string
   email: string
   nombre_completo: string
   telefono?: string
