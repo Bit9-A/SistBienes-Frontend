@@ -14,7 +14,7 @@ import { getProfile, UserProfile } from '../../api/UserApi';
 // Custom Chakra theme
 export default function Dashboard(props: { [x: string]: any }) {
   const { ...rest } = props;
-  
+
   // Obtener el estado inicial del sidebar desde localStorage
   const getInitialSidebarState = () => {
     return true; // Siempre iniciará abierto
@@ -64,7 +64,7 @@ export default function Dashboard(props: { [x: string]: any }) {
 
   // Verificar si el usuario es administrador (tipo_usuario === 1)
   const isAdmin = () => {
-    return userProfile?.tipo_usuario === 1;
+    return userProfile && userProfile.nombre_tipo_usuario === "Administrador";
   };
 
   // Obtener las rutas filtradas según el rol
@@ -91,7 +91,9 @@ export default function Dashboard(props: { [x: string]: any }) {
   const getActiveNavbar = (routes: RoutesType[]): boolean => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
-      if (window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1) {
+      if (
+        window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
+      ) {
         return routes[i].secondary ?? false;
       }
     }
@@ -101,7 +103,9 @@ export default function Dashboard(props: { [x: string]: any }) {
   const getActiveNavbarText = (routes: RoutesType[]): string | boolean => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
-      if (window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1) {
+      if (
+        window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
+      ) {
         return routes[i].name;
       }
     }
@@ -111,7 +115,9 @@ export default function Dashboard(props: { [x: string]: any }) {
   const getRoutes = (routes: RoutesType[]): any => {
     return routes.map((route: RoutesType, key: any) => {
       if (route.layout === '/admin') {
-        return <Route path={`${route.path}`} element={route.component} key={key} />;
+        return (
+          <Route path={`${route.path}`} element={route.component} key={key} />
+        );
       } else {
         return null;
       }
@@ -140,10 +146,14 @@ export default function Dashboard(props: { [x: string]: any }) {
       <SidebarContext.Provider
         value={{
           toggleSidebar,
-          setToggleSidebar: handleToggleSidebar
+          setToggleSidebar: handleToggleSidebar,
         }}
       >
-        <Sidebar routes={filteredRoutes} setToggleSidebar={handleToggleSidebar} {...rest} />
+        <Sidebar
+          routes={filteredRoutes}
+          setToggleSidebar={handleToggleSidebar}
+          {...rest}
+        />
         <Box
           float="right"
           minHeight="100vh"
@@ -187,7 +197,17 @@ export default function Dashboard(props: { [x: string]: any }) {
             >
               <Routes>
                 {getRoutes(filteredRoutes)}
-                <Route path="/" element={<Navigate to="/admin/default" replace />} />
+                <Route
+                  path="/"
+                  element={
+                    <Navigate
+                      to={
+                        isAdmin() ? '/admin/default' : '/admin/asset-management'
+                      }
+                      replace
+                    />
+                  }
+                />
               </Routes>
             </Box>
           ) : null}
