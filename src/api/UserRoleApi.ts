@@ -31,6 +31,7 @@ export const deleteUserRole = async (id: number): Promise<void> => {
 // Obtener un rol de usuario por su id
 export const getUserRoleById = async (id: number): Promise<UserRole> => {
     const response = await axiosInstance.get(`/user_role/${id}`);
+    console.log(response.data);
     return response.data; // Asegúrate de que la respuesta tenga esta estructura
   }
 
