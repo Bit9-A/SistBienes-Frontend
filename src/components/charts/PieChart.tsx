@@ -2,39 +2,20 @@ import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
 type ChartProps = {
-	// using `interface` is also ok
-	[x: string]: any;
-};
-type ChartState = {
 	chartData: any[];
 	chartOptions: any;
+	[x: string]: any;
 };
 
-class PieChart extends React.Component<ChartProps, ChartState> {
-	constructor(props: { chartData: any[]; chartOptions: any }) {
-		super(props);
-
-		this.state = {
-			chartData: [],
-			chartOptions: {}
-		};
-	}
-
-	componentDidMount() {
-		this.setState({
-			chartData: this.props.chartData,
-			chartOptions: this.props.chartOptions
-		});
-	}
-
+class PieChart extends React.Component<ChartProps> {
 	render() {
 		return (
 			<ReactApexChart
-				options={this.state.chartOptions}
-				series={this.state.chartData}
+				options={this.props.chartOptions}
+				series={this.props.chartData}
 				type='pie'
 				width='100%'
-				height='55%'
+				height='300px' // Altura explícita
 			/>
 		);
 	}

@@ -38,7 +38,7 @@ export default function TransferPage() {
 
     const handleConfirmDelete = () => {
         if (transferToDelete) {
-            deleteTransfer(transferToDelete.id);
+            deleteTransfer(String(transferToDelete.id));
             setIsDeleteModalOpen(false);
             onClose();
             setTransferToDelete(null);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { RgbaColorPicker } from "react-colorful";
 import {
   Box,
@@ -10,8 +10,14 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 
-const ColorPicker = ({ onColorChange }: { onColorChange: (color: string) => void }) => {
-  const [color, setColor] = useState({ r: 255, g: 255, b: 255, a: 1 });
+type ColorPickerProps = {
+  color: string;
+  onColorChange: (color: string) => void;
+};
+
+const ColorPicker: React.FC<ColorPickerProps> = ({ color, onColorChange }) => {
+  // Sincroniza el estado interno con la prop color
+  const [colorState, setColorState] = useState({ r: 255, g: 255, b: 255, a: 1 });
   const [hexColor, setHexColor] = useState("#ffffff");
 
   // Convert RGB to Hex
@@ -29,8 +35,14 @@ const ColorPicker = ({ onColorChange }: { onColorChange: (color: string) => void
     };
   };
 
+  // Sincroniza el color inicial cuando cambia la prop
+  useEffect(() => {
+    setHexColor(color);
+    setColorState(hexToRgb(color));
+  }, [color]);
+
   const handleColorChange = (newColor: any) => {
-    setColor(newColor);
+    setColorState(newColor);
     const hex = rgbToHex(newColor.r, newColor.g, newColor.b);
     setHexColor(hex);
     onColorChange(hex); // Notify parent component
@@ -42,12 +54,11 @@ const ColorPicker = ({ onColorChange }: { onColorChange: (color: string) => void
 
     if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
       const rgb = hexToRgb(value);
-      setColor(rgb);
+      setColorState(rgb);
       onColorChange(value); // Notify parent component
     }
   };
 
-  // Chakra UI colors for theming
   const borderColor = useColorModeValue("gray.200", "gray.600");
 
   return (
@@ -55,7 +66,7 @@ const ColorPicker = ({ onColorChange }: { onColorChange: (color: string) => void
       {/* RGB Color Picker */}
       <Box border="1px" borderColor={borderColor} borderRadius="md" p={4}>
         <FormLabel>Selecciona un color (RGB)</FormLabel>
-        <RgbaColorPicker color={color} onChange={handleColorChange} />
+        <RgbaColorPicker color={colorState} onChange={handleColorChange} />
       </Box>
 
       {/* Hexadecimal Input */}

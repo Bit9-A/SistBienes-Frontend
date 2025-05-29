@@ -1,16 +1,54 @@
 // Chakra imports
 import { Box, Flex, Text, Select, useColorModeValue } from '@chakra-ui/react';
+import { getDashboardCounts, DashboardCounts } from '../../../../api/DashboardApi'
+import React, { useEffect, useState } from 'react';
+
 // Custom components
 import Card from 'components/card/Card';
 import PieChart from 'components/charts/PieChart';
-import { pieChartData, pieChartOptions } from 'variables/charts';
+import { pieChartOptions } from 'variables/charts';
 import { VSeparator } from 'components/separator/Separator';
+
 export default function Conversion(props: { [x: string]: any }) {
 	const { ...rest } = props;
 
 	// Chakra Color Mode
 	const textColor = useColorModeValue('secondaryGray.900', 'white');
 	const cardColor = useColorModeValue('white', 'navy.700');
+	const [counts, setCounts] = useState<DashboardCounts | null>(null);
+
+
+	const fetchCounts = async () => {
+		try {
+			const data = await getDashboardCounts();
+			setCounts(data);
+		} catch (error) {
+			console.error("Error fetching dashboard counts:", error);
+		}
+	}
+
+	useEffect(() => {
+		fetchCounts();
+	}, []);
+
+	if (!counts) {
+		return (
+			<Card p='20px' alignItems='center' flexDirection='column' w='100%' {...rest}>
+				<Text>Cargando datos...</Text>
+			</Card>
+		);
+	}
+	const pieChartData = [
+		Number(counts?.equiposInformaticos || 0),
+		Number(counts?.mobiliarios || 25),
+		Number(counts?.vehiculos || 30),
+		Number(counts?.equiposOficina || 10),
+		Number(counts?.audiovisuales || 5)
+	];
+	const total = pieChartData.reduce((acc, val) => acc + val, 0);
+
+	const percent = (value: number) => total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+
 	return (
 		<Card p='20px' alignItems='center' flexDirection='column' w='100%' {...rest}>
 			<Flex
@@ -53,7 +91,7 @@ export default function Conversion(props: { [x: string]: any }) {
 							</Text>
 						</Flex>
 						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							53%
+							{percent(counts?.equiposInformaticos || 0)}
 						</Text>
 					</Flex>
 					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
@@ -67,7 +105,7 @@ export default function Conversion(props: { [x: string]: any }) {
 							</Text>
 						</Flex>
 						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							22%
+							{percent(counts?.mobiliarios || 0)}
 						</Text>
 					</Flex>
 					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
@@ -81,7 +119,7 @@ export default function Conversion(props: { [x: string]: any }) {
 							</Text>
 						</Flex>
 						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							12%
+							{percent(counts?.vehiculos || 0)}
 						</Text>
 					</Flex>
 					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
@@ -95,7 +133,7 @@ export default function Conversion(props: { [x: string]: any }) {
 							</Text>
 						</Flex>
 						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							8%
+							{percent(counts?.equiposOficina || 0)}
 						</Text>
 					</Flex>
 					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
@@ -109,7 +147,7 @@ export default function Conversion(props: { [x: string]: any }) {
 							</Text>
 						</Flex>
 						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							5%
+							{percent(counts?.audiovisuales || 0)}
 						</Text>
 					</Flex>
 				</Flex>

@@ -118,12 +118,12 @@ const GeneralSettings: React.FC = () => {
         <HStack spacing={8} align="stretch">
           <FormControl>
             <FormLabel>Color Primario</FormLabel>
-            <ColorPicker onColorChange={handlePrimaryColorChange} />
+            <ColorPicker color={primaryColor} onColorChange={handlePrimaryColorChange} />
           </FormControl>
 
           <FormControl>
             <FormLabel>Color Secundario</FormLabel>
-            <ColorPicker onColorChange={handleSecondaryColorChange} />
+            <ColorPicker color={secondaryColor} onColorChange={handleSecondaryColorChange} />
           </FormControl>
         </HStack>
 
