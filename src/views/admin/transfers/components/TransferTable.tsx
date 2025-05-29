@@ -33,15 +33,17 @@ import {
 } from "@chakra-ui/react"
 import { FiEye, FiCalendar, FiArrowRight, FiUser, FiPackage, FiFileText, FiHome, FiInfo } from "react-icons/fi"
 import { BsBoxes } from "react-icons/bs"
-import type { Transfer } from "../variables/transferTypes"
+import { Transfer, getAllTransfers } from "../../../../api/TransferApi";
+import { Department, getDepartments } from "../../../../api/SettingsApi";
 
 interface TransferTableProps {
-  transfers: Transfer[]
+  transfers: Transfer[],
+  departments?: Department[],
   onViewDetails: (transfer: Transfer) => void
   isLoading?: boolean
 }
 
-export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewDetails, isLoading = false }) => {
+export const TransferTable: React.FC<TransferTableProps> = ({ transfers, departments, onViewDetails, isLoading = false }) => {
   // Colores y estilos
   const headerBg = useColorModeValue("gray.50", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -58,6 +60,22 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
   const iconSize = useBreakpointValue({ base: 4, md: 5 })
   const fontSize = useBreakpointValue({ base: "sm", md: "md" })
+
+  const groupedTransfers = transfers.reduce((acc, transfer) => {
+    if (!acc[transfer.id]) {
+      acc[transfer.id] = { ...transfer, count: 1 }; // Inicializa el grupo
+    } else {
+      acc[transfer.id].count += 1; // Incrementa el contador
+    }
+    return acc;
+  }, {} as Record<number, Transfer & { count: number }>);
+  const groupedTransfersArray = Object.values(groupedTransfers);
+
+  // Crear un mapa de departamentos para acceder a los nombres
+  const departmentMap = departments.reduce((acc, department) => {
+    acc[department.id] = department.nombre;
+    return acc;
+  }, {} as Record<number, string>);
 
   // Formatear fecha para mostrar
   const formatDate = (dateString: string | undefined): string => {
@@ -156,7 +174,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
   }
 
   // Renderizar mensaje cuando no hay datos
-  if (!transfers || transfers.length === 0) {
+  if (!groupedTransfersArray || groupedTransfersArray.length === 0) {
     return (
       <Card borderRadius="lg" boxShadow="sm" mb={4}>
         <CardBody>
@@ -180,7 +198,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
       <VStack spacing={4} width="100%">
         {transfers.map((item) => (
           <Card
-            key={item.id}
+            key={String(item.id)}
             width="100%"
             borderRadius="lg"
             overflow="hidden"
@@ -223,7 +241,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
                     </Text>
                   </HStack>
                   <Text fontSize="sm" fontWeight="medium">
-                    {truncateText(item.departamentoOrigen, 20)}
+                    {truncateText(String(item.origen_id), 20)}
                   </Text>
                 </Box>
                 <Box>
@@ -234,7 +252,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
                     </Text>
                   </HStack>
                   <Text fontSize="sm" fontWeight="medium">
-                    {truncateText(item.departamentoDestino, 20)}
+                    {truncateText(String(item.destino_id), 20)}
                   </Text>
                 </Box>
               </SimpleGrid>
@@ -247,7 +265,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
                       Responsable
                     </Text>
                   </HStack>
-                  <Text fontSize="sm">{truncateText(item.responsable, 20)}</Text>
+                  <Text fontSize="sm">{truncateText(item?.responsable || '', 20)}</Text>
                 </Box>
                 <Box>
                   <HStack spacing={1} mb={1}>
@@ -257,12 +275,12 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
                     </Text>
                   </HStack>
                   <Badge colorScheme="blue" borderRadius="full" px={2}>
-                    {item.cantidadBienes} bienes
+                    {item.cantidad} bienes
                   </Badge>
                 </Box>
               </SimpleGrid>
 
-              {item.observaciones && (
+              {item?.observaciones && (
                 <Box mb={3}>
                   <HStack spacing={1} mb={1}>
                     <Icon as={FiFileText} fontSize="xs" color={textMutedColor} />
@@ -271,7 +289,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
                     </Text>
                   </HStack>
                   <Text fontSize="sm" noOfLines={2}>
-                    {item.observaciones}
+                    {item?.observaciones || ''}
                   </Text>
                 </Box>
               )}
@@ -321,7 +339,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
           </Tr>
         </Thead>
         <Tbody>
-          {transfers.map((item) => (
+          {groupedTransfersArray.map((item) => (
             <Tr
               key={item.id}
               _hover={{ bg: hoverBg }}
@@ -355,29 +373,29 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers, onViewD
                 </Tag>
               </Td>
               <Td>
-                <Tooltip label={item.departamentoOrigen} placement="top" hasArrow>
-                  <Text>{truncateText(item.departamentoOrigen, 20)}</Text>
+                <Tooltip label={item.origen_id} placement="top" hasArrow>
+                  <Text>{departmentMap[item.origen_id] || "Desconocido"}</Text>
                 </Tooltip>
               </Td>
               <Td>
-                <Tooltip label={item.departamentoDestino} placement="top" hasArrow>
-                  <Text>{truncateText(item.departamentoDestino, 20)}</Text>
+                <Tooltip label={item.destino_id} placement="top" hasArrow>
+                  <Text>{departmentMap[item.destino_id] || "Desconocido"}</Text>
                 </Tooltip>
               </Td>
               <Td>
                 <HStack>
-                  <Avatar size="xs" name={item.responsable} />
-                  <Text>{truncateText(item.responsable, 15)}</Text>
+                  <Avatar size="xs" name={item?.responsable || ''} />
+                  <Text>{truncateText(item?.responsable || '', 15)}</Text>
                 </HStack>
               </Td>
               <Td>
                 <Badge colorScheme="blue" borderRadius="full" px={2}>
-                  {item.cantidadBienes} bienes
+                  {item.cantidad} bienes
                 </Badge>
               </Td>
               <Td maxW="200px">
-                <Tooltip label={item.observaciones} placement="top" hasArrow>
-                  <Text noOfLines={1}>{item.observaciones || "—"}</Text>
+                <Tooltip label={item?.observaciones || ''} placement="top" hasArrow>
+                  <Text noOfLines={1}>{item?.observaciones || "—"}</Text>
                 </Tooltip>
               </Td>
               <Td textAlign="center">

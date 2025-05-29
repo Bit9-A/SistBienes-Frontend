@@ -63,12 +63,16 @@ import {
   FiBox,
   FiBarChart2,
 } from "react-icons/fi"
-import type { Transfer } from "../variables/transferTypes"
+import { Transfer } from "../../../../api/TransferApi";
+import { Department, getDepartments } from "../../../../api/SettingsApi";
 
+
+// Cambia esto:
 interface TransferDetailsModalProps {
   isOpen: boolean
   onClose: () => void
   transfer: Transfer | null
+  departments?: Department[]
   onEdit?: (transfer: Transfer) => void
   onAskDelete?: (transfer: Transfer) => void
 }
@@ -77,6 +81,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
   isOpen,
   onClose,
   transfer,
+  departments = [],
   onEdit,
   onAskDelete,
 }) => {
@@ -95,7 +100,6 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
   // Estados
   const [isEditing, setIsEditing] = useState(false)
   const [editTransfer, setEditTransfer] = useState<Transfer | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState(0)
 
   // Referencias
@@ -111,7 +115,6 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
     if (transfer) {
       setEditTransfer(transfer)
       setIsEditing(false)
-      setSearchTerm("")
     }
   }, [transfer, isOpen])
 
@@ -145,20 +148,11 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
     }
   }
 
-  // Filtrar bienes según término de búsqueda
-  const filteredBienes = editTransfer.bienes?.filter((bien) => {
-    if (!searchTerm) return true
-
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      bien.id?.toString().includes(searchLower) ||
-      bien.nombre?.toLowerCase().includes(searchLower) ||
-      bien.descripcion?.toLowerCase().includes(searchLower) ||
-      bien.serial?.toLowerCase().includes(searchLower) ||
-      bien.marca?.toLowerCase().includes(searchLower) ||
-      bien.estado?.toLowerCase().includes(searchLower)
-    )
-  })
+  // Crear un mapa de departamentos para acceder a los nombres
+  const departmentMap = departments.reduce((acc, department) => {
+    acc[department.id] = department.nombre;
+    return acc;
+  }, {} as Record<number, string>);
 
   // Obtener el color del badge según el estado
   const getBadgeColor = (estado?: string) => {
@@ -302,14 +296,14 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="text"
                             name="departamentoOrigen"
-                            value={editTransfer.departamentoOrigen || ""}
+                            value={departmentMap[editTransfer.origen_id] || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
                           />
                         ) : (
                           <Text fontSize="md" pl={6}>
-                            {editTransfer.departamentoOrigen || "N/A"}
+                            {departmentMap[editTransfer.origen_id] || "N/A"}
                           </Text>
                         )}
                       </FormControl>
@@ -325,14 +319,14 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="text"
                             name="departamentoDestino"
-                            value={editTransfer.departamentoDestino || ""}
+                            value={departmentMap[editTransfer.destino_id] || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
                           />
                         ) : (
                           <Text fontSize="md" pl={6}>
-                            {editTransfer.departamentoDestino || "N/A"}
+                            {departmentMap[editTransfer.destino_id] || "N/A"}
                           </Text>
                         )}
                       </FormControl>
@@ -348,14 +342,14 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="number"
                             name="cantidadBienes"
-                            value={editTransfer.cantidadBienes?.toString() || ""}
+                            value={editTransfer.cantidad?.toString() || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
                           />
                         ) : (
                           <Text fontSize="md" pl={6}>
-                            {editTransfer.cantidadBienes || 0}
+                            {editTransfer.cantidad || 0}
                           </Text>
                         )}
                       </FormControl>
@@ -391,29 +385,13 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
             {/* Panel de Bienes */}
             <TabPanel px={0} pt={4}>
               <ModalBody p={0}>
-                {/* Buscador */}
-                {editTransfer.bienes && editTransfer.bienes.length > 0 && (
-                  <InputGroup mb={4} size="md">
-                    <InputLeftElement pointerEvents="none">
-                      <Icon as={FiSearch} color="gray.400" />
-                    </InputLeftElement>
-                    <Input
-                      placeholder="Buscar bienes..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      borderRadius="full"
-                      bg={bgCard}
-                    />
-                  </InputGroup>
-                )}
-
                 {/* Lista de bienes */}
-                {filteredBienes && filteredBienes.length > 0 ? (
+                {editTransfer.bienes && editTransfer.bienes.length > 0 ? (
                   <Box>
                     {/* Vista móvil: Cards */}
                     {isMobile ? (
                       <VStack spacing={4} align="stretch">
-                        {filteredBienes.map((bien, index) => (
+                        {editTransfer.bienes.map((bien, index) => (
                           <Card key={bien.id || index} variant="outline" borderColor={borderColor}>
                             <CardBody>
                               <HStack justify="space-between" mb={2}>
@@ -434,12 +412,12 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                               </HStack>
 
                               <Heading size="sm" mb={1}>
-                                {bien.nombre}
+                                {bien.nombre_descripcion}
                               </Heading>
 
-                              {bien.descripcion && (
+                              {bien.numero_identificacion && (
                                 <Text fontSize="sm" color={subtitleColor} mb={3} noOfLines={2}>
-                                  {bien.descripcion}
+                                  {bien.numero_identificacion}
                                 </Text>
                               )}
 
@@ -448,13 +426,13 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                                   <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
                                     Serial
                                   </Text>
-                                  <Text fontSize="sm">{bien.serial || "—"}</Text>
+                                  <Text fontSize="sm">{bien.id_mueble || "—"}</Text>
                                 </Box>
                                 <Box>
                                   <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
                                     Marca
                                   </Text>
-                                  <Text fontSize="sm">{bien.marca || "—"}</Text>
+                                  <Text fontSize="sm">{bien.id_traslado || "—"}</Text>
                                 </Box>
                               </SimpleGrid>
                             </CardBody>
@@ -481,19 +459,19 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                             </Tr>
                           </Thead>
                           <Tbody>
-                            {filteredBienes.map((bien, index) => (
+                            {editTransfer.bienes.map((bien, index) => (
                               <Tr key={bien.id || index} _hover={{ bg: bgHover }} transition="background 0.2s">
                                 <Td>{bien.id}</Td>
                                 <Td>
-                                  <Text fontWeight="medium">{bien.nombre}</Text>
-                                  {bien.descripcion && (
+                                  <Text fontWeight="medium">{bien.nombre_descripcion}</Text>
+                                  {bien.numero_identificacion && (
                                     <Text fontSize="xs" color={subtitleColor} noOfLines={1}>
-                                      {bien.descripcion}
+                                      {bien.numero_identificacion}
                                     </Text>
                                   )}
                                 </Td>
-                                <Td>{bien.serial || "—"}</Td>
-                                <Td>{bien.marca || "—"}</Td>
+                                <Td>{bien.id_mueble || "—"}</Td>
+                                <Td>{bien.id_traslado || "—"}</Td>
                                 <Td>
                                   <Badge
                                     colorScheme={getBadgeColor(bien.estado)}
@@ -522,11 +500,6 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                     <Text color="gray.500" fontWeight="medium">
                       No hay bienes asociados a este traslado
                     </Text>
-                    {searchTerm && (
-                      <Text color="gray.400" fontSize="sm" mt={1}>
-                        Prueba con otros términos de búsqueda
-                      </Text>
-                    )}
                   </Flex>
                 )}
               </ModalBody>
