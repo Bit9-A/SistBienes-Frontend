@@ -1,3 +1,4 @@
+import axiosInstance from "../utils/axiosInstance";
 export interface Asset {
   id?: string | number
   nombre: string
@@ -18,6 +19,6 @@ export interface Transfer {
   departamentoDestino?: string
   cantidadBienes?: number
   observaciones?: string
-  bien?: string // Campo original para compatibilidad
-  bienes?: Asset[] // Nuevo campo para múltiples bienes
+  bien?: string
+  bienes?: Asset[]
 }

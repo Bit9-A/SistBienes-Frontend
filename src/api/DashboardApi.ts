@@ -12,7 +12,7 @@ export interface DashboardCounts {
 // Obtener Datos para el Grafico de Torta de Activos
 export const getDashboardCounts = async (): Promise<DashboardCounts> => {
     try {
-        const response = await axiosInstance.get('/default');
+        const response = await axiosInstance.get('/');
         return response.data.counts;
     } catch (error) {
         console.error("Error fetching dashboard counts:", error);
