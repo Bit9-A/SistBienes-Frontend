@@ -106,14 +106,14 @@ const routes = [
     path: '/notifications',
     icon: <Icon as={MdNotifications} width="20px" height="20px" color="inherit" />,
     component: <NotificationsHistory />,
-    adminOnly: true,
+    adminOnly: false,
   },
   {
     name: 'Cerrar sesión',
     layout: '/auth',
     path: '/sign-in',
     icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-    component: <SignInCentered />,
+    component: <SignInCentered /> ,
     adminOnly: false,
   },
 ];

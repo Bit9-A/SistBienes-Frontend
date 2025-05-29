@@ -10,6 +10,7 @@ interface AuthUser {
   tipo_usuario: number;
   cedula: string;
   token?: string;
+  role?: string;
 }
 
 export const useAuth = () => {

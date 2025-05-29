@@ -19,6 +19,7 @@ import { RiEyeCloseLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom"; // Importa useNavigate
 import banner from "assets/img/banner.png";
 import { handleLogin } from "../signIn/utils/authUtils"; // Asegúrate de que la ruta sea correcta
+import { getProfile } from "../../../api/UserApi"; // Ajusta la ruta si es necesario
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -49,6 +50,8 @@ const SignIn = () => {
 
   try {
     await handleLogin(email, password);
+    // Obtener el perfil del usuario después de iniciar sesión
+    const profile = await getProfile();
     toast({
       title: "Inicio de sesión exitoso",
       description: "Bienvenido al sistema.",
@@ -56,7 +59,12 @@ const SignIn = () => {
       duration: 3000,
       isClosable: true,
     });
-    navigate("/admin/default");
+    // Redirigir según el tipo de usuario
+    if (profile.nombre_tipo_usuario === "Administrador") {
+      navigate("/admin/default");
+    } else {
+      navigate("/admin/asset-management");
+    }
   } catch (error: any) {
     toast({
       title: "Error",
