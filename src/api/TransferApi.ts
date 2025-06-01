@@ -6,6 +6,7 @@ export interface Bien {
   id_traslado?: number;
   id_mueble: number;
   nombre_descripcion: string;
+  estado: string;
   numero_identificacion: string;
 }
 // Actualizar la interfaz Transfer para incluir bienes
@@ -14,10 +15,11 @@ export interface Transfer {
   fecha: string;
   cantidad: number;
   origen_id: number;
-  destino_id: number;
+  destino_id: number;  
   bien_traslado_id: number;
   id_mueble: number;
   responsable_id: number;
+  responsable:string;
   observaciones?: string;
   bienes?: Bien[]; // Agregar la propiedad bienes
 }
