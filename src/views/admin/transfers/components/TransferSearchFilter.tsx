@@ -35,7 +35,7 @@ export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
                     <Input
                         placeholder="Buscar por ID, nombre o descripción"
                         variant="outline"
-                        value={searchQuery}
+                        value={searchQuery ?? ''}
                         onChange={(e) => onSearch(e.target.value)}
                         borderRadius="md"
                     />
@@ -47,7 +47,7 @@ export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
                     <Input
                         type="date"
                         size="md"
-                        value={startDate}
+                        value={startDate ?? ''}
                         onChange={(e) => onDateFilter(e.target.value, endDate)}
                         placeholder="Fecha inicial"
                     />
@@ -55,7 +55,7 @@ export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
                     <Input
                         type="date"
                         size="md"
-                        value={endDate}
+                        value={endDate ?? ''}
                         onChange={(e) => onDateFilter(startDate, e.target.value)}
                         placeholder="Fecha final"
                     />

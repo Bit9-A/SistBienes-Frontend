@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { RgbaColorPicker } from "react-colorful";
 import {
   Box,
@@ -16,9 +16,11 @@ type ColorPickerProps = {
 };
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ color, onColorChange }) => {
-  // Sincroniza el estado interno con la prop color
+  // State for RGBA and Hex color
   const [colorState, setColorState] = useState({ r: 255, g: 255, b: 255, a: 1 });
   const [hexColor, setHexColor] = useState("#ffffff");
+
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Convert RGB to Hex
   const rgbToHex = (r: number, g: number, b: number) =>
@@ -35,17 +37,27 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ color, onColorChange }) => {
     };
   };
 
-  // Sincroniza el color inicial cuando cambia la prop
+  // Sync color prop changes to internal state
   useEffect(() => {
     setHexColor(color);
     setColorState(hexToRgb(color));
   }, [color]);
 
+  // Handle color change with debounce to reduce frequent updates
   const handleColorChange = (newColor: any) => {
     setColorState(newColor);
-    const hex = rgbToHex(newColor.r, newColor.g, newColor.b);
-    setHexColor(hex);
-    onColorChange(hex); // Notify parent component
+
+    // Clear any existing timeout
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    // Setup new debounce timeout
+    debounceTimeout.current = setTimeout(() => {
+      const hex = rgbToHex(newColor.r, newColor.g, newColor.b);
+      setHexColor(hex);
+      onColorChange(hex);
+    }, 150); // 150ms debounce delay
   };
 
   const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +67,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ color, onColorChange }) => {
     if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
       const rgb = hexToRgb(value);
       setColorState(rgb);
-      onColorChange(value); // Notify parent component
+      onColorChange(value);
     }
   };
 
@@ -101,3 +113,4 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ color, onColorChange }) => {
 };
 
 export default ColorPicker;
+

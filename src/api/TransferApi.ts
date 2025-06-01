@@ -1,12 +1,18 @@
 import axiosInstance from "../utils/axiosInstance";
 
+// Definición de la interfaz para los datos
+export interface TransferResponse {
+  ok: boolean;
+  transfer: Transfer;
+}
 // Definir la interfaz para los bienes
-export interface Bien {
+export interface bienes {
   id: number;
   id_traslado?: number;
   id_mueble: number;
   nombre_descripcion: string;
   numero_identificacion: string;
+  estado: string;
 }
 // Actualizar la interfaz Transfer para incluir bienes
 export interface Transfer {
@@ -15,11 +21,12 @@ export interface Transfer {
   cantidad: number;
   origen_id: number;
   destino_id: number;
-  bien_traslado_id: number;
-  id_mueble: number;
   responsable_id: number;
-  observaciones?: string;
-  bienes?: Bien[]; // Agregar la propiedad bienes
+  observaciones: string;
+  responsable: string;
+  origen_nombre?: string;
+  destino_nombre?: string;
+  bienes?: bienes[];
 }
 
 // Obtener todas las transferencias
@@ -32,11 +39,12 @@ export const getAllTransfers = async (): Promise<Transfer[]> => {
     throw error;
   }
 };
+//Obtener los bienes asociados a una transferencia por su ID
 
-export const getByTransfersId = async (id: string | number): Promise<Transfer[]> => {
+export const getByTransfersId = async (id: string | number): Promise<TransferResponse> => {
   try {
     const response = await axiosInstance.get(`/transfers/${id}`);
-    return response.data.transfers || [];
+    return response.data;
   } catch (error) {
     console.error("Error fetching transfers:", error);
     throw error;
@@ -77,3 +85,4 @@ export const deleteTransfer = async (id: number) => {
     throw error;
   }
 }
+

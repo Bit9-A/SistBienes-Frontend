@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import {
   Modal,
   ModalOverlay,
@@ -35,8 +35,6 @@ import {
   CardBody,
   HStack,
   VStack,
-  InputGroup,
-  InputLeftElement,
   Avatar,
   AvatarBadge,
   Tabs,
@@ -46,8 +44,6 @@ import {
   TabPanel,
 } from "@chakra-ui/react"
 import {
-  FiEdit,
-  FiTrash2,
   FiInfo,
   FiPackage,
   FiCalendar,
@@ -56,52 +52,47 @@ import {
   FiHome,
   FiHash,
   FiFileText,
-  FiSearch,
   FiCheckCircle,
   FiAlertCircle,
   FiAlertTriangle,
   FiBox,
   FiBarChart2,
 } from "react-icons/fi"
-import { Transfer } from "../../../../api/TransferApi";
+import { Transfer, getByTransfersId, bienes, TransferResponse } from "../../../../api/TransferApi";
 import { Department, getDepartments } from "../../../../api/SettingsApi";
 
 
-// Cambia esto:
 interface TransferDetailsModalProps {
   isOpen: boolean
   onClose: () => void
-  transfer: Transfer | null
+  transferId?: number
   departments?: Department[]
   onEdit?: (transfer: Transfer) => void
-  onAskDelete?: (transfer: Transfer) => void
 }
 
 export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
   isOpen,
   onClose,
-  transfer,
+  transferId,
   departments = [],
   onEdit,
-  onAskDelete,
+
 }) => {
   // Colores y estilos
   const textColor = useColorModeValue("secondaryGray.900", "white")
-  const bgCard = useColorModeValue("white", "navy.700")
-  const bgTable = useColorModeValue("white", "navy.700")
   const bgTableHeader = useColorModeValue("gray.50", "navy.800")
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.100")
   const bgHover = useColorModeValue("gray.50", "navy.800")
   const bgBadge = useColorModeValue("gray.100", "whiteAlpha.200")
   const subtitleColor = useColorModeValue("gray.600", "gray.400")
   const iconColor = useColorModeValue("brand.500", "white")
-  const primaryButtonBg = useColorModeValue("brand.500", "brand.400")
 
   // Estados
   const [isEditing, setIsEditing] = useState(false)
-  const [editTransfer, setEditTransfer] = useState<Transfer | null>(null)
   const [activeTab, setActiveTab] = useState(0)
-
+  const [transfer, setTransfer] = useState<Transfer | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Referencias
   const initialRef = useRef(null)
 
@@ -110,43 +101,6 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
   const gridColumns = useBreakpointValue({ base: 1, md: 2 })
   const buttonSize = useBreakpointValue({ base: "sm", md: "md" })
-
-  React.useEffect(() => {
-    if (transfer) {
-      setEditTransfer(transfer)
-      setIsEditing(false)
-    }
-  }, [transfer, isOpen])
-
-  if (!transfer || !editTransfer) return null
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setEditTransfer((prev) => (prev ? { ...prev, [name]: value } : prev))
-  }
-
-  const handleSave = () => {
-    if (onEdit && editTransfer) {
-      onEdit(editTransfer)
-      setIsEditing(false)
-    }
-  }
-
-  // Formatear fecha para mostrar
-  const formatDate = (dateString: string | undefined): string => {
-    if (!dateString) return "N/A"
-
-    try {
-      const date = new Date(dateString)
-      return new Intl.DateTimeFormat("es-ES", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(date)
-    } catch (error) {
-      return dateString
-    }
-  }
 
   // Crear un mapa de departamentos para acceder a los nombres
   const departmentMap = departments.reduce((acc, department) => {
@@ -190,6 +144,69 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
     }
   }
 
+  useEffect(() => {
+    if (isOpen && typeof transferId !== 'undefined') {
+      setLoading(true);
+      setError(null);
+      console.log("Cargando detalles de la transferencia con ID:", transferId);
+      getByTransfersId(transferId)
+        .then((response: TransferResponse) => {
+          if (!response.ok) {
+            setError("No se encontró la transferencia.");
+            return;
+          }
+          const transferData: Transfer = response.transfer; // Accede al objeto transfer
+          setTransfer(transferData);
+        })
+        .catch((error) => {
+          console.error("Error al cargar detalles de la transferencia:", error);
+          setError("Error al cargar detalles de la transferencia");
+        })
+        .finally(() => {
+          setLoading(false); // Asegúrate de que esto se ejecute
+        });
+    }
+  }, [transferId, isOpen]);
+
+  if (loading) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Cargando detalles...</ModalHeader>
+          <ModalBody>
+            <Flex justify="center" align="center" minH="150px">
+              <Text>Cargando...</Text>
+            </Flex>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    )
+  }
+  if (!transfer) return null
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setTransfer((prev) => (prev ? { ...prev, [name]: value } : prev))
+  }
+
+  // Formatear fecha para mostrar
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return "N/A"
+
+    try {
+      const date = new Date(dateString)
+      return new Intl.DateTimeFormat("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(date)
+    } catch (error) {
+      return dateString
+    }
+  }
+
+
   return (
     <Modal
       isOpen={isOpen}
@@ -205,7 +222,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
           <Icon as={FiBarChart2} mr={3} color={iconColor} />
           Detalles del Traslado
           <Badge ml={3} colorScheme="purple" fontSize="xs" px={2} py={1} borderRadius="full">
-            ID: {editTransfer.id}
+            ID: {transfer.id}
           </Badge>
         </ModalHeader>
         <Divider />
@@ -224,7 +241,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
               <Icon as={FiFileText} mr={2} /> Información
             </Tab>
             <Tab>
-              <Icon as={FiPackage} mr={2} /> Bienes ({editTransfer.bienes?.length || 0})
+              <Icon as={FiPackage} mr={2} /> Bienes ({transfer.bienes?.length || 0})
             </Tab>
           </TabList>
 
@@ -246,7 +263,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="date"
                             name="fecha"
-                            value={editTransfer.fecha || ""}
+                            value={transfer.fecha || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
@@ -254,7 +271,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           />
                         ) : (
                           <Text fontSize="md" pl={6}>
-                            {formatDate(editTransfer.fecha)}
+                            {formatDate(transfer.fecha)}
                           </Text>
                         )}
                       </FormControl>
@@ -270,17 +287,17 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="text"
                             name="responsable"
-                            value={editTransfer.responsable || ""}
+                            value={transfer.responsable || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
                           />
                         ) : (
                           <HStack pl={6}>
-                            <Avatar size="xs" name={editTransfer.responsable || "Usuario"}>
+                            <Avatar size="xs" name={transfer.responsable.toString() || "Usuario"}>
                               <AvatarBadge boxSize="1em" bg="green.500" />
                             </Avatar>
-                            <Text fontSize="md">{editTransfer.responsable || "N/A"}</Text>
+                            <Text fontSize="md">{transfer.responsable || "N/A"}</Text>
                           </HStack>
                         )}
                       </FormControl>
@@ -296,14 +313,14 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="text"
                             name="departamentoOrigen"
-                            value={departmentMap[editTransfer.origen_id] || ""}
+                            value={departmentMap[transfer.origen_id] || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
                           />
                         ) : (
                           <Text fontSize="md" pl={6}>
-                            {departmentMap[editTransfer.origen_id] || "N/A"}
+                            {departmentMap[transfer.origen_id] || "N/A"}
                           </Text>
                         )}
                       </FormControl>
@@ -319,14 +336,14 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="text"
                             name="departamentoDestino"
-                            value={departmentMap[editTransfer.destino_id] || ""}
+                            value={departmentMap[transfer.destino_id] || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
                           />
                         ) : (
                           <Text fontSize="md" pl={6}>
-                            {departmentMap[editTransfer.destino_id] || "N/A"}
+                            {departmentMap[transfer.destino_id] || "N/A"}
                           </Text>
                         )}
                       </FormControl>
@@ -342,14 +359,14 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                           <Input
                             type="number"
                             name="cantidadBienes"
-                            value={editTransfer.cantidad?.toString() || ""}
+                            value={transfer.cantidad?.toString() || ""}
                             onChange={handleInputChange}
                             size="md"
                             borderRadius="md"
                           />
                         ) : (
                           <Text fontSize="md" pl={6}>
-                            {editTransfer.cantidad || 0}
+                            {transfer.cantidad || 0}
                           </Text>
                         )}
                       </FormControl>
@@ -365,7 +382,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                       {isEditing ? (
                         <Textarea
                           name="observaciones"
-                          value={editTransfer.observaciones || ""}
+                          value={transfer.observaciones || ""}
                           onChange={handleInputChange}
                           size="md"
                           borderRadius="md"
@@ -373,7 +390,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                         />
                       ) : (
                         <Text fontSize="md" pl={6} whiteSpace="pre-wrap">
-                          {editTransfer.observaciones || "Sin observaciones"}
+                          {transfer.observaciones || "Sin observaciones"}
                         </Text>
                       )}
                     </FormControl>
@@ -386,53 +403,53 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
             <TabPanel px={0} pt={4}>
               <ModalBody p={0}>
                 {/* Lista de bienes */}
-                {editTransfer.bienes && editTransfer.bienes.length > 0 ? (
+                {transfer.bienes && transfer.bienes.length > 0 ? (
                   <Box>
                     {/* Vista móvil: Cards */}
                     {isMobile ? (
                       <VStack spacing={4} align="stretch">
-                        {editTransfer.bienes.map((bien, index) => (
+                        {transfer.bienes.map((bien, index) => (
                           <Card key={bien.id || index} variant="outline" borderColor={borderColor}>
                             <CardBody>
-                              <HStack justify="space-between" mb={2}>
-                                <Badge
-                                  colorScheme={getBadgeColor(bien.estado)}
-                                  px={2}
-                                  py={1}
-                                  borderRadius="full"
-                                  display="flex"
-                                  alignItems="center"
-                                >
-                                  <Icon as={getBadgeIcon(bien.estado)} mr={1} />
-                                  {bien.estado || "Sin estado"}
-                                </Badge>
-                                <Text fontSize="xs" color={subtitleColor}>
-                                  ID: {bien.id}
-                                </Text>
-                              </HStack>
-
                               <Heading size="sm" mb={1}>
-                                {bien.nombre_descripcion}
+                                {bien?.nombre_descripcion || "N/A"}
                               </Heading>
 
-                              {bien.numero_identificacion && (
+                              {bien.id_mueble && (
                                 <Text fontSize="sm" color={subtitleColor} mb={3} noOfLines={2}>
-                                  {bien.numero_identificacion}
+                                  {bien.id_mueble}
                                 </Text>
                               )}
 
-                              <SimpleGrid columns={2} spacing={2}>
+
+                              <SimpleGrid columns={3} spacing={2}>
                                 <Box>
                                   <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
                                     Serial
                                   </Text>
-                                  <Text fontSize="sm">{bien.id_mueble || "—"}</Text>
+                                  <Text fontSize="sm">{bien.numero_identificacion || "—"}</Text>
                                 </Box>
                                 <Box>
                                   <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
-                                    Marca
+                                    N° Traslado
                                   </Text>
                                   <Text fontSize="sm">{bien.id_traslado || "—"}</Text>
+                                </Box>
+                                <Box>
+                                  <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
+                                    Estado
+                                  </Text>
+                                  <Badge
+                                    colorScheme={getBadgeColor(bien.estado)}
+                                    px={2}
+                                    py={1}
+                                    borderRadius="full"
+                                    display="flex"
+                                    alignItems="center"
+                                  >
+                                    <Icon as={getBadgeIcon(bien.estado)} mr={1} />
+                                    {bien.estado || "Sin estado"}
+                                  </Badge>
                                 </Box>
                               </SimpleGrid>
                             </CardBody>
@@ -451,41 +468,38 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                         <Table variant="simple" size={tableSize}>
                           <Thead bg={bgTableHeader}>
                             <Tr>
-                              <Th>ID</Th>
+                              <Th>N°Traslado</Th>
                               <Th>Nombre/Descripción</Th>
                               <Th>Serial</Th>
-                              <Th>Marca</Th>
                               <Th>Estado</Th>
                             </Tr>
                           </Thead>
                           <Tbody>
-                            {editTransfer.bienes.map((bien, index) => (
+                            {transfer.bienes.map((bien, index) => (
                               <Tr key={bien.id || index} _hover={{ bg: bgHover }} transition="background 0.2s">
-                                <Td>{bien.id}</Td>
+                                <Td>{bien.id_traslado || "—"}</Td>
                                 <Td>
                                   <Text fontWeight="medium">{bien.nombre_descripcion}</Text>
-                                  {bien.numero_identificacion && (
+                                  {bien.id_mueble && (
                                     <Text fontSize="xs" color={subtitleColor} noOfLines={1}>
-                                      {bien.numero_identificacion}
+                                      {bien.id_mueble}
                                     </Text>
                                   )}
                                 </Td>
-                                <Td>{bien.id_mueble || "—"}</Td>
-                                <Td>{bien.id_traslado || "—"}</Td>
-                                <Td>
+                                <Td>{bien.numero_identificacion || "—"}</Td>
+                                <Td><HStack justify="space-between" mb={2}>
                                   <Badge
                                     colorScheme={getBadgeColor(bien.estado)}
-                                    fontSize="xs"
                                     px={2}
                                     py={1}
                                     borderRadius="full"
                                     display="flex"
                                     alignItems="center"
-                                    width="fit-content"
                                   >
                                     <Icon as={getBadgeIcon(bien.estado)} mr={1} />
                                     {bien.estado || "Sin estado"}
                                   </Badge>
+                                </HStack>
                                 </Td>
                               </Tr>
                             ))}
@@ -508,33 +522,6 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
         </Tabs>
 
         <ModalFooter borderTop="1px" borderColor={borderColor} mt={4}>
-          <Flex justify="space-between" width="100%">
-            {isEditing ? (
-              <>
-                <Button variant="ghost" size={buttonSize} onClick={() => setIsEditing(false)}>
-                  Cancelar
-                </Button>
-                <Button colorScheme="brand" size={buttonSize} onClick={handleSave} leftIcon={<FiCheckCircle />}>
-                  Guardar Cambios
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  colorScheme="red"
-                  size={buttonSize}
-                  leftIcon={<FiTrash2 />}
-                  onClick={() => onAskDelete && transfer && onAskDelete(transfer)}
-                >
-                  Eliminar
-                </Button>
-                <Button colorScheme="brand" size={buttonSize} leftIcon={<FiEdit />} onClick={() => setIsEditing(true)}>
-                  Editar
-                </Button>
-              </>
-            )}
-          </Flex>
         </ModalFooter>
       </ModalContent>
     </Modal>

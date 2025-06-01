@@ -3,10 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Box, Card, CardHeader, CardBody, Heading, useDisclosure } from "@chakra-ui/react";
 import { TransferSearchFilter } from "./components/TransferSearchFilter";
 import { TransferTable } from "./components/TransferTable";
-import { DeleteTransferModal } from "./components/DeleteTransferModal";
 import { TransferDetailsModal } from "./components/TransferDetailsModal";
 import { NoTransfersFound } from "./components/NoTransfersFound";
-import { Transfer, getAllTransfers, Bien } from "../../../api/TransferApi";
+import { Transfer, getAllTransfers, } from "../../../api/TransferApi";
 import { Department, getDepartments } from "../../../api/SettingsApi";
 
 export default function TransferPage() {
@@ -24,26 +23,6 @@ export default function TransferPage() {
 
     // Fetch Departments y Transfers
 
-    function groupTransfersWithBienes(transfers: Transfer[]): Transfer[] {
-        const grouped: Record<number, Transfer & { bienes: Bien[] }> = {};
-
-        transfers.forEach((t) => {
-            if (!grouped[t.id]) {
-                grouped[t.id] = {
-                    ...t,
-                    bienes: [],
-                };
-            }
-            // Crea el bien a partir de los campos que tienes (ajusta según tu modelo real)
-            grouped[t.id].bienes.push({
-                id: t.bien_traslado_id,
-                nombre: `Mueble ${t.id_mueble}`,
-                // Puedes agregar más campos si los tienes en la respuesta
-            });
-        });
-
-        return Object.values(grouped);
-    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -52,8 +31,7 @@ export default function TransferPage() {
                     getAllTransfers(),
                     getDepartments(),
                 ]);
-                const groupedTransfers = groupTransfersWithBienes(transferData);
-                setTransfers(groupedTransfers);
+                setTransfers(transferData);
                 setDepartments(departmentsData);
                 console.log("Transfers:", transferData);
             } catch (error) {
@@ -83,24 +61,12 @@ export default function TransferPage() {
 
     const handleViewDetails = (transfer: Transfer) => {
         setSelectedTransfer(transfer);
+        console.log("Selected Transfer:", transfer.id);
         onOpen();
     };
 
     const handleEditTransfer = (transfer: Transfer) => {
         onClose();
-    };
-
-    const handleAskDelete = (transfer: Transfer) => {
-        setTransferToDelete(transfer);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleConfirmDelete = () => {
-        if (transferToDelete) {
-            setIsDeleteModalOpen(false);
-            onClose();
-            setTransferToDelete(null);
-        }
     };
 
     return (
@@ -130,16 +96,9 @@ export default function TransferPage() {
                     <TransferDetailsModal
                         isOpen={isOpen}
                         onClose={onClose}
-                        transfer={selectedTransfer}
+                        transferId={selectedTransfer?.id || null}
                         departments={departments}
                         onEdit={handleEditTransfer}
-                        onAskDelete={handleAskDelete}
-                    />
-                    <DeleteTransferModal
-                        isOpen={isDeleteModalOpen}
-                        onClose={() => setIsDeleteModalOpen(false)}
-                        onConfirm={handleConfirmDelete}
-                        transfer={transferToDelete}
                     />
                 </CardBody>
             </Card>

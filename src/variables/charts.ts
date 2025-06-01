@@ -1,7 +1,5 @@
 // Daily Traffic Dashboards Default
 export const pieChartOptions: any = {
-	labels: ['Equipos Informáticos', ' Mobiliario', 'Vehículos', 'Equipos de Oficina', 'Audiovisuales'],
-	colors: ['#90caf9', '#f8bbd0', '#80cbc4', '#ffe082', '#00dafc'],
 	chart: {
 		width: '50px'
 	},
@@ -40,9 +38,6 @@ export const pieChartOptions: any = {
 				}
 			}
 		}
-	},
-	fill: {
-		colors: ['#47a7f5', '#f176a0', '#87cb80', '#ffcd36', '#00dafc']
 	},
 	tooltip: {
 		enabled: true,
