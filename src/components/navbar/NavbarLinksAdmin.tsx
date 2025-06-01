@@ -56,7 +56,26 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
 
 
   const handleLogout = async () => {
-    Logout()
+    try {
+      await Logout()
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión exitosamente.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      })
+      navigate("/auth/sign-in")
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo cerrar sesión. Inténtalo de nuevo.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
   }
 
   const handleProfileClick = () => {

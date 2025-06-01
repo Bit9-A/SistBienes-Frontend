@@ -8,7 +8,6 @@ export const handleLogin = async (username: string, password: string) => {
 
     if (response && response.token) {
       const userData = {
-        ...response.user,
         token: response.token
       };
       localStorage.setItem("user", JSON.stringify(userData));
@@ -17,7 +16,6 @@ export const handleLogin = async (username: string, password: string) => {
       throw new Error("No se recibió un token válido del servidor.");
     }
   } catch (error: any) {
-    // Captura el mensaje del backend si existe
     const backendMsg =
       error?.response?.data?.message ||
       error?.response?.data?.msg ||
@@ -29,7 +27,6 @@ export const handleLogin = async (username: string, password: string) => {
 
 // Función para cerrar sesión
 export const handleLogout = async () => {
-  const toast = useToast();
   try {
     await logout();
   } catch (e) {
