@@ -62,9 +62,19 @@ export const login = async (userData: any) => {
 
 // Cerrar Sesión
 export const logout = async () => {
-  const response = await axiosInstance.post("/auth/logout")
-  return response.data // Devuelve la respuesta de cierre de sesión
-}
+  const user = localStorage.getItem("user");
+  let token = null;
+  if (user) {
+    try {
+      token = JSON.parse(user).token;
+    } catch {}
+  }
+  const headers = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+  const response = await axiosInstance.post("/auth/logout", {}, { headers });
+  return response.data; // Devuelve la respuesta de cierre de sesión
+};
 
 // Obtener el profile del usuario
 export const getProfile = async (): Promise<UserProfile> => {

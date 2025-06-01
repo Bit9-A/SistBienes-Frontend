@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import {
   Box,
   Button,
@@ -18,8 +18,11 @@ import { MdOutlineRemoveRedEye } from 'react-icons/md';
 import { RiEyeCloseLine } from 'react-icons/ri';
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 import banner from 'assets/img/banner.png';
-import { handleLogin } from '../signIn/utils/authUtils'; // Asegúrate de que la ruta sea correcta
+import { handleLogin,handleLogout } from '../signIn/utils/authUtils'; // Asegúrate de que la ruta sea correcta
 import { getProfile } from '../../../api/UserApi'; // Ajusta la ruta si es necesario
+
+
+
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -29,6 +32,21 @@ const SignIn = () => {
   const navigate = useNavigate(); // Inicializa useNavigate
 
   const handlePasswordVisibility = () => setShowPassword(!showPassword);
+
+  useEffect(() => {
+    // Verifica si el usuario ya está autenticado al cargar el componente
+    if (localStorage.getItem("user") || localStorage.getItem("token")) {
+      handleLogout()
+      toast({
+        title: 'Sesión cerrada',
+        description: 'Has sido desconectado exitosamente.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, []);
+
 
   const handleSubmit = async () => {
     if (!username || !password) {

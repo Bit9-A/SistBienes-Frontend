@@ -27,6 +27,7 @@ import { FiUser, FiLogOut, FiSettings, FiChevronDown } from "react-icons/fi"
 import routes from "routes"
 // API
 import { logout as logoutApi, type UserProfile } from "../../api/UserApi"
+import  {handleLogout as Logout} from "../../views/auth/signIn/utils/authUtils"
 import { useNavigate } from "react-router-dom"
 
 
@@ -55,38 +56,7 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
 
 
   const handleLogout = async () => {
-    try {
-      if (onLogout) {
-        onLogout()
-      } else {
-        // Llamar a la API de logout
-        await logoutApi()
-
-        // Limpiar localStorage
-        localStorage.removeItem("user")
-        localStorage.removeItem("token")
-        localStorage.removeItem("sidebarState")
-
-        // Mostrar mensaje de éxito
-        toast({
-          title: "Sesión cerrada",
-          description: "Has cerrado sesión exitosamente",
-          status: "success",
-          duration: 2000,
-          isClosable: true,
-        })
-
-        // Redirigir al login usando navigate
-        navigate("/auth/sign-in")
-      }
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error)
-      // Aunque haya error, limpiar localStorage y redirigir
-      localStorage.removeItem("user")
-      localStorage.removeItem("token")
-      localStorage.removeItem("sidebarState")
-      navigate("/auth/sign-in")
-    }
+    Logout()
   }
 
   const handleProfileClick = () => {

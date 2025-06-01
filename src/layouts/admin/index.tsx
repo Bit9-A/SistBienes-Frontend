@@ -45,6 +45,7 @@ export default function Dashboard(props: { [x: string]: any }) {
 
   // Obtener el perfil del usuario
   useEffect(() => {
+  
     const fetchUserProfile = async () => {
       try {
         setIsLoading(true);

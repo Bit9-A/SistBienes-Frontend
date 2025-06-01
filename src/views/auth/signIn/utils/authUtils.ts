@@ -1,4 +1,5 @@
-import { login } from "../../../../api/UserApi";
+import { login,logout } from "../../../../api/UserApi";
+import { useToast } from "@chakra-ui/react";
 
 // Función para manejar el inicio de sesión
 export const handleLogin = async (username: string, password: string) => {
@@ -27,9 +28,17 @@ export const handleLogin = async (username: string, password: string) => {
 };
 
 // Función para cerrar sesión
-export const handleLogout = () => {
+export const handleLogout = async () => {
+  const toast = useToast();
+  try {
+    await logout();
+  } catch (e) {
+    console.error("Error al cerrar sesión:", e);
+  }
   localStorage.removeItem("user");
+  if (window.location.pathname !== "/auth/sign-in") {
   window.location.href = "/auth/sign-in";
+}
 };
 
 // Función para verificar si el usuario está autenticado
