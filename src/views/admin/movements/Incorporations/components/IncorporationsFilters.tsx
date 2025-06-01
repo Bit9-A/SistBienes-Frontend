@@ -1,7 +1,6 @@
-
 import { Box, Button, Input, FormLabel, Stack, Text, Select, Collapse, Flex } from "@chakra-ui/react"
 import { FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi"
-import { departments } from "../variables/Incorporations";
+import type { Department } from "api/SettingsApi";
 
 interface IncorporationsFiltersProps {
   onFilterDepartment: (deptId: string) => void
@@ -13,6 +12,7 @@ interface IncorporationsFiltersProps {
   buttonSize: string
   borderColor: string
   cardBg: string
+  departments: Department[] // <-- Nuevo prop
 }
 
 export default function IncorporationsFilters({
@@ -25,6 +25,7 @@ export default function IncorporationsFilters({
   buttonSize,
   borderColor,
   cardBg,
+  departments, // <-- Nuevo prop
 }: IncorporationsFiltersProps) {
   return (
     <>
@@ -85,7 +86,7 @@ export default function IncorporationsFilters({
                 <option value="">Todos los departamentos</option>
                 {departments.map((dept) => (
                   <option key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
+                    {dept.nombre}
                   </option>
                 ))}
               </Select>

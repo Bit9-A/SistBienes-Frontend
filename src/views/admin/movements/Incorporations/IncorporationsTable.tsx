@@ -1,162 +1,171 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { Box, Button, useDisclosure, useColorModeValue, useBreakpointValue, Stack } from "@chakra-ui/react"
-import { FiEdit } from "react-icons/fi"
-import type { Incorporation } from "./variables/Incorporations"
-import IncorporationsFilters from "./components/IncorporationsFilters"
-import IncorporationsForm from "./components/IncorporationsForm"
-import DesktopTable from "./components/DesktopTable"
-import MobileCards from "./components/MobileCard"
-
+import { useState, useEffect } from "react";
+import { Box, Button, useDisclosure, useColorModeValue, useBreakpointValue, Stack } from "@chakra-ui/react";
+import { FiEdit } from "react-icons/fi";
+import {
+  Incorp,
+  getIncorps,
+  createIncorp,
+  updateIncorp,
+  deleteIncorp,
+} from "api/IncorpApi";
+import {
+  filterIncorporations,
+} from "./utils/IncorporationsLogic";
+import IncorporationsFilters from "./components/IncorporationsFilters";
+import IncorporationsForm from "./components/IncorporationsForm";
+import DesktopTable from "./components/DesktopTable";
+import MobileCards from "./components/MobileCard";
+import { Department,getDepartments } from "api/SettingsApi"; // Importa el tipo de Departamento si lo necesitas
+import { ConceptoMovimiento,getConceptosMovimientoIncorporacion } from "api/SettingsApi";
+ // Importa el tipo de ConceptoMovimiento si lo necesitas
 // Mock data for initial load
-const initialData: Incorporation[] = [
-  {
-    id: 1,
-    bien_id: 12345,
-    nombre: "Escritorio",
-    descripcion: "Escritorio de oficina",
-    fecha: "2025-04-20",
-    valor: 150.0,
-    cantidad: 10,
-    concepto_id: 1,
-    dept_id: 1,
-  },
-  {
-    id: 2,
-    bien_id: 67890,
-    nombre: "Silla",
-    descripcion: "Silla ergonómica",
-    fecha: "2025-04-19",
-    valor: 75.0,
-    cantidad: 20,
-    concepto_id: 2,
-    dept_id: 2,
-  },
-]
 
 export default function IncorporationsTable() {
-  const [incorporations, setIncorporations] = useState<Incorporation[]>([])
-  const [filteredIncorporations, setFilteredIncorporations] = useState<Incorporation[]>([])
-  const [selectedIncorporation, setSelectedIncorporation] = useState<Incorporation | null>(null)
-  const [newIncorporation, setNewIncorporation] = useState<Partial<Incorporation>>({})
-  const [filterDept, setFilterDept] = useState<string | null>(null)
-  const [startDate, setStartDate] = useState<string>("")
-  const [endDate, setEndDate] = useState<string>("")
-  const [showFilters, setShowFilters] = useState(false)
-  const { isOpen, onOpen, onClose } = useDisclosure()
+
+const [incorporations, setIncorporations] = useState<Incorp[]>([]);
+  const [filteredIncorporations, setFilteredIncorporations] = useState<Incorp[]>([]);
+  const [selectedIncorporation, setSelectedIncorporation] = useState<Incorp | null>(null);
+  const [newIncorporation, setNewIncorporation] = useState<Partial<Incorp>>({});
+  const [filterDept, setFilterDept] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [departments, setDepartments] = useState<Department[]>([]); // Mock departments
+  const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([]); // Mock concepts
 
   // UI theme values
-  const borderColor = useColorModeValue("gray.200", "gray.700")
-  const headerBg = useColorModeValue("gray.100", "gray.800")
-  const hoverBg = useColorModeValue("gray.50", "gray.700")
-  const cardBg = useColorModeValue("white", "gray.800")
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const headerBg = useColorModeValue("gray.100", "gray.800");
+  const hoverBg = useColorModeValue("gray.50", "gray.700");
+  const cardBg = useColorModeValue("white", "gray.800");
 
   // Responsive values
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const buttonSize = useBreakpointValue({ base: "sm", md: "md" })
-  const tableSize = useBreakpointValue({ base: "sm", md: "md" })
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const buttonSize = useBreakpointValue({ base: "sm", md: "md" });
+  const tableSize = useBreakpointValue({ base: "sm", md: "md" });
 
-  // Load initial data
+
+
+
+  // Cargar datos reales al montar
   useEffect(() => {
-    setIncorporations(initialData)
-    setFilteredIncorporations(initialData)
-  }, [])
+    const fetchData = async () => {
+      try {
+        const data = await getIncorps();
+        const deptData = await getDepartments();
+        const conceptData = await getConceptosMovimientoIncorporacion();
+        console.log("Conceptos de Incorporación:", conceptData);
+        setDepartments(deptData);
+        setConcepts(conceptData);
+        setIncorporations(data);
+        setFilteredIncorporations(data);
+      } catch (error) {
+        // Manejo de error
+      }
+    };
+    fetchData();
+  }, []);
 
-  const handleAdd = () => {
-    if (!newIncorporation.bien_id || !newIncorporation.nombre || !newIncorporation.fecha) return
+const handleAdd = async () => {
+  // Validar y limpiar datos
+  const bien_id = Number(newIncorporation.bien_id);
+  const fecha = newIncorporation.fecha ? newIncorporation.fecha : "";
+  const valor = Number(newIncorporation.valor);
+  const cantidad = Number(newIncorporation.cantidad);
+  const concepto_id = Number(newIncorporation.concepto_id);
+  const dept_id = Number(newIncorporation.dept_id);
 
-    const newEntry: Incorporation = {
-      id: incorporations.length + 1,
-      bien_id: newIncorporation.bien_id,
-      nombre: newIncorporation.nombre,
-      descripcion: newIncorporation.descripcion || "",
-      fecha: newIncorporation.fecha,
-      valor: newIncorporation.valor || 0,
-      cantidad: newIncorporation.cantidad || 0,
-      concepto_id: newIncorporation.concepto_id || 1,
-      dept_id: newIncorporation.dept_id || 1,
+  if (
+    !bien_id ||
+    !fecha ||
+    !valor ||
+    !cantidad ||
+    !concepto_id ||
+    !dept_id
+  ) {
+    // Muestra un toast de error: "Todos los campos son obligatorios"
+    return;
+  }
+
+  // Solo envía los campos que espera el backend
+  const dataToSend = { bien_id, fecha, valor, cantidad, concepto_id, dept_id };
+
+  try {
+    const created = await createIncorp(dataToSend);
+    setIncorporations((prev) => [...prev, created]);
+    setFilteredIncorporations((prev) => [...prev, created]);
+    setNewIncorporation({});
+    onClose();
+  } catch (error) {
+    // Manejo de error
+    console.error("Error al crear incorporación:", error);
+  }
+};
+
+  const handleEdit = async () => {
+    if (selectedIncorporation && newIncorporation) {
+      try {
+        const updated = await updateIncorp(selectedIncorporation.id, newIncorporation as Partial<Omit<Incorp, "id">>);
+        setIncorporations((prev) =>
+          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+        );
+        setFilteredIncorporations((prev) =>
+          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+        );
+        setSelectedIncorporation(null);
+        setNewIncorporation({});
+        onClose();
+      } catch (error) {
+        // Manejo de error
+      }
     }
+  };
 
-    setIncorporations([...incorporations, newEntry])
-    setFilteredIncorporations([...filteredIncorporations, newEntry])
-    setNewIncorporation({})
-    onClose()
-  }
-
-  const handleEdit = () => {
-    if (selectedIncorporation) {
-      const updatedIncorporations = incorporations.map((item) =>
-        item.id === selectedIncorporation.id ? { ...item, ...newIncorporation } : item,
-      )
-
-      setIncorporations(updatedIncorporations)
-      setFilteredIncorporations(
-        filterDept
-          ? updatedIncorporations.filter((item) => item.dept_id === Number.parseInt(filterDept))
-          : updatedIncorporations,
-      )
-
-      setSelectedIncorporation(null)
-      setNewIncorporation({})
-      onClose()
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteIncorp(id);
+      setIncorporations((prev) => prev.filter((item) => item.id !== id));
+      setFilteredIncorporations((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      // Manejo de error
     }
-  }
+  };
 
-  const handleDelete = (id: number) => {
-    const updatedIncorporations = incorporations.filter((item) => item.id !== id)
-    setIncorporations(updatedIncorporations)
-    setFilteredIncorporations(
-      filterDept
-        ? updatedIncorporations.filter((item) => item.dept_id === Number.parseInt(filterDept))
-        : updatedIncorporations,
-    )
-  }
-
-  const handleFilterDepartment = (deptId: string) => {
-    setFilterDept(deptId)
-    applyFilters(deptId, startDate, endDate)
-  }
+   const handleFilterDepartment = (deptId: string) => {
+    setFilterDept(deptId);
+    applyFilters(deptId, startDate, endDate);
+  };
 
   const handleFilterDate = (start: string, end: string) => {
-    setStartDate(start)
-    setEndDate(end)
-    applyFilters(filterDept, start, end)
-  }
+    setStartDate(start);
+    setEndDate(end);
+    applyFilters(filterDept, start, end);
+  };
 
-  const applyFilters = (deptId: string | null, start: string, end: string) => {
-    let filtered = [...incorporations]
+   const applyFilters = (deptId: string, start: string, end: string) => {
+    const filtered = filterIncorporations(
+      incorporations,
+      "", // Si tienes búsqueda, pásala aquí
+      deptId,
+      start,
+      end
+    );
+    setFilteredIncorporations(filtered);
+  };
 
-    // Filtrar por departamento
-    if (deptId) {
-      filtered = filtered.filter((item) => item.dept_id === Number.parseInt(deptId))
-    }
-
-    // Filtrar por fecha
-    if (start) {
-      filtered = filtered.filter((item) => new Date(item.fecha) >= new Date(start))
-    }
-
-    if (end) {
-      filtered = filtered.filter((item) => new Date(item.fecha) <= new Date(end))
-    }
-
-    setFilteredIncorporations(filtered)
-  }
-
-  const openEditDialog = (incorporation: Incorporation) => {
-    setSelectedIncorporation(incorporation)
-    setNewIncorporation(incorporation)
-    onOpen()
-  }
+  const openEditDialog = (inc: Incorp) => {
+    setSelectedIncorporation(inc);
+    setNewIncorporation(inc);
+    onOpen();
+  };
 
   const openAddDialog = () => {
-    setSelectedIncorporation(null)
-    setNewIncorporation({})
-    onOpen()
-  }
-
-  const toggleFilters = () => setShowFilters(!showFilters)
+    setSelectedIncorporation(null);
+    setNewIncorporation({});
+    onOpen();
+  };
+  const toggleFilters = () => setShowFilters(!showFilters);
 
   return (
     <Box pt={{ base: "100px", md: "80px", xl: "80px" }}>
@@ -188,10 +197,10 @@ export default function IncorporationsTable() {
           buttonSize={buttonSize || "md"}
           borderColor={borderColor}
           cardBg={cardBg}
+          departments={departments} // Pasa los departamentos al filtro
         />
       </Stack>
 
-      {/* Desktop or Mobile view based on screen size */}
       {!isMobile ? (
         <DesktopTable
           incorporations={filteredIncorporations}
@@ -206,12 +215,13 @@ export default function IncorporationsTable() {
         <MobileCards
           incorporations={filteredIncorporations}
           borderColor={borderColor}
+          departments={departments}
+          concepts={concepts}
           onEdit={openEditDialog}
           onDelete={handleDelete}
         />
       )}
 
-      {/* Form Modal */}
       <IncorporationsForm
         isOpen={isOpen}
         onClose={onClose}
@@ -221,7 +231,9 @@ export default function IncorporationsTable() {
         handleAdd={handleAdd}
         handleEdit={handleEdit}
         isMobile={isMobile || false}
+        departments={departments}
+        concepts={concepts} // Pasa los conceptos al formulario
       />
     </Box>
-  )
+  );
 }

@@ -1,16 +1,16 @@
 "use client"
 
-import { Table, Thead, Tbody, Tr, Th, Td, Button, Flex, TableContainer, IconButton, Icon } from "@chakra-ui/react"
+import { Table, Thead, Tbody, Tr, Th, Td, Flex, TableContainer, IconButton, Icon } from "@chakra-ui/react"
 import { FiEdit, FiTrash2 } from "react-icons/fi"
-import type { Incorporation } from "../variables/Incorporations"
+import type { Incorp } from "api/IncorpApi"
 
 interface DesktopTableProps {
-  incorporations: Incorporation[]
+  incorporations: Incorp[]
   borderColor: string
   headerBg: string
   hoverBg: string
   tableSize: string | undefined
-  onEdit: (incorporation: Incorporation) => void
+  onEdit: (incorporation: Incorp) => void
   onDelete: (id: number) => void
 }
 
@@ -30,11 +30,11 @@ export default function DesktopTable({
           <Tr>
             <Th>ID</Th>
             <Th>N° Identificación</Th>
-            <Th>Nombre</Th>
-            <Th>Descripción</Th>
             <Th>Fecha</Th>
             <Th>Valor</Th>
             <Th>Cantidad</Th>
+            <Th>Concepto</Th>
+            <Th>Departamento</Th>
             <Th textAlign="center">Acciones</Th>
           </Tr>
         </Thead>
@@ -42,12 +42,20 @@ export default function DesktopTable({
           {incorporations.map((item) => (
             <Tr key={item.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
               <Td>{item.id}</Td>
-              <Td>{item.bien_id}</Td>
-              <Td>{item.nombre}</Td>
-              <Td>{item.descripcion}</Td>
-              <Td>{item.fecha}</Td>
-              <Td>{item.valor.toFixed(2)}</Td>
+              <Td>{item.numero_identificacion}</Td>
+              <Td>
+  {item.fecha
+    ? new Date(item.fecha).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : ""}
+</Td>
+              <Td>{Number(item.valor).toFixed(2)}</Td>
               <Td>{item.cantidad}</Td>
+              <Td>{item.concepto_nombre}</Td>
+              <Td>{item.dept_nombre}</Td>
               <Td>
                 <Flex justify="center" gap={2}>
                   <IconButton
@@ -63,7 +71,9 @@ export default function DesktopTable({
                     icon={<Icon as={FiTrash2} />}
                     size="sm"
                     colorScheme="red"
-                    variant="ghost" onClick={() => onDelete(item.id)} />
+                    variant="ghost"
+                    onClick={() => onDelete(item.id)}
+                  />
                 </Flex>
               </Td>
             </Tr>

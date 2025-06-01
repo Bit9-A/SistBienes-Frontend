@@ -81,3 +81,4 @@ export const getProfile = async (): Promise<UserProfile> => {
   const response = await axiosInstance.get("/auth/profile")
   return response.data.user // Devuelve el perfil del usuario
 }
+

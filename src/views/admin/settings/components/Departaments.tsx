@@ -64,7 +64,7 @@ const Departaments = () => {
   const headerBg = useColorModeValue('gray.100', 'gray.800');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
 
-  const fetchDepartments = async () => {
+ const fetchDepartments = async () => {
     try {
       const data = await getDepartments();
       setDepartments(data);
