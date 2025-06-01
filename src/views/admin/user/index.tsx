@@ -51,6 +51,7 @@ import {
 } from 'react-icons/fi';
 
 import { CreateUserForm, EditUserForm } from './components/UserForm';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
 import {
   getUsers,
@@ -76,6 +77,13 @@ const UserManage = () => {
   const [selectedDept, setSelectedDept] = useState('all');
   const [selectedUserType, setSelectedUserType] = useState('all');
   const [departments, setDepartments] = useState([]); // Lista de departamentos
+
+  //estado para el filtro de estado de usuario
+  const [statusFilter, setStatusFilter] = useState<
+    'active' | 'inactive' | 'all'
+  >('active');
+  const [currentPage, setCurrentPage] = useState(1); // Página actual para la paginación
+  const itemsPerPage = 10; // Elementos por página para la paginación
 
   const [userRoles, setUserRoles] = useState([]); // Lista de roles de usuario
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -121,12 +129,30 @@ const UserManage = () => {
     fetchUsers();
   }, []);
 
+  // Filtro por estado
+  const statusFilteredUsers = users.filter((user) => {
+    if (statusFilter === 'active')
+      return user.isActive === 1 || user.isActive === '1';
+    if (statusFilter === 'inactive')
+      return user.isActive === 0 || user.isActive === '0';
+    return true;
+  });
+
   const filteredUsers = filterUsers(
-    users,
+    statusFilteredUsers,
     searchQuery,
     selectedDept,
     selectedUserType,
   );
+  // Paginación
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedDept, selectedUserType, statusFilter]);
 
   // Funciones para manejar la creación y edición de usuarios
   const handleCreateUserWrapper = async (newUser: any) => {
@@ -140,10 +166,15 @@ const UserManage = () => {
     await fetchUsers(); // Refresca la lista de usuarios después de editar
   };
 
-  // Funciones para manejar la eliminación de usuarios
-  const handleDeleteUserWrapper = async (id: number) => {
-    await handleDeleteUser(id, deleteUser, setUsers);
-    await fetchUsers(); // Refresca la lista de usuarios después de eliminar
+  const handleDeactivateUserWrapper = async (user: any) => {
+    await updateUser(user.id, { ...user, isActive: 0 });
+    await fetchUsers(); // Refresca la lista de usuarios después de desactivar
+  };
+
+  // Función para manejar la edición de usuarios
+  const handleCloseAndRefresh = () => {
+    onClose();
+    fetchUsers();
   };
 
   // Colors for theming
@@ -206,6 +237,16 @@ const UserManage = () => {
                   borderRadius="md"
                 />
               </InputGroup>
+              {/* Filtro de estado */}
+              <Select
+                maxW="200px"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+              >
+                <option value="active">Solo Activos</option>
+                <option value="inactive">Solo Inactivos</option>
+                <option value="all">Todos</option>
+              </Select>
 
               <Menu placement="bottom-end" isLazy>
                 <MenuButton
@@ -245,8 +286,9 @@ const UserManage = () => {
                         selectedDept === dept.id ? 'type.primary' : 'inherit'
                       }
                     >
-                    
-                      {selectedDept === String(dept.id) && <Icon as={FiCheck} mr={2} />}
+                      {selectedDept === String(dept.id) && (
+                        <Icon as={FiCheck} mr={2} />
+                      )}
                       {dept.nombre}
                     </MenuItem>
                   ))}
@@ -276,17 +318,19 @@ const UserManage = () => {
             <Table variant="simple" size="md">
               <Thead bg={headerBg}>
                 <Tr>
-                  <Th>Usuario</Th>
+                  <Th>Nombre</Th>
+                  <Th>Nombre de Usuario</Th>
                   <Th>Tipo</Th>
                   <Th>Email</Th>
                   <Th>Teléfono</Th>
                   <Th>Departamento</Th>
                   <Th>Cédula</Th>
+                  <Th>Estado</Th>
                   <Th textAlign="center">Acciones</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <Tr
                     key={user.id}
                     _hover={{ bg: hoverBg }}
@@ -296,30 +340,36 @@ const UserManage = () => {
                       <Text fontWeight="medium">{`${user.nombre} ${user.apellido}`}</Text>
                     </Td>
                     <Td>
+                      <Text>{user.username}</Text>
+                    </Td>
+                    <Td>
                       <Badge
                         colorScheme={user.tipo_usuario?.color || 'gray'}
                         borderRadius="full"
                         px={2}
                         py={1}
                       >
-                        {
-                          // Muestra el nombre del rol o 'N/A' si no está disponible
-                          userRoles.find(
-                            (role) =>
-                              String(role.id) === String(user.tipo_usuario),
-                          )?.nombre || 'N/A'
-                        }
+                        {userRoles.find(
+                          (role) =>
+                            String(role.id) === String(user.tipo_usuario),
+                        )?.nombre || 'N/A'}
                       </Badge>
                     </Td>
                     <Td>{user.email}</Td>
                     <Td>{user.telefono || 'N/A'}</Td>
                     <Td>
-                    {
-          departments.find((dept) => String(dept.id) === String(user.dept_id))
-            ?.nombre || 'N/A'
-        }
+                      {departments.find(
+                        (dept) => String(dept.id) === String(user.dept_id),
+                      )?.nombre || 'N/A'}
                     </Td>
                     <Td>{user.cedula}</Td>
+                    <Td>
+                      {user.isActive === 1 ? (
+                        <Badge colorScheme="green">Activo</Badge>
+                      ) : (
+                        <Badge colorScheme="red">No Activo</Badge>
+                      )}
+                    </Td>
                     <Td>
                       <Flex justify="center" gap={2}>
                         <IconButton
@@ -330,7 +380,7 @@ const UserManage = () => {
                           variant="ghost"
                           onClick={() =>
                             handleEditUser(user, setEditingUser, onOpen)
-                          } // Abre el formulario de edición
+                          }
                         />
                         <IconButton
                           aria-label="Eliminar usuario"
@@ -351,34 +401,53 @@ const UserManage = () => {
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
+          {/* Paginación */}
           <Flex justify="space-between" align="center" mt={4}>
-            <Text color="gray.600">Mostrando 1-3 de 3 usuarios</Text>
-            <HStack spacing={2}>
-              <Button
+            <Text color="gray.600">
+              Mostrando{' '}
+              {filteredUsers.length === 0
+                ? 0
+                : (currentPage - 1) * itemsPerPage + 1}
+              -{Math.min(currentPage * itemsPerPage, filteredUsers.length)} de{' '}
+              {filteredUsers.length} usuarios
+            </Text>
+            <HStack spacing={1}>
+              <IconButton
+                aria-label="Anterior"
+                icon={<ChevronLeftIcon />}
                 size="sm"
-                isDisabled={true}
-                colorScheme={'type.primary'}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                isDisabled={currentPage === 1}
                 variant="outline"
-              >
-                Anterior
-              </Button>
-              <Button
+              />
+              {/* Botones numerados */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    size="sm"
+                    variant={page === currentPage ? 'solid' : 'outline'}
+                    color={'white'}
+                    colorScheme={page === currentPage ? 'purple' : 'gray'}
+                    bg={page === currentPage ? 'type.primary' : 'gray'}
+                    onClick={() => setCurrentPage(page)}
+                    fontWeight={page === currentPage ? 'bold' : 'normal'}
+                    mx={0.5}
+                  >
+                    {page}
+                  </Button>
+                ),
+              )}
+              <IconButton
+                aria-label="Siguiente"
+                icon={<ChevronRightIcon />}
                 size="sm"
-                bgColor={'type.primary'}
-                color={'type.cbutton'}
-                variant="solid"
-              >
-                1
-              </Button>
-              <Button
-                size="sm"
-                isDisabled={true}
-                colorScheme={'type.primary'}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                isDisabled={currentPage === totalPages || totalPages === 0}
                 variant="outline"
-              >
-                Siguiente
-              </Button>
+              />
             </HStack>
           </Flex>
         </CardBody>
@@ -390,7 +459,7 @@ const UserManage = () => {
           isOpen={isOpen}
           onClose={() => {
             setEditingUser(null);
-            onClose(); // Cierra el modal después de editar
+            handleCloseAndRefresh(); // Cierra el modal después de editar
           }}
           user={editingUser}
           onSave={handleSaveEditUserWrapper} // Función para guardar cambios
@@ -398,7 +467,7 @@ const UserManage = () => {
       ) : (
         <CreateUserForm
           isOpen={isOpen}
-          onClose={onClose}
+          onClose={handleCloseAndRefresh}
           onSave={handleCreateUserWrapper}
         />
       )}
@@ -415,15 +484,15 @@ const UserManage = () => {
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Confirmar Eliminación
+              Confirmar Desactivación
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              ¿Estás seguro de que deseas eliminar al usuario{' '}
+              ¿Estás seguro de que deseas desactivar al usuario{' '}
               <strong>
                 {userToDelete?.nombre} {userToDelete?.apellido}
               </strong>
-              ? Esta acción no se puede deshacer.
+              ? Esta acción no eliminará el usuario, solo lo desactivará.
             </AlertDialogBody>
 
             <AlertDialogFooter>
@@ -431,12 +500,12 @@ const UserManage = () => {
               <Button
                 colorScheme="red"
                 onClick={async () => {
-                  await handleDeleteUserWrapper(userToDelete.id);
+                  await handleDeactivateUserWrapper(userToDelete);
                   onDeleteDialogClose();
                 }}
                 ml={3}
               >
-                Eliminar
+                Desactivar
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

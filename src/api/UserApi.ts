@@ -10,6 +10,8 @@ export interface User {
   tipo_usuario: number
   cedula: string
   password?: string
+  isActive?: number
+  username: string
   nombre_completo?: string // Agregamos este campo
 }
 
@@ -22,11 +24,16 @@ export interface UserProfile {
   telefono?: string
   dept_id: number
   cedula: string
+  username: string
 }
 
 // Obtener todos los usuarios
 export const getUsers = async (): Promise<User[]> => {
   const response = await axiosInstance.get("/user")
+  if (!response.data || !response.data.users) {
+    throw new Error("No se encontraron usuarios")
+  }
+  console.log("Usuarios obtenidos:", response.data.users)
   return response.data.users
 }
 

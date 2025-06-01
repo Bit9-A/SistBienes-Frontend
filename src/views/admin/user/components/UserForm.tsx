@@ -54,12 +54,14 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
+    username: '', // <-- Nuevo campo
     email: '',
     cedula: '',
     telefono: '',
     tipo_usuario: '2',
     dept_id: '1',
     password: '',
+    // isActive no se muestra ni se edita aquí
   });
 
   const toast = useToast();
@@ -96,35 +98,37 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
-    if (
-      !formData.nombre ||
-      !formData.apellido ||
-      !formData.email ||
-      !formData.password ||
-      !formData.tipo_usuario ||
-      !formData.dept_id
-    ) {
-      toast({
-        title: 'Error',
-        description: 'Por favor, completa todos los campos obligatorios.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    if (!isValidEmail(formData.email)) {
-      toast({
-        title: 'Error',
-        description: 'Por favor, ingresa un email válido.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    onSave(formData);
+ const handleSubmit = async () => {
+  if (
+    !formData.nombre ||
+    !formData.apellido ||
+    !formData.username ||
+    !formData.email ||
+    !formData.password ||
+    !formData.tipo_usuario ||
+    !formData.dept_id
+  ) {
+    toast({
+      title: 'Error',
+      description: 'Por favor, completa todos los campos obligatorios.',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+  if (!isValidEmail(formData.email)) {
+    toast({
+      title: 'Error',
+      description: 'Por favor, ingresa un email válido.',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+  try {
+    await onSave({ ...formData, isActive: 1 }); // Si hay error, lanzará excepción y no sigue
     toast({
       title: 'Usuario creado',
       description: 'El usuario se ha creado correctamente.',
@@ -133,7 +137,22 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
       isClosable: true,
     });
     onClose();
-  };
+  } catch (error: any) {
+    const backendMsg =
+      error?.response?.data?.message ||
+      error?.response?.data?.msg ||
+      error?.message ||
+      'Error desconocido';
+    toast({
+      title: 'Error',
+      description: backendMsg,
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+    // No cierres el modal aquí
+  }
+};
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -159,6 +178,15 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                 value={formData.apellido}
                 onChange={handleChange}
                 placeholder="Apellido"
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Nombre de Usuario</FormLabel>
+              <Input
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Nombre de usuario"
               />
             </FormControl>
             <FormControl>
@@ -303,11 +331,13 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
+    username: '', // <-- Nuevo campo
     email: '',
     cedula: '',
     telefono: '',
     tipo_usuario: '',
     dept_id: '',
+    isActive: '1', // <-- Nuevo campo
   });
   const [departments, setDepartments] = useState<Department[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
@@ -331,7 +361,10 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     fetchData();
 
     if (user) {
-      setFormData(user); // Carga los datos del usuario seleccionado
+      setFormData({
+        ...user,
+        isActive: user.isActive !== undefined ? String(user.isActive) : '1',
+      });
     }
   }, [user]);
 
@@ -343,7 +376,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
   };
 
   const handleSubmit = () => {
-    if (!formData.nombre || !formData.apellido || !formData.email) {
+    if (!formData.nombre || !formData.apellido || !formData.username || !formData.email) {
       toast({
         title: 'Error',
         description: 'Por favor, completa todos los campos obligatorios.',
@@ -391,6 +424,15 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                 placeholder="Apellido"
               />
             </FormControl>
+              <FormControl>
+              <FormLabel>Nombre de Usuario</FormLabel>
+              <Input
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Nombre de usuario"
+              />
+            </FormControl>
             <FormControl>
               <FormLabel>Email</FormLabel>
               <Input
@@ -418,6 +460,17 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                 onChange={handleChange}
                 placeholder="Teléfono"
               />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Activo</FormLabel>
+              <Select
+                name="isActive"
+                value={formData.isActive}
+                onChange={handleChange}
+              >
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+              </Select>
             </FormControl>
             <FormControl>
               <FormLabel>Tipo de Usuario</FormLabel>

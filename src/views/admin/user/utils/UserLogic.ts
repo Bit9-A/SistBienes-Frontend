@@ -60,18 +60,19 @@ export const filterUsers = (
     onOpen();
   };
 
-  export const handleCreateUser = async (
-    user: any,
-    createUser: (userData: any) => Promise<void>,
-    setUsers: any
-  ) => {
-    try {
-      const newUser = await createUser(user);
-      setUsers((prevUsers: any[]) => [...prevUsers, newUser]);
-    } catch (error) {
-      console.error('Error al crear el usuario:', error);
-    }
-  };
+ export const handleCreateUser = async (
+  user: any,
+  createUser: (userData: any) => Promise<any>,
+  setUsers: any
+) => {
+  try {
+    const newUser = await createUser(user);
+    setUsers((prevUsers: any[]) => [...prevUsers, newUser]);
+    return newUser;
+  } catch (error) {
+    throw error; // <-- Lanza el error para que el formulario lo capture
+  }
+};
 
   export const handleSaveEditUser = async (
     updatedUser: any,

@@ -82,7 +82,7 @@ const routes = [
     path: '/audit',
     icon: <Icon as={MdAssignment} width="20px" height="20px" color="inherit" />,
     component: <AuditModule />,
-    adminOnly: false,
+    adminOnly: true,
   },
   {
     name: 'Reportes',

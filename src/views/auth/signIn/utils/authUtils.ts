@@ -1,29 +1,28 @@
 import { login } from "../../../../api/UserApi";
 
 // Función para manejar el inicio de sesión
-export const handleLogin = async (email: string, password: string) => {
+export const handleLogin = async (username: string, password: string) => {
   try {
-    const response = await login({ email, password });
-    
-    // Asegurarse de que la respuesta incluya el token
+    const response = await login({ username, password });
+
     if (response && response.token) {
       const userData = {
         ...response.user,
         token: response.token
       };
-      
-      // Guardar el usuario con token en localStorage
       localStorage.setItem("user", JSON.stringify(userData));
       return userData;
     } else {
       throw new Error("No se recibió un token válido del servidor.");
     }
   } catch (error: any) {
-    // Personalizar el mensaje de error según la respuesta del backend
-    if (error.response?.status === 401) {
-      throw new Error("Correo o contraseña incorrectos.");
-    }
-    throw new Error("Error al iniciar sesión. Intenta de nuevo.");
+    // Captura el mensaje del backend si existe
+    const backendMsg =
+      error?.response?.data?.message ||
+      error?.response?.data?.msg ||
+      error?.message ||
+      "Error al iniciar sesión. Intenta de nuevo.";
+    throw new Error(backendMsg);
   }
 };
 
