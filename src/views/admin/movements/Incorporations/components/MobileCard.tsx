@@ -2,24 +2,35 @@
 
 import { Card, CardBody, Stack, Flex, Text, Badge, Divider, Grid, Box, IconButton } from "@chakra-ui/react"
 import { FiEdit, FiTrash2 } from "react-icons/fi"
-import { type Incorporation, concepts, departments } from "../variables/Incorporations"
+import type { Incorp } from "api/IncorpApi"
+import type { Department, ConceptoMovimiento } from "api/SettingsApi"
+import { v4 as uuidv4 } from "uuid"
 
 interface MobileCardsProps {
-  incorporations: Incorporation[]
+  incorporations: Incorp[]
   borderColor: string
-  onEdit: (incorporation: Incorporation) => void
+  onEdit: (incorporation: Incorp) => void
   onDelete: (id: number) => void
+  departments: Department[]
+  concepts: ConceptoMovimiento[]
 }
 
-export default function MobileCards({ incorporations, borderColor, onEdit, onDelete }: MobileCardsProps) {
+export default function MobileCards({
+  incorporations,
+  borderColor,
+  onEdit,
+  onDelete,
+  departments,
+  concepts,
+}: MobileCardsProps) {
   const getConceptName = (conceptId: number) => {
     const concept = concepts.find((c) => c.id === conceptId)
-    return concept ? concept.name : ""
+    return concept ? concept.nombre : conceptId
   }
 
   const getDepartmentName = (deptId: number) => {
     const dept = departments.find((d) => d.id === deptId)
-    return dept ? dept.name : ""
+    return dept ? dept.nombre : deptId
   }
 
   if (incorporations.length === 0) {
@@ -32,28 +43,18 @@ export default function MobileCards({ incorporations, borderColor, onEdit, onDel
 
   return (
     <Stack spacing={4}>
-      {incorporations.map((item) => (
-        <Card key={item.id} borderColor={borderColor} boxShadow="sm">
+      {incorporations.map((item,index) => (
+        <Card key={uuidv4()} borderColor={borderColor} boxShadow="sm">
           <CardBody p={3}>
             <Stack spacing={2}>
               <Flex justify="space-between" align="center">
-                <Text fontWeight="bold">{item.nombre}</Text>
+                <Text fontWeight="bold">N° {index+1}</Text>
                 <Badge colorScheme="purple">{getConceptName(item.concepto_id)}</Badge>
               </Flex>
-
-              <Text fontSize="sm" color="gray.600">
-                {item.descripcion}
-              </Text>
 
               <Divider my={1} />
 
               <Grid templateColumns="repeat(2, 1fr)" gap={2}>
-                <Box>
-                  <Text fontSize="xs" color="gray.500">
-                    ID
-                  </Text>
-                  <Text fontSize="sm">{item.id}</Text>
-                </Box>
                 <Box>
                   <Text fontSize="xs" color="gray.500">
                     N° Identificación
@@ -76,7 +77,7 @@ export default function MobileCards({ incorporations, borderColor, onEdit, onDel
                   <Text fontSize="xs" color="gray.500">
                     Valor
                   </Text>
-                  <Text fontSize="sm">{item.valor.toFixed(2)}</Text>
+                  <Text fontSize="sm">{Number(item.valor).toFixed(2)}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="xs" color="gray.500">

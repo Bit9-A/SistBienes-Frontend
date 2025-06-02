@@ -15,17 +15,20 @@ import {
   Input,
   Select,
 } from "@chakra-ui/react"
-import { type Disposal, departments, concepts } from "../variables/Disposals"
+import type { Desincorp } from "api/IncorpApi"
+import type { Department, ConceptoMovimiento } from "api/SettingsApi"
 
 interface DisposalsFormProps {
   isOpen: boolean
   onClose: () => void
-  selectedDisposal: Disposal | null
-  newDisposal: Partial<Disposal>
-  setNewDisposal: (disposal: Partial<Disposal>) => void
+  selectedDisposal: Desincorp | null
+  newDisposal: Partial<Desincorp>
+  setNewDisposal: (disposal: Partial<Desincorp>) => void
   handleAdd: () => void
   handleEdit: () => void
   isMobile: boolean
+  departments: Department[]
+  concepts: ConceptoMovimiento[]
 }
 
 export default function DisposalsForm({
@@ -37,12 +40,16 @@ export default function DisposalsForm({
   handleAdd,
   handleEdit,
   isMobile,
+  departments,
+  concepts,
 }: DisposalsFormProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "lg"}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{selectedDisposal ? "Editar Desincorporación" : "Agregar Desincorporación"}</ModalHeader>
+        <ModalHeader>
+          {selectedDisposal ? "Editar Desincorporación" : "Agregar Desincorporación"}
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Grid templateColumns={{ base: "1fr", md: "1fr 3fr" }} gap={4} mb={4}>
@@ -62,42 +69,7 @@ export default function DisposalsForm({
                     bien_id: Number.parseInt(e.target.value),
                   })
                 }
-              />
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="nombre" textAlign={{ base: "left", md: "right" }}>
-                Nombre
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="nombre"
-                value={newDisposal.nombre || ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    nombre: e.target.value,
-                  })
-                }
-              />
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="descripcion" textAlign={{ base: "left", md: "right" }}>
-                Descripción
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="descripcion"
-                value={newDisposal.descripcion || ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    descripcion: e.target.value,
-                  })
-                }
+                isReadOnly={!!selectedDisposal}
               />
             </GridItem>
 
@@ -110,13 +82,14 @@ export default function DisposalsForm({
               <Input
                 id="fecha"
                 type="date"
-                value={newDisposal.fecha || ""}
+                value={newDisposal.fecha ? newDisposal.fecha.slice(0, 10) : ""}
                 onChange={(e) =>
                   setNewDisposal({
                     ...newDisposal,
                     fecha: e.target.value,
                   })
                 }
+                isReadOnly={!!selectedDisposal}
               />
             </GridItem>
 
@@ -130,11 +103,11 @@ export default function DisposalsForm({
                 id="valor"
                 type="number"
                 step="0.01"
-                value={newDisposal.valor || ""}
+                value={newDisposal.valor ?? ""}
                 onChange={(e) =>
                   setNewDisposal({
                     ...newDisposal,
-                    valor: Number.parseFloat(e.target.value),
+                    valor: e.target.value === "" ? 0 : Number.parseFloat(e.target.value),
                   })
                 }
               />
@@ -178,7 +151,7 @@ export default function DisposalsForm({
               >
                 {concepts.map((concept) => (
                   <option key={concept.id} value={concept.id.toString()}>
-                    {concept.name}
+                    {concept.nombre}
                   </option>
                 ))}
               </Select>
@@ -203,7 +176,7 @@ export default function DisposalsForm({
               >
                 {departments.map((dept) => (
                   <option key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
+                    {dept.nombre}
                   </option>
                 ))}
               </Select>

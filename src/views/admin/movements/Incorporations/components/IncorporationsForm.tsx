@@ -1,4 +1,3 @@
-
 import {
   Modal,
   ModalOverlay,
@@ -13,18 +12,21 @@ import {
   FormLabel,
   Input,
   Select,
-} from "@chakra-ui/react"
-import { type Incorporation, departments, concepts } from "../variables/Incorporations"
+} from '@chakra-ui/react';
+import type { Incorp } from 'api/IncorpApi';
+import type { Department, ConceptoMovimiento } from 'api/SettingsApi';
 
 interface IncorporationsFormProps {
-  isOpen: boolean
-  onClose: () => void
-  selectedIncorporation: Incorporation | null
-  newIncorporation: Partial<Incorporation>
-  setNewIncorporation: (incorporation: Partial<Incorporation>) => void
-  handleAdd: () => void
-  handleEdit: () => void
-  isMobile: boolean
+  isOpen: boolean;
+  onClose: () => void;
+  selectedIncorporation: Incorp | null;
+  newIncorporation: Partial<Incorp>;
+  setNewIncorporation: (incorporation: Partial<Incorp>) => void;
+  handleAdd: () => void;
+  handleEdit: () => void;
+  isMobile: boolean;
+  departments: Department[]; // <-- Nuevo prop
+  concepts: ConceptoMovimiento[]; // <-- Nuevo prop
 }
 
 export default function IncorporationsForm({
@@ -36,17 +38,26 @@ export default function IncorporationsForm({
   handleAdd,
   handleEdit,
   isMobile,
+  departments,
+  concepts,
 }: IncorporationsFormProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "lg"}>
+    <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? 'full' : 'lg'}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{selectedIncorporation ? "Editar Incorporación" : "Agregar Incorporación"}</ModalHeader>
+        <ModalHeader>
+          {selectedIncorporation
+            ? 'Editar Incorporación'
+            : 'Agregar Incorporación'}
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Grid templateColumns={{ base: "1fr", md: "1fr 3fr" }} gap={4} mb={4}>
+          <Grid templateColumns={{ base: '1fr', md: '1fr 3fr' }} gap={4} mb={4}>
             <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="bien_id" textAlign={{ base: "left", md: "right" }}>
+              <FormLabel
+                htmlFor="bien_id"
+                textAlign={{ base: 'left', md: 'right' }}
+              >
                 N° Identificación
               </FormLabel>
             </GridItem>
@@ -54,7 +65,7 @@ export default function IncorporationsForm({
               <Input
                 id="bien_id"
                 type="number"
-                value={newIncorporation.bien_id || ""}
+                value={newIncorporation.bien_id || ''}
                 onChange={(e) =>
                   setNewIncorporation({
                     ...newIncorporation,
@@ -65,43 +76,10 @@ export default function IncorporationsForm({
             </GridItem>
 
             <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="nombre" textAlign={{ base: "left", md: "right" }}>
-                Nombre
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="nombre"
-                value={newIncorporation.nombre || ""}
-                onChange={(e) =>
-                  setNewIncorporation({
-                    ...newIncorporation,
-                    nombre: e.target.value,
-                  })
-                }
-              />
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="descripcion" textAlign={{ base: "left", md: "right" }}>
-                Descripción
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="descripcion"
-                value={newIncorporation.descripcion || ""}
-                onChange={(e) =>
-                  setNewIncorporation({
-                    ...newIncorporation,
-                    descripcion: e.target.value,
-                  })
-                }
-              />
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="fecha" textAlign={{ base: "left", md: "right" }}>
+              <FormLabel
+                htmlFor="fecha"
+                textAlign={{ base: 'left', md: 'right' }}
+              >
                 Fecha
               </FormLabel>
             </GridItem>
@@ -109,18 +87,26 @@ export default function IncorporationsForm({
               <Input
                 id="fecha"
                 type="date"
-                value={newIncorporation.fecha || ""}
+                value={
+                  newIncorporation.fecha
+                    ? newIncorporation.fecha.slice(0, 10) // Solo YYYY-MM-DD
+                    : ''
+                }
                 onChange={(e) =>
                   setNewIncorporation({
                     ...newIncorporation,
                     fecha: e.target.value,
                   })
                 }
+                isReadOnly={!!selectedIncorporation} // Solo lectura si se está editando
               />
             </GridItem>
 
             <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="valor" textAlign={{ base: "left", md: "right" }}>
+              <FormLabel
+                htmlFor="valor"
+                textAlign={{ base: 'left', md: 'right' }}
+              >
                 Valor
               </FormLabel>
             </GridItem>
@@ -129,18 +115,24 @@ export default function IncorporationsForm({
                 id="valor"
                 type="number"
                 step="0.01"
-                value={newIncorporation.valor || ""}
+                value={newIncorporation.valor ?? ''}
                 onChange={(e) =>
                   setNewIncorporation({
                     ...newIncorporation,
-                    valor: Number.parseFloat(e.target.value),
+                    valor:
+                      e.target.value === ''
+                        ? 0
+                        : Number.parseFloat(e.target.value),
                   })
                 }
               />
             </GridItem>
 
             <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="cantidad" textAlign={{ base: "left", md: "right" }}>
+              <FormLabel
+                htmlFor="cantidad"
+                textAlign={{ base: 'left', md: 'right' }}
+              >
                 Cantidad
               </FormLabel>
             </GridItem>
@@ -148,7 +140,7 @@ export default function IncorporationsForm({
               <Input
                 id="cantidad"
                 type="number"
-                value={newIncorporation.cantidad || ""}
+                value={newIncorporation.cantidad || ''}
                 onChange={(e) =>
                   setNewIncorporation({
                     ...newIncorporation,
@@ -159,14 +151,17 @@ export default function IncorporationsForm({
             </GridItem>
 
             <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="concepto" textAlign={{ base: "left", md: "right" }}>
+              <FormLabel
+                htmlFor="concepto"
+                textAlign={{ base: 'left', md: 'right' }}
+              >
                 Concepto
               </FormLabel>
             </GridItem>
             <GridItem colSpan={{ base: 1, md: 1 }}>
               <Select
                 id="concepto"
-                value={newIncorporation.concepto_id?.toString() || ""}
+                value={newIncorporation.concepto_id?.toString() || ''}
                 onChange={(e) =>
                   setNewIncorporation({
                     ...newIncorporation,
@@ -177,21 +172,24 @@ export default function IncorporationsForm({
               >
                 {concepts.map((concept) => (
                   <option key={concept.id} value={concept.id.toString()}>
-                    {concept.name}
+                    {concept.nombre}
                   </option>
                 ))}
               </Select>
             </GridItem>
 
             <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="departamento" textAlign={{ base: "left", md: "right" }}>
+              <FormLabel
+                htmlFor="departamento"
+                textAlign={{ base: 'left', md: 'right' }}
+              >
                 Departamento
               </FormLabel>
             </GridItem>
             <GridItem colSpan={{ base: 1, md: 1 }}>
               <Select
                 id="departamento"
-                value={newIncorporation.dept_id?.toString() || ""}
+                value={newIncorporation.dept_id?.toString() || ''}
                 onChange={(e) =>
                   setNewIncorporation({
                     ...newIncorporation,
@@ -202,7 +200,7 @@ export default function IncorporationsForm({
               >
                 {departments.map((dept) => (
                   <option key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
+                    {dept.nombre}
                   </option>
                 ))}
               </Select>
@@ -213,11 +211,14 @@ export default function IncorporationsForm({
           <Button variant="ghost" mr={3} onClick={onClose}>
             Cancelar
           </Button>
-          <Button colorScheme="purple" onClick={selectedIncorporation ? handleEdit : handleAdd}>
-            {selectedIncorporation ? "Guardar Cambios" : "Agregar"}
+          <Button
+            colorScheme="purple"
+            onClick={selectedIncorporation ? handleEdit : handleAdd}
+          >
+            {selectedIncorporation ? 'Guardar Cambios' : 'Agregar'}
           </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
-  )
+  );
 }

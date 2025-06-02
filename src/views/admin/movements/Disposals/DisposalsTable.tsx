@@ -1,50 +1,27 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Box, Button, useDisclosure, useColorModeValue, useBreakpointValue, Stack } from "@chakra-ui/react"
 import { FiEdit } from "react-icons/fi"
-import type { Disposal } from "./variables/Disposals"
+import { getDesincorps, createDesincorp, updateDesincorp, deleteDesincorp } from "api/IncorpApi"
+import type { Department, ConceptoMovimiento } from "api/SettingsApi"
+import { getDepartments, getConceptosMovimientoIncorporacion } from "api/SettingsApi"
+import type { Desincorp } from "api/IncorpApi"
 import DisposalsFilters from "./components/DisposalsFilters"
 import DisposalsForm from "./components/DisposalsForm"
 import DesktopTable from "./components/DesktopTable"
 import MobileCards from "./components/MobileCard"
 
-// Mock data for initial load
-const initialData: Disposal[] = [
-  {
-    id: 1,
-    bien_id: 12345,
-    nombre: "Monitor",
-    descripcion: "Monitor dañado",
-    fecha: "2025-04-15",
-    valor: 120.0,
-    cantidad: 5,
-    concepto_id: 2,
-    dept_id: 3,
-  },
-  {
-    id: 2,
-    bien_id: 54321,
-    nombre: "Impresora",
-    descripcion: "Impresora obsoleta",
-    fecha: "2025-04-10",
-    valor: 200.0,
-    cantidad: 2,
-    concepto_id: 1,
-    dept_id: 1,
-  },
-]
-
 export default function DisposalsTable() {
-  const [disposals, setDisposals] = useState<Disposal[]>([])
-  const [filteredDisposals, setFilteredDisposals] = useState<Disposal[]>([])
-  const [selectedDisposal, setSelectedDisposal] = useState<Disposal | null>(null)
-  const [newDisposal, setNewDisposal] = useState<Partial<Disposal>>({})
-  const [filterDept, setFilterDept] = useState<string | null>(null)
+  const [disposals, setDisposals] = useState<Desincorp[]>([])
+  const [filteredDisposals, setFilteredDisposals] = useState<Desincorp[]>([])
+  const [selectedDisposal, setSelectedDisposal] = useState<Desincorp | null>(null)
+  const [newDisposal, setNewDisposal] = useState<Partial<Desincorp>>({})
+  const [filterDept, setFilterDept] = useState<string>("")
   const [startDate, setStartDate] = useState<string>("")
   const [endDate, setEndDate] = useState<string>("")
   const [showFilters, setShowFilters] = useState(false)
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([])
 
   // UI theme values
   const borderColor = useColorModeValue("gray.200", "gray.700")
@@ -57,56 +34,85 @@ export default function DisposalsTable() {
   const buttonSize = useBreakpointValue({ base: "sm", md: "md" })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-  // Load initial data
+  // Cargar datos reales al montar
   useEffect(() => {
-    setDisposals(initialData)
-    setFilteredDisposals(initialData)
+    const fetchData = async () => {
+      try {
+        const data = await getDesincorps()
+        const deptData = await getDepartments()
+        const conceptData = await getConceptosMovimientoIncorporacion()
+        setDepartments(deptData)
+        setConcepts(conceptData)
+        setDisposals(data)
+        setFilteredDisposals(data)
+      } catch (error) {
+        // Manejo de error
+      }
+    }
+    fetchData()
   }, [])
 
-  const handleAdd = () => {
-    if (!newDisposal.bien_id || !newDisposal.nombre || !newDisposal.fecha) return
+  const handleAdd = async () => {
+    // Validar y limpiar datos
+    const bien_id = Number(newDisposal.bien_id)
+    const fecha = newDisposal.fecha ? newDisposal.fecha : ""
+    const valor = Number(newDisposal.valor)
+    const cantidad = Number(newDisposal.cantidad)
+    const concepto_id = Number(newDisposal.concepto_id)
+    const dept_id = Number(newDisposal.dept_id)
 
-    const newEntry: Disposal = {
-      id: disposals.length + 1,
-      bien_id: newDisposal.bien_id,
-      nombre: newDisposal.nombre,
-      descripcion: newDisposal.descripcion || "",
-      fecha: newDisposal.fecha,
-      valor: newDisposal.valor || 0,
-      cantidad: newDisposal.cantidad || 0,
-      concepto_id: newDisposal.concepto_id || 1,
-      dept_id: newDisposal.dept_id || 1,
+    if (!bien_id || !fecha || !valor || !cantidad || !concepto_id || !dept_id) {
+      // Muestra un toast de error: "Todos los campos son obligatorios"
+      return
     }
 
-    setDisposals([...disposals, newEntry])
-    setFilteredDisposals([...filteredDisposals, newEntry])
-    setNewDisposal({})
-    onClose()
-  }
+    const dataToSend = { bien_id, fecha, valor, cantidad, concepto_id, dept_id }
 
-  const handleEdit = () => {
-    if (selectedDisposal) {
-      const updatedDisposals = disposals.map((item) =>
-        item.id === selectedDisposal.id ? { ...item, ...newDisposal } : item,
-      )
-
-      setDisposals(updatedDisposals)
-      setFilteredDisposals(
-        filterDept ? updatedDisposals.filter((item) => item.dept_id === Number.parseInt(filterDept)) : updatedDisposals,
-      )
-
-      setSelectedDisposal(null)
+    try {
+      const created = await createDesincorp(dataToSend)
+      setDisposals((prev) => [...prev, created])
+      setFilteredDisposals((prev) => [...prev, created])
       setNewDisposal({})
       onClose()
+    } catch (error) {
+      // Manejo de error
     }
   }
 
-  const handleDelete = (id: number) => {
-    const updatedDisposals = disposals.filter((item) => item.id !== id)
-    setDisposals(updatedDisposals)
-    setFilteredDisposals(
-      filterDept ? updatedDisposals.filter((item) => item.dept_id === Number.parseInt(filterDept)) : updatedDisposals,
-    )
+  const handleEdit = async () => {
+    if (selectedDisposal && newDisposal) {
+      try {
+        const { fecha, bien_id, ...updates } = newDisposal
+        const updated = await updateDesincorp(selectedDisposal.id, updates)
+
+        if (!updated || typeof updated.id === "undefined") {
+          // Manejo de error: no se recibió el objeto actualizado
+          return
+        }
+
+        setDisposals((prev) =>
+          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+        )
+        setFilteredDisposals((prev) =>
+          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+        )
+        setSelectedDisposal(null)
+        setNewDisposal({})
+        onClose()
+      } catch (error) {
+        // Manejo de error
+      }
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteDesincorp(id)
+      setDisposals((prev) => prev.filter((item) => item.id !== id))
+      setFilteredDisposals((prev) => prev.filter((item) => item.id !== id))
+    } catch (error) {
+      // Manejo de error
+    }
   }
 
   const handleFilterDepartment = (deptId: string) => {
@@ -120,27 +126,21 @@ export default function DisposalsTable() {
     applyFilters(filterDept, start, end)
   }
 
-  const applyFilters = (deptId: string | null, start: string, end: string) => {
+  const applyFilters = (deptId: string, start: string, end: string) => {
     let filtered = [...disposals]
-
-    // Filtrar por departamento
     if (deptId) {
-      filtered = filtered.filter((item) => item.dept_id === Number.parseInt(deptId))
+      filtered = filtered.filter((item) => item.dept_id === Number(deptId))
     }
-
-    // Filtrar por fecha
     if (start) {
       filtered = filtered.filter((item) => new Date(item.fecha) >= new Date(start))
     }
-
     if (end) {
       filtered = filtered.filter((item) => new Date(item.fecha) <= new Date(end))
     }
-
     setFilteredDisposals(filtered)
   }
 
-  const openEditDialog = (disposal: Disposal) => {
+  const openEditDialog = (disposal: Desincorp) => {
     setSelectedDisposal(disposal)
     setNewDisposal(disposal)
     onOpen()
@@ -183,10 +183,10 @@ export default function DisposalsTable() {
           buttonSize={buttonSize || "md"}
           borderColor={borderColor}
           cardBg={cardBg}
+          departments={departments}
         />
       </Stack>
 
-      {/* Desktop or Mobile view based on screen size */}
       {!isMobile ? (
         <DesktopTable
           disposals={filteredDisposals}
@@ -196,6 +196,8 @@ export default function DisposalsTable() {
           tableSize={tableSize}
           onEdit={openEditDialog}
           onDelete={handleDelete}
+          departments={departments}
+          concepts={concepts}
         />
       ) : (
         <MobileCards
@@ -203,10 +205,11 @@ export default function DisposalsTable() {
           borderColor={borderColor}
           onEdit={openEditDialog}
           onDelete={handleDelete}
+          departments={departments}
+          concepts={concepts}
         />
       )}
 
-      {/* Form Modal */}
       <DisposalsForm
         isOpen={isOpen}
         onClose={onClose}
@@ -216,6 +219,8 @@ export default function DisposalsTable() {
         handleAdd={handleAdd}
         handleEdit={handleEdit}
         isMobile={isMobile || false}
+        departments={departments}
+        concepts={concepts}
       />
     </Box>
   )
