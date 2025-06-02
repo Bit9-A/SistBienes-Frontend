@@ -21,12 +21,12 @@ export interface Transfer {
   cantidad: number;
   origen_id: number;
   destino_id: number;
+  bien_traslado_id: number;
+  id_mueble: number;
   responsable_id: number;
-  observaciones: string;
   responsable: string;
-  origen_nombre?: string;
-  destino_nombre?: string;
-  bienes?: bienes[];
+  observaciones?: string;
+  bienes?: bienes[]; // Agregar la propiedad bienes
 }
 
 // Obtener todas las transferencias
