@@ -4,6 +4,7 @@ import { Card, CardBody, Stack, Flex, Text, Badge, Divider, Grid, Box, IconButto
 import { FiEdit, FiTrash2 } from "react-icons/fi"
 import type { Incorp } from "api/IncorpApi"
 import type { Department, ConceptoMovimiento } from "api/SettingsApi"
+import { v4 as uuidv4 } from "uuid"
 
 interface MobileCardsProps {
   incorporations: Incorp[]
@@ -42,12 +43,12 @@ export default function MobileCards({
 
   return (
     <Stack spacing={4}>
-      {incorporations.map((item) => (
-        <Card key={item.id} borderColor={borderColor} boxShadow="sm">
+      {incorporations.map((item,index) => (
+        <Card key={uuidv4()} borderColor={borderColor} boxShadow="sm">
           <CardBody p={3}>
             <Stack spacing={2}>
               <Flex justify="space-between" align="center">
-                <Text fontWeight="bold">ID: {item.id}</Text>
+                <Text fontWeight="bold">N° {index+1}</Text>
                 <Badge colorScheme="purple">{getConceptName(item.concepto_id)}</Badge>
               </Flex>
 

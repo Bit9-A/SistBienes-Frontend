@@ -55,7 +55,6 @@ const [incorporations, setIncorporations] = useState<Incorp[]>([]);
         const data = await getIncorps();
         const deptData = await getDepartments();
         const conceptData = await getConceptosMovimientoIncorporacion();
-        console.log("Conceptos de Incorporación:", conceptData);
         setDepartments(deptData);
         setConcepts(conceptData);
         setIncorporations(data);
@@ -103,24 +102,31 @@ const handleAdd = async () => {
   }
 };
 
-  const handleEdit = async () => {
-    if (selectedIncorporation && newIncorporation) {
-      try {
-        const updated = await updateIncorp(selectedIncorporation.id, newIncorporation as Partial<Omit<Incorp, "id">>);
-        setIncorporations((prev) =>
-          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
-        );
-        setFilteredIncorporations((prev) =>
-          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
-        );
-        setSelectedIncorporation(null);
-        setNewIncorporation({});
-        onClose();
-      } catch (error) {
-        // Manejo de error
+const handleEdit = async () => {
+  if (selectedIncorporation && newIncorporation) {
+    try {
+      const { fecha, bien_id, ...updates } = newIncorporation;
+      const updated = await updateIncorp(selectedIncorporation.id, updates);
+
+      if (!updated || typeof updated.id === "undefined") {
+        // Manejo de error: no se recibió el objeto actualizado
+        return;
       }
+
+      setIncorporations((prev) =>
+        prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+      );
+      setFilteredIncorporations((prev) =>
+        prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+      );
+      setSelectedIncorporation(null);
+      setNewIncorporation({});
+      onClose();
+    } catch (error) {
+      // Manejo de error
     }
-  };
+  }
+};
 
   const handleDelete = async (id: number) => {
     try {

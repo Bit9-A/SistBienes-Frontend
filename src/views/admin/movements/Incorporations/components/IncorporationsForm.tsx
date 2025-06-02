@@ -87,13 +87,18 @@ export default function IncorporationsForm({
               <Input
                 id="fecha"
                 type="date"
-                value={newIncorporation.fecha || ''}
+                value={
+                  newIncorporation.fecha
+                    ? newIncorporation.fecha.slice(0, 10) // Solo YYYY-MM-DD
+                    : ''
+                }
                 onChange={(e) =>
                   setNewIncorporation({
                     ...newIncorporation,
                     fecha: e.target.value,
                   })
                 }
+                isReadOnly={!!selectedIncorporation} // Solo lectura si se está editando
               />
             </GridItem>
 
