@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import { useState } from "react"
+import { useState } from 'react';
 import {
   Box,
   Table,
@@ -18,63 +18,86 @@ import {
   Input,
   Select,
   HStack,
-} from "@chakra-ui/react"
-import { SearchIcon } from "@chakra-ui/icons"
-import { FiUser } from "react-icons/fi"
-import { Log } from "api/AuditApi"
-import { ACTION_TYPES } from "api/AuditApi"
+} from '@chakra-ui/react';
+import { SearchIcon } from '@chakra-ui/icons';
+import { FiUser } from 'react-icons/fi';
+import { Log } from 'api/AuditApi';
+import { ACTION_TYPES } from 'api/AuditApi';
 
 interface ActionAuditProps {
-  logs: Log[]
-  loading: boolean
-  headerBg: string
-  hoverBg: string
-  borderColor: string
+  logs: Log[];
+  loading: boolean;
+  headerBg: string;
+  hoverBg: string;
+  borderColor: string;
 }
 
-export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderColor }: ActionAuditProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterType, setFilterType] = useState("all")
-  const [filterDepartment, setFilterDepartment] = useState("all")
+export default function ActionAudit({
+  logs,
+  loading,
+  headerBg,
+  hoverBg,
+  borderColor,
+}: ActionAuditProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [filterDepartment, setFilterDepartment] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Get unique departments for filter
-  const departmentOptions = [...new Set(logs.map((log) => log.departamento).filter(Boolean))]
+  const departmentOptions = [
+    ...new Set(logs.map((log) => log.departamento).filter(Boolean)),
+  ];
 
   // Filter logs by type, department and search query
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
-      (log.usuario_id?.toString() || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (log.detalles || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (log.accion || "").toLowerCase().includes(searchQuery.toLowerCase())
+      (log.usuario_id?.toString() || '')
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      (log.detalles || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (log.accion || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesType = filterType === "all" || log.accion === filterType
-    const matchesDepartment = filterDepartment === "all" || log.departamento === filterDepartment
+    // Aquí el filtro: si es "all" muestra todo, si no, filtra si contiene la palabra
+    const matchesType =
+      filterType === 'all' ||
+      (filterType &&
+        (log.accion || '').toLowerCase().includes(filterType.toLowerCase()));
 
-    return matchesSearch && matchesType && matchesDepartment
-  })
+    const matchesDepartment =
+      filterDepartment === 'all' || log.departamento === filterDepartment;
+
+    // Filtro de fecha
+    const logDate = new Date(log.fecha);
+    const fromOk = !dateFrom || logDate >= new Date(dateFrom);
+    const toOk = !dateTo || logDate <= new Date(dateTo);
+
+    return matchesSearch && matchesType && matchesDepartment && fromOk && toOk;
+  });
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
+    return new Date(dateString).toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   return (
     <Box>
       <Flex
-        direction={{ base: "column", md: "row" }}
+        direction={{ base: 'column', md: 'row' }}
         justify="space-between"
-        align={{ base: "stretch", md: "center" }}
+        align={{ base: 'stretch', md: 'center' }}
         mb={6}
         gap={4}
       >
         <HStack spacing={4} flex={{ md: 2 }}>
-          <InputGroup maxW={{ md: "320px" }}>
+          <InputGroup maxW={{ md: '320px' }}>
             <InputLeftElement pointerEvents="none">
               <SearchIcon color="gray.400" />
             </InputLeftElement>
@@ -91,7 +114,7 @@ export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderCo
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               borderRadius="md"
-              w={{ base: "full", md: "auto" }}
+              w={{ base: 'full', md: 'auto' }}
             >
               {ACTION_TYPES.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -106,7 +129,7 @@ export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderCo
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
               borderRadius="md"
-              w={{ base: "full", md: "auto" }}
+              w={{ base: 'full', md: 'auto' }}
             >
               <option value="all">Todos los departamentos</option>
               {departmentOptions.map((dept) => (
@@ -119,7 +142,14 @@ export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderCo
         </HStack>
       </Flex>
 
-      <TableContainer border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="auto" mb={4}>
+      <TableContainer
+        border="1px"
+        borderColor={borderColor}
+        borderRadius="lg"
+        boxShadow="sm"
+        overflow="auto"
+        mb={4}
+      >
         <Table variant="simple" size="md">
           <Thead bg={headerBg}>
             <Tr>
@@ -133,7 +163,11 @@ export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderCo
           </Thead>
           <Tbody>
             {filteredLogs.map((log, index) => (
-              <Tr key={log.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
+              <Tr
+                key={log.id}
+                _hover={{ bg: hoverBg }}
+                transition="background 0.2s"
+              >
                 <Td>{index + 1}</Td>
                 <Td>
                   <Flex align="center" gap={2}>
@@ -159,5 +193,5 @@ export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderCo
         </Table>
       </TableContainer>
     </Box>
-  )
+  );
 }
