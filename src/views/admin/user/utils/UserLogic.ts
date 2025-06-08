@@ -1,3 +1,5 @@
+import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
+
 export const filterUsers = (
   users: any[],
   searchQuery: string,
@@ -68,11 +70,16 @@ export const filterUsers = (
   try {
     const newUser = await createUser(user);
     setUsers((prevUsers: any[]) => [...prevUsers, newUser]);
+    // Registrar la acción personalizada en el log de auditoría
+    logCustomAction({
+    accion: 'Creacion de usuario',
+    detalles: `Usuario creado: ${user.username} `
+});
     return newUser;
   } catch (error) {
     throw error; // <-- Lanza el error para que el formulario lo capture
-  }
-};
+  };
+  };
 
   export const handleSaveEditUser = async (
     updatedUser: any,

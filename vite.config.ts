@@ -23,6 +23,7 @@ export default defineConfig({
   server: {
     port: 10000, // Puerto del servidor de desarrollo
     open: true, // Abre el navegador automáticamente
+    host: true,
   },
   build: {
     outDir: 'build', // Carpeta de salida para el build
