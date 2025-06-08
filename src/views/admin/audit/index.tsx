@@ -98,7 +98,7 @@ export default function AuditModule() {
   }
 
   return (
-    <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
+    <Box pt={{ base: "130px", md: "80px", xl: "80px" } }>
       <Card bg={cardBg} boxShadow="sm" borderRadius="xl" border="1px" borderColor={borderColor} mb={6}>
         <CardHeader>
           <Flex justify="space-between" align="center" wrap="wrap" gap={4}>

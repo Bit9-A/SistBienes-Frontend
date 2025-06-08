@@ -18,6 +18,12 @@ export const filterIncorporations = (
   const query = searchQuery.toLowerCase();
 
   return incorporations.filter((inc) => {
+    // Normaliza la fecha de la incorporación a YYYY-MM-DD
+    const incDateStr = inc.fecha ? new Date(inc.fecha).toISOString().slice(0, 10) : "";
+
+    const matchesStart = !startDate || incDateStr >= startDate;
+    const matchesEnd = !endDate || incDateStr <= endDate;
+
     const matchesSearch =
       inc.bien_id.toString().includes(query) ||
       inc.concepto_id.toString().includes(query) ||
@@ -26,12 +32,10 @@ export const filterIncorporations = (
     const matchesDept =
       selectedDept === "all" || inc.dept_id?.toString() === selectedDept;
 
-    const matchesStartDate = !startDate || new Date(inc.fecha) >= new Date(startDate);
-    const matchesEndDate = !endDate || new Date(inc.fecha) <= new Date(endDate);
-
-    return matchesSearch && matchesDept && matchesStartDate && matchesEndDate;
+    return matchesSearch && matchesDept && matchesStart && matchesEnd;
   });
 };
+
 
 // Eliminar una incorporación
 export const handleDeleteIncorp = async (

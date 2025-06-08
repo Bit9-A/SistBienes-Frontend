@@ -1,3 +1,7 @@
+* {
+  font-family: "DM Sans" !important;
+}
+
 .asset-table {
   &-container {
     border-radius: 12px;
@@ -10,20 +14,7 @@
     }
   }
   
-  &-header {
-    /* Eliminado el color de fondo personalizado para usar el de Chakra UI */
-    
-    th {
-      font-weight: 600;
-      text-transform: none;
-      letter-spacing: 0;
-      padding: 16px;
-      border: none;
-      font-size: 14px;
-      white-space: nowrap;
-      color: inherit; /* Usar el color heredado en lugar de blanco */
-    }
-  }
+
   
   &-body {
     tr {
@@ -39,16 +30,7 @@
       }
     }
     
-    td {
-      padding: 14px 16px;
-      font-size: 14px;
-      vertical-align: middle;
-      color: #2d3748;
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+   
   }
   
   &-pagination {
@@ -198,6 +180,9 @@
 
 // Responsive styles
 @media (max-width: 768px) {
+  *{
+    font-family: "DM Sans" !important;
+  }
   .asset-table {
     &-container {
       border-radius: 8px;
