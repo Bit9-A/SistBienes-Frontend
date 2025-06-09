@@ -1,18 +1,43 @@
-import { Box, Flex, Text, useColorModeValue, IconButton, Menu, MenuButton, MenuList, MenuItem, Select } from '@chakra-ui/react';
-import { FiDownload, FiFilter, FiMoreVertical } from 'react-icons/fi';
+import { Box, Flex, Text, useColorModeValue, IconButton, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import { FiDownload, FiMoreVertical } from 'react-icons/fi';
+import { getDashboardCountsFurniture, DashboardCountsFurniture } from '../../../../api/DashboardApi';
+import React, { useEffect, useState } from 'react';
+
 import Card from 'components/card/Card';
 
-const estados = [
-    { label: 'Activos', color: '#22c55e', value: 80 },
-    { label: 'En mantenimiento', color: '#f59e42', value: 20 },
-    { label: 'Dado de baja', color: '#ef4444', value: 5 },
-];
 
-const maxValue = Math.max(...estados.map(e => e.value));
+const estadoColors: Record<string, string> = {
+    'Nuevo': '#22c55e',
+    'Usado': '#f59e42',
+    'Dañado': '#ef4444',
+};
+
 
 const BarChart = () => {
     const textColor = useColorModeValue('secondaryGray.900', 'white');
     const bgBar = useColorModeValue('gray.200', 'whiteAlpha.200');
+    const [counts, setCounts] = useState<DashboardCountsFurniture[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const response = await getDashboardCountsFurniture();
+                setCounts(Array.isArray(response) ? response : []);
+            } catch (error) {
+                console.error('Error fetching dashboard counts:', error);
+                setCounts([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCounts();
+    }, []);
+
+    if (loading) return <Text>Cargando...</Text>;
+
+    const maxValue = counts.length > 0 ? Math.max(...counts.map(e => Number(e.total))) : 1;
 
 
     const handleDownload = () => {
@@ -42,17 +67,17 @@ const BarChart = () => {
                 </Flex>
             </Flex>
             <Box>
-                {estados.map((estado) => (
-                    <Flex align="center" mb="4" key={estado.label}>
+                {counts.map((estado) => (
+                    <Flex align="center" mb="4" key={estado.nombre}>
                         <Box
                             h="10px"
                             w="10px"
                             borderRadius="full"
-                            bg={estado.color}
+                            bg={estadoColors[estado.nombre] || '#888'}
                             mr="2"
                         />
                         <Text fontWeight="600" fontSize="sm" color={textColor} minW="140px" mr="2">
-                            {estado.label}
+                            {estado.nombre}
                         </Text>
                         <Box flex="1" mx="2">
                             <Box
@@ -65,8 +90,8 @@ const BarChart = () => {
                                 <Box
                                     h="8px"
                                     borderRadius="md"
-                                    bg={estado.color}
-                                    width={`${(estado.value / maxValue) * 100}%`}
+                                    bg={estadoColors[estado.nombre] || '#888'}
+                                    width={`${(Number(estado.total) / maxValue) * 100}%`}
                                     transition="width 0.5s"
                                     position="absolute"
                                     top="0"
@@ -75,7 +100,7 @@ const BarChart = () => {
                             </Box>
                         </Box>
                         <Text fontWeight="700" fontSize="sm" color={textColor} minW="32px" ml="2">
-                            {estado.value}
+                            {estado.total}
                         </Text>
                     </Flex>
                 ))}

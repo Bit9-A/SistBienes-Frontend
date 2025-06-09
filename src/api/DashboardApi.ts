@@ -29,7 +29,7 @@ export interface DashboardCountsFurniture {
 export const getDashboardCountsFurniture = async (): Promise<DashboardCountsFurniture[]> => {
     try {
         const response = await axiosInstance.get('/summary');
-        return response.data.counts;
+        return response.data.countsEstadobien;
     } catch (error) {
         console.error("Error fetching dashboard counts for furniture:", error);
         throw error;
@@ -43,7 +43,7 @@ export interface DashboardCountsTotal {
 export const getDashboardTotal = async (): Promise<DashboardCountsTotal> => {
     try {
         const response = await axiosInstance.get('/total');
-        return response.data;
+        return response.data.total;
     } catch (error) {
         console.error("Error fetching dashboard total:", error);
         throw error;
@@ -52,12 +52,12 @@ export const getDashboardTotal = async (): Promise<DashboardCountsTotal> => {
 
 // Obtener bienes registrados la ultima semana
 export interface DashboardCountsLastWeek {
-    lastweek: number;
+    ultimaSemana: number;
 }
 export const getDashboardCountsLastWeek = async (): Promise<DashboardCountsLastWeek[]> => {
     try {
         const response = await axiosInstance.get('/lastweek');
-        return response.data.counts;
+        return response.data;
     } catch (error) {
         console.error("Error fetching dashboard counts for last week:", error);
         throw error;

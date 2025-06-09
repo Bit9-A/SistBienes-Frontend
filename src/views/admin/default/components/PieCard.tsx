@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 import Card from 'components/card/Card';
 import PieChart from 'components/charts/PieChart';
 import { pieChartOptions } from 'variables/charts';
-import { VSeparator } from 'components/separator/Separator';
 
 export default function Conversion(props: { [x: string]: any }) {
 	const { ...rest } = props;
