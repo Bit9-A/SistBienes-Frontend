@@ -97,6 +97,10 @@ export const globalStyles = {
 			fontFamily: "DM Sans",
 			letterSpacing: "-0.5px",
 		  },
+		  "*": {
+			fontFamily: "DM Sans",
+			letterSpacing: "-0.5px",
+		  },
 		  input: {
 			color: "gray.700",
 		  },

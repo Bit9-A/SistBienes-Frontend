@@ -1,22 +1,29 @@
 import axiosInstance from "../utils/axiosInstance";
 
 export interface MovableAsset {
-    id: number;
-    numero_identificacion: string;
-    nombre_descripcion: string;
-    numero_serial: string;
-    grupo: number;
-    subgrupo: string;
-    cantidad: number;
-    descripcion: string;
-    marca_id?: number ;
-    modelo_id?: number;
-    valor_unitario: number;
-    valor_total: number;
-    fecha: string;
-    departamento: number;
-    id_estado?: number;
-    id_Parroquia: number;
+  id: number;
+  numero_identificacion: string;
+  nombre_descripcion: string;
+  numero_serial: string;
+  grupo: number;
+  subgrupo_id: string;
+  subgrupo_nombre?: string;      // Nuevo: nombre del subgrupo
+  cantidad: number;
+  descripcion: string;
+  marca_id?: number;
+  marca_nombre?: string;         // Nuevo: nombre de la marca
+  modelo_id?: number;
+  modelo_nombre?: string;        // Nuevo: nombre del modelo
+  valor_unitario: number;
+  valor_total: number;
+  fecha: string;
+  dept_id: number;
+  dept_nombre?: string;          // Nuevo: nombre del departamento
+  id_estado?: number;
+  estado_nombre?: string;        // Nuevo: nombre del estado
+  id_Parroquia: number;
+  parroquia_nombre?: string;
+  isActive?:number;     // Nuevo: nombre de la parroquia
 }
 
 export interface marca{
@@ -165,6 +172,17 @@ export const getModelosByMarca = async (idMarca: number) => {
         return response.data.modelos; // Asegúrate de que la respuesta tenga esta estructura
     } catch (error) {
         console.error('Error fetching modelos by marca:', error);
+        throw error;
+    }   
+}
+
+//Obtener bienes por departamento
+export const getAssetsByDepartment = async (departmentId: number): Promise<MovableAsset[]> => {
+    try {
+        const response = await axiosInstance.get(`/furniture/dept/${departmentId}`);
+        return response.data.furniture; // Asegúrate de que la respuesta tenga esta estructura
+    } catch (error) {
+        console.error('Error fetching assets by department:', error);
         throw error;
     }   
 }

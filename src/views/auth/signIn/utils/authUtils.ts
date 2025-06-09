@@ -1,4 +1,5 @@
-import { login,logout } from "../../../../api/UserApi";
+import { login,logout } from "../../../../api/UserApi"
+import { logUserEntry,logUserExit } from "../../../admin/audit/utils/AuditUtils";
 import { useToast } from "@chakra-ui/react";
 
 // Función para manejar el inicio de sesión
@@ -11,6 +12,7 @@ export const handleLogin = async (username: string, password: string) => {
         token: response.token
       };
       localStorage.setItem("user", JSON.stringify(userData));
+      logUserEntry(); // Registrar entrada de usuario
       return userData;
     } else {
       throw new Error("No se recibió un token válido del servidor.");
@@ -27,11 +29,14 @@ export const handleLogin = async (username: string, password: string) => {
 
 // Función para cerrar sesión
 export const handleLogout = async () => {
+
   try {
-    await logout();
+   await logUserExit();
+   await logout();
   } catch (e) {
     console.error("Error al cerrar sesión:", e);
   }
+  // Registrar salida de usuario
   localStorage.removeItem("user");
   if (window.location.pathname !== "/auth/sign-in") {
   window.location.href = "/auth/sign-in";

@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const baseURL = "http://192.168.2.3:8000";
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: baseURL,
+  timeout: 10000, // Tiempo de espera de 10 segundos
   headers: {
     "Content-Type": "application/json",
   },

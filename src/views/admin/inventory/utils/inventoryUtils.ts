@@ -13,6 +13,7 @@ import {
     createModelo,
     updateModelo,
     deleteModelo,
+    getAssetsByDepartment,
     modelo,
   } from "../../../../api/AssetsApi";
   
@@ -156,3 +157,25 @@ import {
       console.error("Error al eliminar el modelo:", error);
     }
   };
+
+// Obtener los bieness por departamento
+export const fetchAssetsByDepartment = async (departmentId: number): Promise<MovableAsset[]> => {
+    try {
+        const assets = await getAssetsByDepartment(departmentId);
+        return assets; // Devuelve los bienes del departamento
+    } catch (error) {
+        console.error("Error al obtener los bienes por departamento:", error);
+        throw error;
+    }
+}
+
+// Obtener todos los bienes
+export const fetchAllAssets = async (): Promise<MovableAsset[]> => {
+    try {
+        const assets = await getAssets();
+        return assets; // Devuelve todos los bienes
+    } catch (error) {
+        console.error("Error al obtener todos los bienes:", error);
+        throw error;
+    }
+}
