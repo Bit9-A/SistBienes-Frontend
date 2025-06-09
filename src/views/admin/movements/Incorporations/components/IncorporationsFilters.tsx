@@ -154,7 +154,7 @@ export default function IncorporationsFilters({
               id="departamento"
               size="md"
               value={undefined}
-              placeholder="Todos los departamentos"
+              placeholder="Selecciona un departamento"
               onChange={(e) => onFilterDepartment(e.target.value)}
               pl={10}
               borderRadius="md"

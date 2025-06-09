@@ -31,6 +31,8 @@ interface AssetsTableCustomProps {
   mode: 'all' | 'department';
   onSelect: (selectedAssets: MovableAsset[]) => void; // Cambiado para selección múltiple
   departmentId?: number;
+  excludedAssetIds?: number[];
+
 }
 
 export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
@@ -42,6 +44,7 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
   mode,
   onSelect,
   departmentId,
+  excludedAssetIds = [],
 }) => {
   const [searchId, setSearchId] = useState('');
   const [searchDept, setSearchDept] = useState('all');
@@ -50,6 +53,8 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
 
   const filteredAssets = useMemo(() => {
     return assets.filter((asset) => {
+
+      if (excludedAssetIds.includes(asset.id)) return false;
       // Filtro por número de identificación
       const matchesId =
         searchId.trim() === '' ||
@@ -71,7 +76,7 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
 
       return matchesId && matchesDept && matchesSubgroup;
     });
-  }, [assets, mode, departmentId, searchId, searchDept, searchSubgroup]);
+  }, [assets, mode, departmentId, searchId, searchDept, searchSubgroup, excludedAssetIds]);
 
   const handleCheck = (id: number) => {
     setSelectedIds((prev) =>

@@ -345,6 +345,7 @@ export default function IncorporationsTable() {
         departments={departments}
         subgroups={subgroups}
         concepts={concepts}
+        incorporations={incorporations}
         onCreated={(nuevos) => {
           setIncorporations((prev) => [...prev, ...nuevos])
         }}

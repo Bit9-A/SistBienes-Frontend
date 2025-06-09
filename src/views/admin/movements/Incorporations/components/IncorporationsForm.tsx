@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -13,13 +13,13 @@ import {
   FormLabel,
   Input,
   Select,
-} from "@chakra-ui/react";
-import type { Incorp } from "api/IncorpApi";
-import { handleCreateIncorp } from "../utils/IncorporationsLogic";
-import type { Department, ConceptoMovimiento } from "api/SettingsApi";
-import { MovableAsset } from "api/AssetsApi";
-import AssetsTableCustom from "views/admin/inventory/components/AssetsTableCustom";
-import { SubGroup } from "api/SettingsApi";
+} from '@chakra-ui/react';
+import type { Incorp } from 'api/IncorpApi';
+import { handleCreateIncorp } from '../utils/IncorporationsLogic';
+import type { Department, ConceptoMovimiento } from 'api/SettingsApi';
+import { MovableAsset } from 'api/AssetsApi';
+import AssetsTableCustom from 'views/admin/inventory/components/AssetsTableCustom';
+import { SubGroup } from 'api/SettingsApi';
 
 interface IncorporationsFormProps {
   isOpen: boolean;
@@ -36,6 +36,7 @@ interface IncorporationsFormProps {
   subgroups: SubGroup[];
   userDepartmentId?: number;
   onCreated?: (nuevos: Incorp[]) => void;
+  incorporations: Incorp[];
 }
 
 export default function IncorporationsForm({
@@ -53,6 +54,7 @@ export default function IncorporationsForm({
   assets,
   userDepartmentId,
   onCreated,
+  incorporations,
 }: IncorporationsFormProps) {
   const [showAssetSelector, setShowAssetSelector] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([]);
@@ -60,7 +62,7 @@ export default function IncorporationsForm({
   // Para editar, carga el bien seleccionado en el array para mostrarlo en el input
   useEffect(() => {
     if (selectedIncorporation) {
-      const asset = assets.find(a => a.id === selectedIncorporation.bien_id);
+      const asset = assets.find((a) => a.id === selectedIncorporation.bien_id);
       setSelectedAssets(asset ? [asset] : []);
       setNewIncorporation({
         ...selectedIncorporation,
@@ -80,7 +82,10 @@ export default function IncorporationsForm({
     setShowAssetSelector(false);
     setNewIncorporation({
       ...newIncorporation,
-      bien_id: assetsSeleccionados.length === 1 ? assetsSeleccionados[0].id : undefined,
+      bien_id:
+        assetsSeleccionados.length === 1
+          ? assetsSeleccionados[0].id
+          : undefined,
     });
   };
 
@@ -92,16 +97,14 @@ export default function IncorporationsForm({
         const dataToSend = {
           ...newIncorporation,
           bien_id: asset.id,
-          fecha: typeof newIncorporation.fecha === "string"
-            ? newIncorporation.fecha
-            : new Date().toISOString().slice(0, 10),
+          fecha:
+            typeof newIncorporation.fecha === 'string'
+              ? newIncorporation.fecha
+              : new Date().toISOString().slice(0, 10),
           valor: asset.valor_total || 0,
           cantidad: asset.cantidad || 1,
         };
-        const newIncorp = await handleCreateIncorp(
-          dataToSend as any,
-          () => {}
-        );
+        const newIncorp = await handleCreateIncorp(dataToSend as any, () => {});
         nuevos.push(newIncorp);
       } catch (error) {
         // Manejo de error individual
@@ -132,24 +135,34 @@ export default function IncorporationsForm({
           assets={assets}
           departments={departments}
           subgroups={subgroups}
-          mode={userDepartmentId ? "department" : "all"}
+          mode={userDepartmentId ? 'department' : 'all'}
           departmentId={userDepartmentId}
           onSelect={handleSelectAssets}
+          excludedAssetIds={incorporations.map((i) => i.bien_id)} // <-- NUEVO
         />
       )}
 
-      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "lg"}>
+      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? 'full' : 'lg'}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {selectedIncorporation ? "Editar Incorporación" : "Agregar Incorporación"}
+            {selectedIncorporation
+              ? 'Editar Incorporación'
+              : 'Agregar Incorporación'}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Grid templateColumns={{ base: "1fr", md: "1fr 3fr" }} gap={4} mb={4}>
+            <Grid
+              templateColumns={{ base: '1fr', md: '1fr 3fr' }}
+              gap={4}
+              mb={4}
+            >
               {/* N° Identificación */}
               <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel htmlFor="bienes" textAlign={{ base: "left", md: "right" }}>
+                <FormLabel
+                  htmlFor="bienes"
+                  textAlign={{ base: 'left', md: 'right' }}
+                >
                   N° Identificación
                 </FormLabel>
               </GridItem>
@@ -159,8 +172,12 @@ export default function IncorporationsForm({
                   type="text"
                   value={
                     selectedIncorporation
-                      ? assets.find(a => a.id === selectedIncorporation.bien_id)?.numero_identificacion || ""
-                      : selectedAssets.map((a) => a.numero_identificacion).join(", ")
+                      ? assets.find(
+                          (a) => a.id === selectedIncorporation.bien_id,
+                        )?.numero_identificacion || ''
+                      : selectedAssets
+                          .map((a) => a.numero_identificacion)
+                          .join(', ')
                   }
                   isReadOnly
                   placeholder="Seleccionar bienes"
@@ -169,54 +186,60 @@ export default function IncorporationsForm({
                       ? () => setShowAssetSelector(true)
                       : undefined
                   }
-                  cursor={!selectedIncorporation ? "pointer" : "default"}
+                  cursor={!selectedIncorporation ? 'pointer' : 'default'}
                 />
                 {!selectedIncorporation && (
-                  <Button mt={2} size="sm" onClick={() => setShowAssetSelector(true)}>
+                  <Button
+                    mt={2}
+                    size="sm"
+                    onClick={() => setShowAssetSelector(true)}
+                  >
                     Buscar bienes
                   </Button>
                 )}
               </GridItem>
 
-              {/* Cantidad */}
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel textAlign={{ base: "left", md: "right" }}>Cantidad</FormLabel>
-              </GridItem>
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <Input
-                  type="number"
-                  value={
-                    selectedIncorporation
-                      ? selectedIncorporation.cantidad
-                      : selectedAssets.length === 1
-                        ? selectedAssets[0].cantidad || 1
-                        : ""
-                  }
-                  isReadOnly
-                  placeholder="Cantidad"
-                />
-              </GridItem>
+              {/* Cantidad y Fecha SOLO en modo editar */}
+              {selectedIncorporation && (
+                <>
+                  {/* Cantidad */}
+                  <GridItem colSpan={{ base: 1, md: 1 }}>
+                    <FormLabel textAlign={{ base: 'left', md: 'right' }}>
+                      Cantidad
+                    </FormLabel>
+                  </GridItem>
+                  <GridItem colSpan={{ base: 1, md: 1 }}>
+                    <Input
+                      type="number"
+                      value={selectedIncorporation.cantidad}
+                      isReadOnly
+                      placeholder="Cantidad"
+                    />
+                  </GridItem>
 
-              {/* Fecha */}
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel textAlign={{ base: "left", md: "right" }}>Fecha</FormLabel>
-              </GridItem>
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <Input
-                  type="date"
-                  value={
-                    selectedIncorporation
-                      ? selectedIncorporation.fecha?.slice(0, 10)
-                      : newIncorporation.fecha?.toString().slice(0, 10) || ""
-                  }
-                  isReadOnly
-                  placeholder="Fecha"
-                />
-              </GridItem>
+                  {/* Fecha */}
+                  <GridItem colSpan={{ base: 1, md: 1 }}>
+                    <FormLabel textAlign={{ base: 'left', md: 'right' }}>
+                      Fecha
+                    </FormLabel>
+                  </GridItem>
+                  <GridItem colSpan={{ base: 1, md: 1 }}>
+                    <Input
+                      type="date"
+                      value={selectedIncorporation.fecha?.slice(0, 10)}
+                      isReadOnly
+                      placeholder="Fecha"
+                    />
+                  </GridItem>
+                </>
+              )}
 
               {/* Concepto (editable) */}
               <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel htmlFor="concepto" textAlign={{ base: "left", md: "right" }}>
+                <FormLabel
+                  htmlFor="concepto"
+                  textAlign={{ base: 'left', md: 'right' }}
+                >
                   Concepto
                 </FormLabel>
               </GridItem>
@@ -227,8 +250,8 @@ export default function IncorporationsForm({
                     selectedIncorporation
                       ? newIncorporation.concepto_id?.toString() ||
                         selectedIncorporation.concepto_id?.toString() ||
-                        ""
-                      : newIncorporation.concepto_id?.toString() || ""
+                        ''
+                      : newIncorporation.concepto_id?.toString() || ''
                   }
                   onChange={(e) =>
                     setNewIncorporation({
@@ -249,7 +272,10 @@ export default function IncorporationsForm({
 
               {/* Departamento (editable) */}
               <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel htmlFor="departamento" textAlign={{ base: "left", md: "right" }}>
+                <FormLabel
+                  htmlFor="departamento"
+                  textAlign={{ base: 'left', md: 'right' }}
+                >
                   Departamento
                 </FormLabel>
               </GridItem>
@@ -260,8 +286,8 @@ export default function IncorporationsForm({
                     selectedIncorporation
                       ? newIncorporation.dept_id?.toString() ||
                         selectedIncorporation.dept_id?.toString() ||
-                        ""
-                      : newIncorporation.dept_id?.toString() || ""
+                        ''
+                      : newIncorporation.dept_id?.toString() || ''
                   }
                   onChange={(e) =>
                     setNewIncorporation({
@@ -290,7 +316,7 @@ export default function IncorporationsForm({
               onClick={selectedIncorporation ? handleEdit : handleAddMultiple}
               isDisabled={selectedIncorporation ? editDisabled : addDisabled}
             >
-              {selectedIncorporation ? "Guardar Cambios" : "Agregar"}
+              {selectedIncorporation ? 'Guardar Cambios' : 'Agregar'}
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -46,10 +46,8 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
     "predeploy": "npm install --force && npm run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "",
     "preinstall": "npx npm-force-resolutions"
   },
   "eslintConfig": {
