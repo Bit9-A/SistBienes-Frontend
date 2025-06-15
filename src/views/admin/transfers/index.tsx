@@ -33,7 +33,6 @@ export default function TransferPage() {
                 ]);
                 setTransfers(transferData);
                 setDepartments(departmentsData);
-                console.log("Transfers:", transferData);
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -61,7 +60,6 @@ export default function TransferPage() {
 
     const handleViewDetails = (transfer: Transfer) => {
         setSelectedTransfer(transfer);
-        console.log("Selected Transfer:", transfer.id);
         onOpen();
     };
 

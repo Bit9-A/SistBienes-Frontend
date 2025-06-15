@@ -30,9 +30,9 @@ export const getIncorpById = async (id: number): Promise<Incorp> => {
 
 // Crear una incorporación
 export const createIncorp = async (incorpData: Omit<Incorp, "id">): Promise<Incorp> => {
-console.log("Datos enviados al servidor:", incorpData);
+
   const response = await axiosInstance.post("/incorp", incorpData);
-  console.log("Respuesta del servidor:", response.data);
+  
 
   return response.data.incorp as Incorp;
 };

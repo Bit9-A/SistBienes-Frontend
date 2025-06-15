@@ -92,8 +92,8 @@ export const registerAuditIn = async (usuario_id: number): Promise<{ ok: boolean
 
 // Registrar salida de usuario (cierre de sesión)
 export const registerAuditOut = async (usuario_id: number): Promise<{ ok: boolean }> => {
-    console.log("Registering audit out for user ID:", usuario_id);
+  
     const response = await axiosInstance.post("/audit/out/r", { usuario_id });
-    console.log("Response from registerAuditOut:", response.data);
+  
     return response.data;
 };

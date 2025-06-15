@@ -190,7 +190,6 @@ export const AssetForm: React.FC<AssetFormProps> = ({
     const date = new Date(formData.fecha)
     formData.fecha = date.toISOString().split("T")[0] // Extraer solo la parte de la fecha
 
-    console.log("Datos enviados al servidor:", formData) // Depuración
     onSubmit(formData)
   }
 

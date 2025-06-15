@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   Box,
   Table,
@@ -17,11 +17,21 @@ import {
   InputLeftElement,
   Input,
   Select,
+  Card,
+  CardBody,
+  Heading,
+  Stack,
+  Center,
+  Divider,
+  useColorModeValue,
+  Icon,
+  useBreakpointValue,
+  Button,
   HStack,
 } from "@chakra-ui/react"
-import { SearchIcon } from "@chakra-ui/icons"
-import { FiUser } from "react-icons/fi"
-import { Audit } from "api/AuditApi"
+import { FiUser, FiSearch, FiFilter, FiX, FiMonitor } from "react-icons/fi"
+import { v4 as uuidv4 } from "uuid"
+import type { Audit } from "api/AuditApi"
 
 interface LoginAuditProps {
   audits: Audit[]
@@ -31,9 +41,21 @@ interface LoginAuditProps {
   borderColor: string
 }
 
+const ITEMS_PER_PAGE = 10
+
 export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderColor }: LoginAuditProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [filterDepartment, setFilterDepartment] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // Theme colors
+  const cardBg = useColorModeValue("white", "gray.800")
+  const textColor = useColorModeValue("gray.800", "white")
+  const badgeBg = useColorModeValue("blue.50", "blue.900")
+  const badgeColor = useColorModeValue("blue.600", "blue.200")
+
+  // Responsive values
+  const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
   // Get unique departments for filter
   const departmentOptions = [...new Set(audits.map((audit) => audit.departamento).filter(Boolean))]
@@ -50,6 +72,19 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
     return matchesSearch && matchesDepartment
   })
 
+  // Pagination
+  const totalPages = Math.ceil(filteredAudits.length / ITEMS_PER_PAGE)
+
+  const paginatedAudits = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredAudits.slice(start, start + ITEMS_PER_PAGE)
+  }, [filteredAudits, currentPage])
+
+  // Reset page if out of range
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(1)
+  }
+
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Sin salida"
@@ -62,34 +97,72 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
     })
   }
 
-  return (
-    <Box>
-      <Flex
-        direction={{ base: "column", md: "row" }}
-        justify="space-between"
-        align={{ base: "stretch", md: "center" }}
-        mb={6}
-        gap={4}
-      >
-        <HStack spacing={4} flex={{ md: 2 }}>
-          <InputGroup maxW={{ md: "320px" }}>
-            <InputLeftElement pointerEvents="none">
-              <SearchIcon color="gray.400" />
-            </InputLeftElement>
-            <Input
-              placeholder="Buscar por nombre, departamento o IP..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              borderRadius="md"
-            />
-          </InputGroup>
+  // Count active filters
+  const activeFiltersCount = [searchQuery, filterDepartment !== "all" ? filterDepartment : ""].filter(Boolean).length
 
-          <Box>
+  // Pagination info
+  const startRow = filteredAudits.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1
+  const endRow = Math.min(currentPage * ITEMS_PER_PAGE, filteredAudits.length)
+
+  return (
+    <Stack spacing={6}>
+      {/* Filters Section */}
+      <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
+        <CardBody p={6}>
+          <Flex mb={4} justify="space-between" align="center" flexWrap="wrap" gap={2}>
+            <Flex align="center" gap={2}>
+              <Icon as={FiFilter} color="blue.500" />
+              <Text fontWeight="medium">Filtros de Sesiones</Text>
+              {activeFiltersCount > 0 && (
+                <Badge borderRadius="full" px={2} bg={badgeBg} color={badgeColor}>
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Flex>
+
+            {(searchQuery || filterDepartment !== "all") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                colorScheme="blue"
+                leftIcon={<FiX />}
+                onClick={() => {
+                  setSearchQuery("")
+                  setFilterDepartment("all")
+                  setCurrentPage(1)
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            )}
+          </Flex>
+
+          <Divider mb={4} />
+
+          <Stack direction={{ base: "column", md: "row" }} spacing={4}>
+            <InputGroup flex="2">
+              <InputLeftElement pointerEvents="none">
+                <Icon as={FiSearch} color="gray.400" />
+              </InputLeftElement>
+              <Input
+                placeholder="Buscar por nombre, departamento o IP..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setCurrentPage(1)
+                }}
+                borderRadius="md"
+              />
+            </InputGroup>
+
             <Select
+              flex="1"
               value={filterDepartment}
-              onChange={(e) => setFilterDepartment(e.target.value)}
+              onChange={(e) => {
+                setFilterDepartment(e.target.value)
+                setCurrentPage(1)
+              }}
               borderRadius="md"
-              w={{ base: "full", md: "auto" }}
             >
               <option value="all">Todos los departamentos</option>
               {departmentOptions.map((dept) => (
@@ -98,47 +171,158 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
                 </option>
               ))}
             </Select>
-          </Box>
-        </HStack>
-      </Flex>
+          </Stack>
+        </CardBody>
+      </Card>
 
-      <TableContainer border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="auto" mb={4}>
-        <Table variant="simple" size="md">
-          <Thead bg={headerBg}>
-            <Tr>
-              <Th>#</Th>
-              <Th>Usuario</Th>
-              <Th>Departamento</Th>
-              <Th>Entrada</Th>
-              <Th>Salida</Th>
-              <Th>IP</Th>
-              <Th>Estado</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {filteredAudits.map((audit, index) => (
-              <Tr key={audit.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
-                <Td>{index + 1}</Td>
-                <Td>
-                  <Flex align="center" gap={2}>
-                    <FiUser />
-                    <Text>{audit.nombre}</Text>
-                  </Flex>
-                </Td>
-                <Td>{audit.departamento}</Td>
-                <Td>{formatDate(audit.entrada)}</Td>
-                <Td>{formatDate(audit.salida)}</Td>
-                <Td>{audit.ip}</Td>
-                <Td>
-                  <Badge colorScheme={audit.salida ? "red" : "green"} borderRadius="full" px={2}>
-                    {audit.salida ? "Finalizada" : "Activa"}
-                  </Badge>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
-    </Box>
+      {/* Results Section */}
+      <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={borderColor}>
+        <CardBody p={6}>
+          {/* Results Summary */}
+          <Flex justify="space-between" align="center" mb={4}>
+            <Box>
+              <Heading size="md" color={textColor} mb={1}>
+                Sesiones de Usuario
+              </Heading>
+              <Box color="gray.600" fontSize="sm">
+                {filteredAudits.length} sesión{filteredAudits.length !== 1 ? "es" : ""} encontrada
+                {filteredAudits.length !== 1 ? "s" : ""}
+              </Box>
+            </Box>
+          </Flex>
+
+          {/* Table Content */}
+          {filteredAudits.length === 0 ? (
+            <Center py={12}>
+              <Stack align="center" spacing={4}>
+                <Box p={4} bg="gray.100" borderRadius="full">
+                  <FiMonitor size={32} color="gray" />
+                </Box>
+                <Box textAlign="center">
+                  <Heading size="md" color="gray.500" mb={2}>
+                    No hay sesiones
+                  </Heading>
+                  <Box color="gray.400" fontSize="sm">
+                    {searchQuery || filterDepartment !== "all"
+                      ? "No se encontraron sesiones que coincidan con los filtros"
+                      : "No hay sesiones registradas"}
+                  </Box>
+                </Box>
+              </Stack>
+            </Center>
+          ) : (
+            <>
+              <TableContainer
+                border="1px"
+                borderColor={borderColor}
+                borderRadius="lg"
+                boxShadow="sm"
+                overflow="auto"
+                mb={4}
+              >
+                <Table variant="simple" size={tableSize}>
+                  <Thead bg={headerBg}>
+                    <Tr>
+                      <Th>N°</Th>
+                      <Th>Usuario</Th>
+                      <Th>Departamento</Th>
+                      <Th>Entrada</Th>
+                      <Th>Salida</Th>
+                      <Th>IP</Th>
+                      <Th>Estado</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {paginatedAudits
+                      .filter((item) => item && typeof item.id !== "undefined")
+                      .map((audit, index) => (
+                        <Tr key={uuidv4()} _hover={{ bg: hoverBg }} transition="background 0.2s">
+                          <Td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</Td>
+                          <Td>
+                            <Flex align="center" gap={2}>
+                              <Icon as={FiUser} color="gray.500" />
+                              <Text fontWeight="medium">{audit.nombre}</Text>
+                            </Flex>
+                          </Td>
+                          <Td>
+                            <Badge variant="outline" colorScheme="purple">
+                              {audit.departamento || 'Sin Departamento'}
+                            </Badge>
+                          </Td>
+                          <Td>
+                            <Text fontSize="sm">{formatDate(audit.entrada)}</Text>
+                          </Td>
+                          <Td>
+                            <Text fontSize="sm" color={audit.salida ? "gray.600" : "gray.400"}>
+                              {formatDate(audit.salida)}
+                            </Text>
+                          </Td>
+                          <Td>
+                            <Text fontSize="sm" fontFamily="mono" color="gray.600">
+                              {audit.ip}
+                            </Text>
+                          </Td>
+                          <Td>
+                            <Badge
+                              colorScheme={audit.salida ? "red" : "green"}
+                              borderRadius="full"
+                              px={2}
+                              variant="subtle"
+                            >
+                              {audit.salida ? "Finalizada" : "Activa"}
+                            </Badge>
+                          </Td>
+                        </Tr>
+                      ))}
+                  </Tbody>
+                </Table>
+              </TableContainer>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Flex justify="space-between" align="center" mt={4}>
+                  <Text color="gray.600" fontSize="sm">
+                    Mostrando {startRow}-{endRow} de {filteredAudits.length} sesiones
+                  </Text>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      isDisabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    >
+                      Anterior
+                    </Button>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <Button
+                        key={i + 1}
+                        size="sm"
+                        bgColor={currentPage === i + 1 ? "blue.500" : undefined}
+                        color={currentPage === i + 1 ? "white" : undefined}
+                        variant={currentPage === i + 1 ? "solid" : "outline"}
+                        colorScheme="blue"
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </Button>
+                    ))}
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      isDisabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    >
+                      Siguiente
+                    </Button>
+                  </HStack>
+                </Flex>
+              )}
+            </>
+          )}
+        </CardBody>
+      </Card>
+    </Stack>
   )
 }

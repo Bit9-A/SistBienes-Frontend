@@ -25,7 +25,7 @@ export const getAllNotifications = async (): Promise<Notification[]> => {
 export const updateNotificationStatus = async (id: number, isRead: number) => {
   try {
     const response = await axiosInstance.put(`/notifications/${id}`, { isRead });
-      console.log(response)
+     
     return response.data;
   } catch (error) {
     console.error('Error updating notification status:', error);

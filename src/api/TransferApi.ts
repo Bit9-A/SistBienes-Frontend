@@ -54,7 +54,6 @@ export const getByTransfersId = async (id: string | number): Promise<TransferRes
 // Crear una nueva transferencia
 export const createTransfer = async (transferData: Transfer) => {
   try {
-    console.log("Datos enviados al servidor:", transferData);
     const response = await axiosInstance.post('/transfers', transferData);
     return response.data;
   } catch (error: any) {
@@ -66,7 +65,6 @@ export const createTransfer = async (transferData: Transfer) => {
 // Actualizar una transferencia existente
 export const updateTransfer = async (transferId: number, transferData: Transfer) => {
   try {
-    console.log("Datos enviados al servidor:", transferData);
     const response = await axiosInstance.put(`/transfers/${transferId}`, transferData);
     return response.data;
   } catch (error: any) {

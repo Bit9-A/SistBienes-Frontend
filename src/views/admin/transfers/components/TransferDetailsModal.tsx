@@ -148,7 +148,6 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
     if (isOpen && typeof transferId !== 'undefined') {
       setLoading(true);
       setError(null);
-      console.log("Cargando detalles de la transferencia con ID:", transferId);
       getByTransfersId(transferId)
         .then((response: TransferResponse) => {
           if (!response.ok) {
