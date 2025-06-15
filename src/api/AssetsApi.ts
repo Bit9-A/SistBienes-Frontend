@@ -47,6 +47,17 @@ export const getAssets = async (): Promise<MovableAsset[]> => {
         throw error;
     }   
 }
+//Obtener activo por id
+export const getAssetById = async (id: number): Promise<MovableAsset> => {
+    try {
+        const response = await axiosInstance.get(`/furniture/${id}`);
+        return response.data.furniture; // Asegúrate de que la respuesta tenga esta estructura
+        }
+        catch (error) {
+            console.error('Error fetching asset by id:', error);
+            throw error;
+            }
+    }
 
 // Crear un nuevo activo
 export const createAsset = async (assetData: MovableAsset) => {

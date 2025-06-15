@@ -6,6 +6,10 @@ import {
   deleteIncorp,
   Incorp,
 } from "api/IncorpApi";
+import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
+
+import { getAssetById } from "api/AssetsApi";
+
 
 // Filtrar incorporaciones por búsqueda, departamento y fechas
 export const filterIncorporations = (
@@ -45,6 +49,10 @@ export const handleDeleteIncorp = async (
   try {
     await deleteIncorp(id);
     setIncorps((prev) => prev.filter((inc) => inc.id !== id));
+    await logCustomAction({
+      accion: "Eliminar Incorporación",
+      detalles: `Se eliminó la incorporación con ID: ${id}`,
+    });
   } catch (error) {
     console.error("Error al eliminar la incorporación:", error);
   }
@@ -58,6 +66,11 @@ export const handleCreateIncorp = async (
   try {
     const newIncorp = await createIncorp(incorp);
     setIncorps((prev) => [...prev, newIncorp]);
+    const bien = await getAssetById(newIncorp.bien_id)
+    await logCustomAction({
+      accion: "Crear Incorporación",
+      detalles: `Se creó la incorporación del Bien: ${bien.numero_identificacion}`,
+    });
     return newIncorp;
   } catch (error) {
     throw error;
@@ -75,6 +88,10 @@ export const handleUpdateIncorp = async (
     setIncorps((prev) =>
       prev.map((i) => (i.id === id ? { ...i, ...updated } : i))
     );
+    await logCustomAction({
+      accion: "Actualizar Incorporación",
+      detalles: `Se actualizó la incorporación del Bien: ${updated.bien_id}`,
+    });
     return updated;
   } catch (error) {
     console.error("Error al actualizar la incorporación:", error);
