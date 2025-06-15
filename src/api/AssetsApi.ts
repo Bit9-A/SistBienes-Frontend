@@ -91,6 +91,20 @@ export const getMarcas = async (): Promise<marca[]> => {
         throw error;
     }   
 }
+//Obtener Marco por Id
+export const getMarcaById = async (id: number): Promise<marca> =>
+{
+    try {
+        const response = await axiosInstance.get(`/api/marcas/${id}`);
+        return response.data.marca; // Asegúrate de que la respuesta tenga esta estructura
+        } catch (error:any) {
+            console.error('Error fetching marca by id:', error.response?.data || error.message); // Im
+            throw error;
+            }
+}
+
+
+
 // Crear una nueva marca
 export const createMarca = async (marcaData: any) => {
     try {

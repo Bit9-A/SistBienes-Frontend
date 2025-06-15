@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Table,
@@ -22,7 +22,6 @@ import {
 import { SearchIcon } from '@chakra-ui/icons';
 import { FiUser } from 'react-icons/fi';
 import { Log } from 'api/AuditApi';
-import { ACTION_TYPES } from 'api/AuditApi';
 
 interface ActionAuditProps {
   logs: Log[];
@@ -44,6 +43,12 @@ export default function ActionAudit({
   const [filterDepartment, setFilterDepartment] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [actionTypes, setActionTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    const uniqueActions = [...new Set(logs.map((log) => log.accion).filter(Boolean))] as string[];
+    setActionTypes(uniqueActions);
+  }, [logs]);
 
   // Get unique departments for filter
   const departmentOptions = [
@@ -59,11 +64,9 @@ export default function ActionAudit({
       (log.detalles || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (log.accion || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Aquí el filtro: si es "all" muestra todo, si no, filtra si contiene la palabra
     const matchesType =
       filterType === 'all' ||
-      (filterType &&
-        (log.accion || '').toLowerCase().includes(filterType.toLowerCase()));
+      (filterType && log.accion === filterType);
 
     const matchesDepartment =
       filterDepartment === 'all' || log.departamento === filterDepartment;
@@ -116,9 +119,10 @@ export default function ActionAudit({
               borderRadius="md"
               w={{ base: 'full', md: 'auto' }}
             >
-              {ACTION_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
+              <option value="all">Todas las acciones</option>
+              {actionTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
                 </option>
               ))}
             </Select>

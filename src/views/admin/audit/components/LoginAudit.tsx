@@ -49,7 +49,7 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
 
     return matchesSearch && matchesDepartment
   })
-    console.log(audits)
+   
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Sin salida"
