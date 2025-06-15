@@ -11,6 +11,8 @@ export interface Incorp {
   dept_nombre?: string;
   concepto_nombre?: string;
   dept_id: number;
+  isActive?: number;
+  observaciones?: string;
 }
 
 // Obtener todas las incorporaciones

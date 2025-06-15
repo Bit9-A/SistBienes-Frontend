@@ -154,7 +154,7 @@ export function SidebarResponsive(props: { routes: RoutesType[] }) {
 				placement={document.documentElement.dir === 'rtl' ? 'right' : 'left'}
 				finalFocusRef={btnRef}>
 				<DrawerOverlay/>
-				<DrawerContent w='285px' maxW='285px' bg={sidebarBackgroundColor}>
+				<DrawerContent w='285px' maxW='285px'bg={sidebarBackgroundColor}>
 					<DrawerCloseButton
 						zIndex='3'
 						onClick={onClose}
@@ -162,7 +162,7 @@ export function SidebarResponsive(props: { routes: RoutesType[] }) {
 						_hover={{ boxShadow: 'none' }}
 						color={menuColor}
 					/>
-					<DrawerBody maxW='285px' px='0rem' pb='0'>
+					<DrawerBody maxW='285px' px='0rem' pb='0' style={{paddingTop :0}}>
 						<Scrollbars
 							autoHide
 							renderTrackVertical={renderTrack}

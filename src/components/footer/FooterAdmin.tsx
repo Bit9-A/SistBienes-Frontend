@@ -21,20 +21,7 @@ export default function Footer() {
         </Text>
 
       
-        <Flex gap="15px">
-          <Link href="https://www.facebook.com" isExternal>
-            <Icon as={FaFacebook as React.ElementType} w="20px" h="20px" color={iconColor} _hover={{ color: 'blue.600' }} />
-          </Link>
-          <Link href="https://www.twitter.com" isExternal>
-            <Icon as={FaTwitter as React.ElementType} w="20px" h="20px" color={iconColor} _hover={{ color: 'blue.400' }} />
-          </Link>
-          <Link href="https://www.instagram.com" isExternal>
-            <Icon as={FaInstagram as React.ElementType} w="20px" h="20px" color={iconColor} _hover={{ color: 'pink.400' }} />
-          </Link>
-          <Link href="https://www.youtube.com" isExternal>
-            <Icon as={FaYoutube as React.ElementType} w="20px" h="20px" color={iconColor} _hover={{ color: 'red.500' }} />
-          </Link>
-        </Flex>
+       
       </Flex>
     </Box>
   );
