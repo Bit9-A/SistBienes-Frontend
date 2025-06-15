@@ -105,7 +105,7 @@ const routes = [
     layout: '/admin',
     path: '/notifications',
     icon: <Icon as={MdNotifications} width="20px" height="20px" color="inherit" />,
-    component: <NotificationsHistory />,
+    component: <NotificationsHistory/>,
     adminOnly: false,
   },
   {

@@ -51,7 +51,7 @@ export const getAssets = async (): Promise<MovableAsset[]> => {
 // Crear un nuevo activo
 export const createAsset = async (assetData: MovableAsset) => {
     try {
-        console.log("Datos enviados al servidor:", assetData); // Agregar esta líne
+        
         const response = await axiosInstance.post('/furniture', assetData);
         return response.data; // Devuelve el activo creado
     } catch (error:any) {
@@ -62,7 +62,7 @@ export const createAsset = async (assetData: MovableAsset) => {
 // Actualizar un activo existente
 export const updateAsset = async (assetId: number, assetData: MovableAsset) => {
     try {
-      console.log("Datos enviados al servidor:", assetData); // Agregar esta línea
+   
       const response = await axiosInstance.put(`/furniture/${assetId}`, assetData);
       return response.data;
     } catch (error: any) {
@@ -95,7 +95,7 @@ export const getMarcas = async (): Promise<marca[]> => {
 export const createMarca = async (marcaData: any) => {
     try {
         const response = await axiosInstance.post('/api/marcas', marcaData);
-        console.log("Respuesta de la API al crear marca:", response.data); // Depuración
+    
         return response.data; // Devuelve la marca creada
     } catch (error) {
         console.error('Error creating marca:', error);
@@ -136,7 +136,7 @@ export const getModelos = async (): Promise<modelo[]> => {
 export const createModelo = async (modeloData: any) => {
     try {
         const response = await axiosInstance.post('/api/modelos', modeloData);
-        console.log("Respuesta de la API al crear modelo:", response.data); // Depuración
+
         return response.data; // Devuelve el modelo creado
     } catch (error) {
         console.error('Error creating modelo:', error);

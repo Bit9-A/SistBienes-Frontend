@@ -33,7 +33,6 @@ export const getUsers = async (): Promise<User[]> => {
   if (!response.data || !response.data.users) {
     throw new Error("No se encontraron usuarios")
   }
-  console.log("Usuarios obtenidos:", response.data.users)
   return response.data.users
 }
 

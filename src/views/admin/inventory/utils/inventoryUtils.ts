@@ -64,7 +64,6 @@ import {
   export const handleAddMarca = async (newMarca: Partial<marca>): Promise<marca> => {
     try {
       const response = await createMarca(newMarca); // Llama a la API para crear la marca
-      console.log("Respuesta de la API al crear marca:", response); // Depuración
       const createdMarca = response.marca; // Accede a la propiedad 'marca' dentro de la respuesta
       if (!createdMarca || typeof createdMarca.nombre !== "string" || createdMarca.nombre.trim() === "") {
         throw new Error("La marca creada no tiene un nombre válido.");
@@ -109,7 +108,6 @@ import {
   export const handleAddModelo = async (newModelo: Partial<modelo>): Promise<modelo> => {
     try {
       const response = await createModelo(newModelo); // Llama a la API para crear el modelo
-      console.log("Respuesta de la API al crear modelo:", response); // Depuración
       const createdModelo = response.modelo;
   
       // Mapear idmarca a marca_id para mantener consistencia en el frontend
