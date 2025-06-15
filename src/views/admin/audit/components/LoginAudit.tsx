@@ -49,7 +49,7 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
 
     return matchesSearch && matchesDepartment
   })
-
+    console.log(audits)
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Sin salida"
@@ -125,7 +125,7 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
                     <Text>{audit.nombre}</Text>
                   </Flex>
                 </Td>
-                <Td>{audit.departamento}</Td>
+                <Td>{audit.departamento || 'Sin departamento'}</Td>
                 <Td>{formatDate(audit.entrada)}</Td>
                 <Td>{formatDate(audit.salida)}</Td>
                 <Td>{audit.ip}</Td>

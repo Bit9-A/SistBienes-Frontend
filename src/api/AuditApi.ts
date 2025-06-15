@@ -7,7 +7,7 @@ export interface Audit{
     entrada: string; // Formato ISO 8601
     salida: string; // Formato ISO 8601
     nombre: string;
-    departamento: string;
+    departamento?: string;
     ip: string;
 }
 export interface Log{

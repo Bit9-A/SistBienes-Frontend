@@ -185,7 +185,7 @@ export default function ActionAudit({
                   <Text>{log.detalles}</Text>
                 </Td>
                 <Td>
-                  <Text>{log.departamento}</Text>
+                  <Text>{log.departamento || 'Sin departamento'}</Text>
                 </Td>
               </Tr>
             ))}
