@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -58,6 +58,7 @@ export default function IncorporationsForm({
 }: IncorporationsFormProps) {
   const [showAssetSelector, setShowAssetSelector] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([]);
+  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(undefined);
 
   // Para editar, carga el bien seleccionado en el array para mostrarlo en el input
   useEffect(() => {
@@ -69,9 +70,11 @@ export default function IncorporationsForm({
         concepto_id: selectedIncorporation.concepto_id,
         dept_id: selectedIncorporation.dept_id,
       });
+      setSelectedDeptId(selectedIncorporation.dept_id);
     } else {
       setSelectedAssets([]);
       setNewIncorporation({});
+      setSelectedDeptId(undefined);
     }
     // eslint-disable-next-line
   }, [selectedIncorporation, assets]);
@@ -87,6 +90,13 @@ export default function IncorporationsForm({
           ? assetsSeleccionados[0].id
           : undefined,
     });
+  };
+
+  const handleDeptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const deptId = Number(e.target.value);
+    setSelectedDeptId(deptId);
+    setNewIncorporation({ ...newIncorporation, dept_id: deptId });
+    setSelectedAssets([]);
   };
 
   // Al agregar, crea un registro por cada bien seleccionado
@@ -115,6 +125,16 @@ export default function IncorporationsForm({
     onCreated?.(nuevos);
   };
 
+  // Solo muestra bienes que NO están oficializados en el departamento seleccionado
+  const bienesDisponibles = useMemo(() => {
+    if (!selectedDeptId) return [];
+    const bienesIncorporadosEnDept = incorporations
+      .filter(i => i.dept_id === selectedDeptId && i.isActive)
+      .map(i => i.bien_id);
+
+    return assets.filter(a => !bienesIncorporadosEnDept.includes(a.id));
+  }, [assets, incorporations, selectedDeptId]);
+
   // Solo habilita el botón en editar si ambos campos están llenos
   const editDisabled =
     !newIncorporation.concepto_id || !newIncorporation.dept_id;
@@ -132,13 +152,12 @@ export default function IncorporationsForm({
         <AssetsTableCustom
           isOpen={showAssetSelector}
           onClose={() => setShowAssetSelector(false)}
-          assets={assets}
+          assets={bienesDisponibles}
           departments={departments}
           subgroups={subgroups}
           mode={userDepartmentId ? 'department' : 'all'}
           departmentId={userDepartmentId}
           onSelect={handleSelectAssets}
-          excludedAssetIds={incorporations.map((i) => i.bien_id)} // <-- NUEVO
         />
       )}
 
@@ -157,6 +176,26 @@ export default function IncorporationsForm({
               gap={4}
               mb={4}
             >
+              {/* Departamento (editable, primero) */}
+              <GridItem colSpan={{ base: 1, md: 1 }}>
+                <FormLabel htmlFor="departamento">Departamento</FormLabel>
+              </GridItem>
+              <GridItem colSpan={{ base: 1, md: 1 }}>
+                <Select
+                  id="departamento"
+                  value={selectedDeptId || ""}
+                  onChange={handleDeptChange}
+                  placeholder="Seleccionar departamento"
+                  isDisabled={!!selectedIncorporation}
+                >
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.nombre}
+                    </option>
+                  ))}
+                </Select>
+              </GridItem>
+
               {/* N° Identificación */}
               <GridItem colSpan={{ base: 1, md: 1 }}>
                 <FormLabel
@@ -182,17 +221,23 @@ export default function IncorporationsForm({
                   isReadOnly
                   placeholder="Seleccionar bienes"
                   onClick={
-                    !selectedIncorporation
+                    !selectedIncorporation && selectedDeptId
                       ? () => setShowAssetSelector(true)
                       : undefined
                   }
-                  cursor={!selectedIncorporation ? 'pointer' : 'default'}
+                  cursor={
+                    !selectedIncorporation && selectedDeptId
+                      ? 'pointer'
+                      : 'not-allowed'
+                  }
+                  isDisabled={!selectedDeptId || !!selectedIncorporation}
                 />
                 {!selectedIncorporation && (
                   <Button
                     mt={2}
                     size="sm"
                     onClick={() => setShowAssetSelector(true)}
+                    isDisabled={!selectedDeptId}
                   >
                     Buscar bienes
                   </Button>
@@ -265,42 +310,6 @@ export default function IncorporationsForm({
                   {concepts.map((concept) => (
                     <option key={concept.id} value={concept.id.toString()}>
                       {concept.nombre}
-                    </option>
-                  ))}
-                </Select>
-              </GridItem>
-
-              {/* Departamento (editable) */}
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel
-                  htmlFor="departamento"
-                  textAlign={{ base: 'left', md: 'right' }}
-                >
-                  Departamento
-                </FormLabel>
-              </GridItem>
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <Select
-                  id="departamento"
-                  value={
-                    selectedIncorporation
-                      ? newIncorporation.dept_id?.toString() ||
-                        selectedIncorporation.dept_id?.toString() ||
-                        ''
-                      : newIncorporation.dept_id?.toString() || ''
-                  }
-                  onChange={(e) =>
-                    setNewIncorporation({
-                      ...newIncorporation,
-                      dept_id: Number.parseInt(e.target.value),
-                    })
-                  }
-                  placeholder="Seleccionar departamento"
-                  isDisabled={false}
-                >
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id.toString()}>
-                      {dept.nombre}
                     </option>
                   ))}
                 </Select>
