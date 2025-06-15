@@ -15,7 +15,10 @@ import {
     deleteModelo,
     getAssetsByDepartment,
     modelo,
+    getMarcaById
   } from "../../../../api/AssetsApi";
+import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
+
   
   // Manejo de Bienes
   export const handleAddAsset = async (
@@ -25,8 +28,12 @@ import {
   ) => {
     try {
       const createdAsset = await createAsset(newAsset as MovableAsset);
-      setAssets((prev) => [...prev, createdAsset]); // Agrega el nuevo bien al estado
-      onClose(); // Cierra el modal
+      setAssets((prev) => [...prev, createdAsset]);
+      onClose();
+      await logCustomAction({
+        accion: "Crear Bien",
+        detalles: `Se creó el bien con ID: ${createdAsset.id}`,
+      });
     } catch (error) {
       console.error("Error al crear el bien:", error);
     }
@@ -43,7 +50,11 @@ import {
       setAssets((prev) =>
         prev.map((asset) => (asset.id === updated.id ? updated : asset))
       );
-      onClose(); // Cierra el modal
+      onClose();
+      await logCustomAction({
+        accion: "Editar Bien",
+        detalles: `Se editó el bien con ID: ${assetId}`,
+      });
     } catch (error) {
       console.error("Error al actualizar el bien:", error);
     }
@@ -55,7 +66,11 @@ import {
   ) => {
     try {
       await deleteAsset(assetId);
-      setAssets((prev) => prev.filter((asset) => asset.id !== assetId)); // Elimina el bien del estado
+      setAssets((prev) => prev.filter((asset) => asset.id !== assetId));
+      await logCustomAction({
+        accion: "Eliminar Bien",
+        detalles: `Se eliminó el bien con ID: ${assetId}`,
+      });
     } catch (error) {
       console.error("Error al eliminar el bien:", error);
     }
@@ -68,7 +83,11 @@ import {
       if (!createdMarca || typeof createdMarca.nombre !== "string" || createdMarca.nombre.trim() === "") {
         throw new Error("La marca creada no tiene un nombre válido.");
       }
-      return createdMarca; // Devuelve la marca creada
+      await logCustomAction({
+        accion: "Crear Marca",
+        detalles: `Se creó la marca con el Nombre: ${createdMarca.nombre}`,
+      });
+      return createdMarca;
     } catch (error) {
       console.error("Error al crear la marca:", error);
       throw error;
@@ -86,7 +105,11 @@ import {
       setMarcas((prev) =>
         prev.map((marca) => (marca.id === updated.id ? updated : marca))
       );
-      onClose(); // Cierra el modal
+      onClose();
+      await logCustomAction({
+        accion: "Editar Marca",
+        detalles: `Se editó la marca con ID: ${marcaId}`,
+      });
     } catch (error) {
       console.error("Error al actualizar la marca:", error);
     }
@@ -98,7 +121,11 @@ import {
   ) => {
     try {
       await deleteMarca(marcaId);
-      setMarcas((prev) => prev.filter((marca) => marca.id !== marcaId)); // Elimina la marca del estado
+      setMarcas((prev) => prev.filter((marca) => marca.id !== marcaId));
+      await logCustomAction({
+        accion: "Eliminar Marca",
+        detalles: `Se eliminó la marca con ID: ${marcaId}`,
+      });
     } catch (error) {
       console.error("Error al eliminar la marca:", error);
     }
@@ -113,14 +140,17 @@ import {
       // Mapear idmarca a marca_id para mantener consistencia en el frontend
       if (createdModelo && createdModelo.idmarca) {
         createdModelo.marca_id = createdModelo.idmarca;
-        delete createdModelo.idmarca; // Elimina la propiedad idmarca si no es necesaria
+        delete createdModelo.idmarca;
       }
   
       if (!createdModelo || !createdModelo.nombre) {
         throw new Error("El modelo creado no tiene un nombre válido.");
       }
-  
-      return createdModelo; // Devuelve el modelo creado
+      await logCustomAction({
+        accion: "Crear Modelo",
+        detalles: `Se creó el modelo con el Nombre: ${createdModelo.nombre}`,
+      });
+      return createdModelo;
     } catch (error) {
       console.error("Error al crear el modelo:", error);
       throw error;
@@ -138,7 +168,11 @@ import {
       setModelos((prev) =>
         prev.map((modelo) => (modelo.id === updated.id ? updated : modelo))
       );
-      onClose(); // Cierra el modal
+      onClose();
+      await logCustomAction({
+        accion: "Editar Modelo",
+        detalles: `Se editó el modelo con ID: ${modeloId}`,
+      });
     } catch (error) {
       console.error("Error al actualizar el modelo:", error);
     }
@@ -150,7 +184,11 @@ import {
   ) => {
     try {
       await deleteModelo(modeloId);
-      setModelos((prev) => prev.filter((modelo) => modelo.id !== modeloId)); // Elimina el modelo del estado
+      setModelos((prev) => prev.filter((modelo) => modelo.id !== modeloId));
+      await logCustomAction({
+        accion: "Eliminar Modelo",
+        detalles: `Se eliminó el modelo con ID: ${modeloId}`,
+      });
     } catch (error) {
       console.error("Error al eliminar el modelo:", error);
     }
@@ -160,7 +198,7 @@ import {
 export const fetchAssetsByDepartment = async (departmentId: number): Promise<MovableAsset[]> => {
     try {
         const assets = await getAssetsByDepartment(departmentId);
-        return assets; // Devuelve los bienes del departamento
+        return assets;
     } catch (error) {
         console.error("Error al obtener los bienes por departamento:", error);
         throw error;
@@ -171,7 +209,7 @@ export const fetchAssetsByDepartment = async (departmentId: number): Promise<Mov
 export const fetchAllAssets = async (): Promise<MovableAsset[]> => {
     try {
         const assets = await getAssets();
-        return assets; // Devuelve todos los bienes
+        return assets;
     } catch (error) {
         console.error("Error al obtener todos los bienes:", error);
         throw error;
