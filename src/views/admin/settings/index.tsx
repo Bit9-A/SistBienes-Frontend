@@ -80,7 +80,7 @@ const Settings = () => {
               <Box>
                 <Flex align="center" gap={3} mb={2}>
                   <Box p={2} bg="blue.100" borderRadius="lg">
-                    <FiSettings size={24} color="blue" />
+                    <FiSettings size={24} color="#0059ae" />
                   </Box>
                   <Heading size="lg" fontWeight="bold" color={textColor}>
                     Configuración del Sistema

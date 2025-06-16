@@ -194,7 +194,7 @@ export default function AuditModule() {
               <Box>
                 <Flex align="center" gap={3} mb={2}>
                   <Box p={2} bg="blue.100" borderRadius="lg">
-                    <FiShield size={24} color="blue" />
+                    <FiShield size={24} color="#0059ae" />
                   </Box>
                   <Heading size="lg" fontWeight="bold" color={textColor}>
                     Auditoría del Sistema

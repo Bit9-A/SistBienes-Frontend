@@ -65,7 +65,7 @@ export default function AssetManagementPage() {
               <Box>
                 <Flex align="center" gap={3} mb={2}>
                   <Box p={2} bg="blue.100" borderRadius="lg">
-                    <FiPackage size={24} color="blue" />
+                    <FiPackage size={24} color="#0059ae" />
                   </Box>
                   <Heading size="lg" fontWeight="bold" color={textColor}>
                     Gestión de Activos
