@@ -24,6 +24,7 @@ export interface MovableAsset {
   id_Parroquia: number;
   parroquia_nombre?: string;
   isActive?:number;     // Nuevo: nombre de la parroquia
+  isComputer?:number
 }
 
 export interface marca{
