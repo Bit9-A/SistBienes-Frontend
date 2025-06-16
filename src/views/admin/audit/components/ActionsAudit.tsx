@@ -349,7 +349,7 @@ export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderCo
                             </Text>
                           </Td>
                           <Td>
-                            <Text fontSize="sm" noOfLines={2} maxW="200px">
+                            <Text fontSize="sm" noOfLines={2} maxW="auto">
                               {log.detalles}
                             </Text>
                           </Td>

@@ -29,7 +29,7 @@ import NotificationsHistory from 'views/admin/notifications';
 import Transfer from 'views/admin/transfers';
 
 import AuditModule from 'views/admin/audit';
-import MissingAssetsReport from 'views/admin/reports';
+import MissingGoodsTable from 'views/admin/reports';
 
 
 
@@ -89,7 +89,7 @@ const routes = [
     layout: '/admin',
     path: '/reports',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-    component: <MissingAssetsReport />,
+    component: <MissingGoodsTable />,
     adminOnly: false,
   },
   {
