@@ -372,7 +372,7 @@ const NotificationsHistory = () => {
               <Box>
                 <Flex align="center" gap={3} mb={2}>
                   <Box p={2} bg="blue.100" borderRadius="lg">
-                    <FiBell size={24} color="blue" />
+                    <FiBell size={24} color="0059ae" />
                   </Box>
                   <Heading size="lg" fontWeight="bold" color={textColor}>
                     Centro de Notificaciones
@@ -469,7 +469,7 @@ const NotificationsHistory = () => {
                 <option value="all">Todos los departamentos</option>
                 {departmentOptions.map((dept) => (
                   <option key={dept} value={dept.toString()}>
-                     {dept}
+                    {dept}
                   </option>
                 ))}
               </Select>

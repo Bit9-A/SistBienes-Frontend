@@ -28,42 +28,42 @@ const NavSettings: React.FC<NavSettingsProps> = ({ activeTab, setActiveTab }) =>
     icon: any
     color: string
   }[] = [
-    {
-      id: "general",
-      label: "General",
-      description: "Configuración básica",
-      icon: FiSettings,
-      color: "blue",
-    },
-    {
-      id: "departaments",
-      label: "Departamentos",
-      description: "Gestión de departamentos",
-      icon: FiUsers,
-      color: "purple",
-    },
-    {
-      id: "subgroups",
-      label: "Subgrupos",
-      description: "Categorías de bienes",
-      icon: FiGrid,
-      color: "green",
-    },
-    {
-      id: "parroquias",
-      label: "Parroquias",
-      description: "Ubicaciones geográficas",
-      icon: FiMapPin,
-      color: "orange",
-    },
-    {
-      id: "concepts",
-      label: "Conceptos",
-      description: "Tipos de movimientos",
-      icon: FiMove,
-      color: "red",
-    },
-  ]
+      {
+        id: "general",
+        label: "General",
+        description: "Configuración básica",
+        icon: FiSettings,
+        color: "blue",
+      },
+      {
+        id: "departaments",
+        label: "Departamentos",
+        description: "Gestión de departamentos",
+        icon: FiUsers,
+        color: "purple",
+      },
+      {
+        id: "subgroups",
+        label: "Subgrupos",
+        description: "Categorías de bienes",
+        icon: FiGrid,
+        color: "green",
+      },
+      {
+        id: "parroquias",
+        label: "Parroquias",
+        description: "Ubicaciones geográficas",
+        icon: FiMapPin,
+        color: "orange",
+      },
+      {
+        id: "concepts",
+        label: "Conceptos",
+        description: "Tipos de movimientos",
+        icon: FiMove,
+        color: "red",
+      },
+    ]
 
   return (
     <Box>

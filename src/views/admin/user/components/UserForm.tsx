@@ -98,61 +98,61 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
- const handleSubmit = async () => {
-  if (
-    !formData.nombre ||
-    !formData.apellido ||
-    !formData.username ||
-    !formData.email ||
-    !formData.password ||
-    !formData.tipo_usuario ||
-    !formData.dept_id
-  ) {
-    toast({
-      title: 'Error',
-      description: 'Por favor, completa todos los campos obligatorios.',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-  if (!isValidEmail(formData.email)) {
-    toast({
-      title: 'Error',
-      description: 'Por favor, ingresa un email válido.',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
-  try {
-    await onSave({ ...formData, isActive: 1 }); // Si hay error, lanzará excepción y no sigue
-    toast({
-      title: 'Usuario creado',
-      description: 'El usuario se ha creado correctamente.',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
-    onClose();
-  } catch (error: any) {
-    const backendMsg =
-      error?.response?.data?.message ||
-      error?.response?.data?.msg ||
-      error?.message ||
-      'Error desconocido';
-    toast({
-      title: 'Error',
-      description: backendMsg,
-      status: 'error',
-      duration: 4000,
-      isClosable: true,
-    });
-    // No cierres el modal aquí
-  }
-};
+  const handleSubmit = async () => {
+    if (
+      !formData.nombre ||
+      !formData.apellido ||
+      !formData.username ||
+      !formData.email ||
+      !formData.password ||
+      !formData.tipo_usuario ||
+      !formData.dept_id
+    ) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, completa todos los campos obligatorios.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    if (!isValidEmail(formData.email)) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, ingresa un email válido.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    try {
+      await onSave({ ...formData, isActive: 1 }); // Si hay error, lanzará excepción y no sigue
+      toast({
+        title: 'Usuario creado',
+        description: 'El usuario se ha creado correctamente.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      onClose();
+    } catch (error: any) {
+      const backendMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.msg ||
+        error?.message ||
+        'Error desconocido';
+      toast({
+        title: 'Error',
+        description: backendMsg,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+      // No cierres el modal aquí
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -266,8 +266,8 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
             </FormControl>
 
             <FormControl>
-              <FormLabel>Departamento</FormLabel>
-              <Menu>
+              <FormLabel >Departamento</FormLabel>
+              <Menu >
                 <MenuButton
                   as={Button}
                   rightIcon={<ChevronDownIcon />}
@@ -285,6 +285,8 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                 <MenuList
                   bg={useColorModeValue('white', 'gray.700')}
                   borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  maxH="300px"
+                  overflowY="auto"
                 >
                   {departments.map((dept) => (
                     <MenuItem
@@ -424,7 +426,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                 placeholder="Apellido"
               />
             </FormControl>
-              <FormControl>
+            <FormControl>
               <FormLabel>Nombre de Usuario</FormLabel>
               <Input
                 name="username"
@@ -530,6 +532,8 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                 <MenuList
                   bg={useColorModeValue('white', 'gray.700')}
                   borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  maxH="300px"
+                  overflowY="auto"
                 >
                   {departments.map((dept) => (
                     <MenuItem
