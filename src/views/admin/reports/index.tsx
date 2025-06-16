@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import {
   Box,
   useDisclosure,
+  IconButton,
   useColorModeValue,
   useBreakpointValue,
   Stack,
@@ -31,7 +32,7 @@ import {
   Container,
   CardHeader,
 } from "@chakra-ui/react"
-import { FiAlertTriangle, FiSearch, FiFilter, FiX, FiCalendar, FiPlus, FiUsers } from "react-icons/fi"
+import { FiAlertTriangle, FiSearch, FiFilter, FiX, FiCalendar, FiPlus, FiUsers, FiEdit, FiTrash2 } from "react-icons/fi"
 import { v4 as uuidv4 } from "uuid"
 import {
   type MissingGoods,
@@ -94,8 +95,8 @@ export default function MissingGoodsTable() {
           good.jefe_nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           good.departamento?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           good.numero_identificacion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          good.observaciones?.toLowerCase().includes(searchQuery.toLowerCase()) 
-        )
+          good.observaciones?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     }
 
     // Department filter
@@ -562,22 +563,22 @@ export default function MissingGoodsTable() {
                                 </Box>
                                 <Box as="td" p={3}>
                                   <Flex justify="center" gap={2}>
-                                    <Button
+                                    <IconButton
+                                      aria-label="Editar Reporte"
                                       size="sm"
+                                      icon={<FiEdit />}
                                       colorScheme="blue"
                                       variant="ghost"
                                       onClick={() => openEditDialog(good)}
-                                    >
-                                      Editar
-                                    </Button>
-                                    <Button
+                                    />
+                                    <IconButton
+                                      aria-label="Eliminar Reporte"
                                       size="sm"
+                                      icon={<FiTrash2 />}
                                       colorScheme="red"
                                       variant="ghost"
                                       onClick={() => handleDelete(good.id)}
-                                    >
-                                      Eliminar
-                                    </Button>
+                                    />
                                   </Flex>
                                 </Box>
                               </Box>
