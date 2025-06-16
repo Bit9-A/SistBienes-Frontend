@@ -1,10 +1,16 @@
-"use client"
-
-import { Card, CardBody, Stack, Flex, Text, Badge, Divider, Grid, Box, IconButton } from "@chakra-ui/react"
-import { FiEdit, FiTrash2 } from "react-icons/fi"
-import type { Desincorp } from "api/IncorpApi"
-import type { Department, ConceptoMovimiento } from "api/SettingsApi"
-import { v4 as uuidv4 } from "uuid"
+import {
+  Box,
+  Stack,
+  Text,
+  Badge,
+  IconButton,
+  HStack,
+  Flex,
+  useColorModeValue,
+} from "@chakra-ui/react"
+import { FiEdit2, FiTrash2 } from "react-icons/fi"
+import { Desincorp } from "api/IncorpApi"
+import { Department, ConceptoMovimiento } from "api/SettingsApi"
 
 interface MobileCardsProps {
   disposals: Desincorp[]
@@ -23,98 +29,74 @@ export default function MobileCards({
   departments,
   concepts,
 }: MobileCardsProps) {
-  const getConceptName = (conceptId: number) => {
-    const concept = concepts.find((c) => c.id === conceptId)
-    return concept ? concept.nombre : conceptId
-  }
+  const cardBg = useColorModeValue("white", "gray.800")
 
-  const getDepartmentName = (deptId: number) => {
-    const dept = departments.find((d) => d.id === deptId)
-    return dept ? dept.nombre : deptId
-  }
-
-  if (disposals.length === 0) {
-    return (
-      <Box textAlign="center" p={4}>
-        <Text>No hay desincorporaciones que coincidan con los filtros.</Text>
-      </Box>
-    )
-  }
+  const getDeptName = (id?: number) =>
+    departments.find((d) => d.id === id)?.nombre || "-"
+  const getConceptName = (id?: number) =>
+    concepts.find((c) => c.id === id)?.nombre || "-"
 
   return (
     <Stack spacing={4}>
-      {disposals.map((item, index) => (
-        <Card key={uuidv4()} borderColor={borderColor} boxShadow="sm">
-          <CardBody p={3}>
-            <Stack spacing={2}>
-              <Flex justify="space-between" align="center">
-                <Text fontWeight="bold">N° {index + 1}</Text>
-                <Badge colorScheme="red">{getConceptName(item.concepto_id)}</Badge>
-              </Flex>
-
-              <Divider my={1} />
-
-              <Grid templateColumns="repeat(2, 1fr)" gap={2}>
-                <Box>
-                  <Text fontSize="xs" color="gray.500">
-                    N° Identificación
-                  </Text>
-                  <Text fontSize="sm">{item.bien_id}</Text>
-                </Box>
-                <Box>
-                  <Text fontSize="xs" color="gray.500">
-                    Fecha
-                  </Text>
-                  <Text fontSize="sm">
-                    {item.fecha
-                      ? new Date(item.fecha).toLocaleDateString("es-ES", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })
-                      : ""}
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="xs" color="gray.500">
-                    Departamento
-                  </Text>
-                  <Text fontSize="sm">{getDepartmentName(item.dept_id)}</Text>
-                </Box>
-                <Box>
-                  <Text fontSize="xs" color="gray.500">
-                    Valor
-                  </Text>
-                  <Text fontSize="sm">{Number(item.valor).toFixed(2)}</Text>
-                </Box>
-                <Box>
-                  <Text fontSize="xs" color="gray.500">
-                    Cantidad
-                  </Text>
-                  <Text fontSize="sm">{item.cantidad}</Text>
-                </Box>
-              </Grid>
-
-              <Flex justify="flex-end" gap={2} mt={2}>
-                <IconButton
-                  aria-label="Editar"
-                  icon={<FiEdit />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="outline"
-                  onClick={() => onEdit(item)}
-                />
-                <IconButton
-                  aria-label="Eliminar"
-                  icon={<FiTrash2 />}
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => onDelete(item.id)}
-                />
-              </Flex>
-            </Stack>
-          </CardBody>
-        </Card>
+      {disposals.map((d) => (
+        <Box
+          key={d.id}
+          bg={cardBg}
+          border="1px"
+          borderColor={borderColor}
+          borderRadius="lg"
+          boxShadow="sm"
+          p={4}
+        >
+          <Flex justify="space-between" align="center" mb={2}>
+            <Text fontWeight="bold" fontSize="lg">
+              Bien ID: {d.bien_id}
+            </Text>
+            <HStack spacing={1}>
+              <IconButton
+                aria-label="Editar"
+                icon={<FiEdit2 />}
+                size="sm"
+                variant="ghost"
+                colorScheme="purple"
+                onClick={() => onEdit(d)}
+              />
+              <IconButton
+                aria-label="Eliminar"
+                icon={<FiTrash2 />}
+                size="sm"
+                variant="ghost"
+                colorScheme="red"
+                onClick={() => onDelete(d.id)}
+              />
+            </HStack>
+          </Flex>
+          <Stack spacing={1} fontSize="sm">
+            <Text>
+              <b>Identificación:</b> {d.numero_identificacion || "-"}
+            </Text>
+            <Text>
+              <b>Departamento:</b> {getDeptName(d.dept_id)}
+            </Text>
+            <Text>
+              <b>Fecha:</b> {d.fecha ? new Date(d.fecha).toLocaleDateString() : ""}
+            </Text>
+            <Text>
+              <b>Concepto:</b> {getConceptName(d.concepto_id)}
+            </Text>
+            <Text>
+              <b>Valor:</b> {d.valor}
+            </Text>
+            <Text>
+              <b>Cantidad:</b> {d.cantidad}
+            </Text>
+            {d.observaciones && (
+              <Badge colorScheme="purple" mt={1}>
+                {d.observaciones}
+              </Badge>
+            )}
+          </Stack>
+        </Box>
       ))}
     </Stack>
   )

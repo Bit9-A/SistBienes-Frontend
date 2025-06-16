@@ -1,81 +1,146 @@
-import { useState, useEffect } from "react"
-import { Box, Button, useDisclosure, useColorModeValue, useBreakpointValue, Stack } from "@chakra-ui/react"
-import { FiEdit } from "react-icons/fi"
-import { getDesincorps, createDesincorp, updateDesincorp, deleteDesincorp } from "api/IncorpApi"
-import type { Department, ConceptoMovimiento } from "api/SettingsApi"
-import { getDepartments, getConceptosMovimientoIncorporacion } from "api/SettingsApi"
-import type { Desincorp } from "api/IncorpApi"
+"use client"
+
+import { useState, useEffect, useMemo } from "react"
+import {
+  Box,
+  useDisclosure,
+  useColorModeValue,
+  useBreakpointValue,
+  Stack,
+  Heading,
+  Card,
+  CardBody,
+  Flex,
+  Spinner,
+  Center,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  useToast,
+} from "@chakra-ui/react"
+import { FiTrash2 } from "react-icons/fi"
+import {
+  getDesincorps,
+  createDesincorp,
+  updateDesincorp,
+  deleteDesincorp,
+  Desincorp,
+} from "api/IncorpApi"
+import { filterDisposals } from "./utils/DisposalsUtils"
 import DisposalsFilters from "./components/DisposalsFilters"
 import DisposalsForm from "./components/DisposalsForm"
 import DesktopTable from "./components/DesktopTable"
 import MobileCards from "./components/MobileCard"
+import { type Department, getDepartments } from "api/SettingsApi"
+import { type ConceptoMovimiento, getConceptosMovimientoDesincorporacion } from "api/SettingsApi"
+import { type MovableAsset, getAssets } from "api/AssetsApi"
+import { type SubGroup, getSubGroupsM } from "api/SettingsApi"
 
 export default function DisposalsTable() {
+  const today = new Date().toISOString().slice(0, 10)
   const [disposals, setDisposals] = useState<Desincorp[]>([])
-  const [filteredDisposals, setFilteredDisposals] = useState<Desincorp[]>([])
   const [selectedDisposal, setSelectedDisposal] = useState<Desincorp | null>(null)
   const [newDisposal, setNewDisposal] = useState<Partial<Desincorp>>({})
-  const [filterDept, setFilterDept] = useState<string>("")
+  const [filterDept, setFilterDept] = useState<string>("all")
   const [startDate, setStartDate] = useState<string>("")
   const [endDate, setEndDate] = useState<string>("")
-  const [showFilters, setShowFilters] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [departments, setDepartments] = useState<Department[]>([])
   const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([])
+  const [assets, setAssets] = useState<MovableAsset[]>([])
+  const [subgroups, setSubgroups] = useState<SubGroup[]>([])
+  const toast = useToast()
 
   // UI theme values
   const borderColor = useColorModeValue("gray.200", "gray.700")
   const headerBg = useColorModeValue("gray.100", "gray.800")
   const hoverBg = useColorModeValue("gray.50", "gray.700")
   const cardBg = useColorModeValue("white", "gray.800")
+  const textColor = useColorModeValue("gray.800", "white")
 
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, md: false })
-  const buttonSize = useBreakpointValue({ base: "sm", md: "md" })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-  // Cargar datos reales al montar
+  // Load data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getDesincorps()
-        const deptData = await getDepartments()
-        const conceptData = await getConceptosMovimientoIncorporacion()
+        setLoading(true)
+        setError(null)
+        const [data, deptData, conceptData, assetData, subGroupData] = await Promise.all([
+          getDesincorps(),
+          getDepartments(),
+          getConceptosMovimientoDesincorporacion(),
+          getAssets(),
+          getSubGroupsM(),
+        ])
+        setAssets(assetData)
+        setSubgroups(subGroupData)
         setDepartments(deptData)
         setConcepts(conceptData)
         setDisposals(data)
-        setFilteredDisposals(data)
       } catch (error) {
-        // Manejo de error
+        setError("Error al cargar los datos. Por favor, intenta nuevamente.")
+        console.error("Error fetching data:", error)
+      } finally {
+        setLoading(false)
       }
     }
     fetchData()
   }, [])
 
-  const handleAdd = async () => {
-    // Validar y limpiar datos
-    const bien_id = Number(newDisposal.bien_id)
-    const fecha = newDisposal.fecha ? newDisposal.fecha : ""
-    const valor = Number(newDisposal.valor)
-    const cantidad = Number(newDisposal.cantidad)
-    const concepto_id = Number(newDisposal.concepto_id)
-    const dept_id = Number(newDisposal.dept_id)
+  const handleAdd = async (disposalData?: Partial<Desincorp>) => {
+    const data = disposalData || newDisposal
+    const bien_id = Number(data.bien_id)
+    const fecha = data.fecha ? data.fecha : ""
+    const valor = Number(data.valor)
+    const cantidad = Number(data.cantidad)
+    const concepto_id = Number(data.concepto_id)
+    const dept_id = Number(data.dept_id)
 
     if (!bien_id || !fecha || !valor || !cantidad || !concepto_id || !dept_id) {
-      // Muestra un toast de error: "Todos los campos son obligatorios"
+      toast({
+        title: "Campos requeridos",
+        description: "Todos los campos son obligatorios",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      })
       return
     }
 
-    const dataToSend = { bien_id, fecha, valor, cantidad, concepto_id, dept_id }
+    const dataToSend = {
+      bien_id,
+      fecha,
+      valor,
+      cantidad,
+      concepto_id,
+      dept_id,
+    }
 
     try {
-      const created = await createDesincorp(dataToSend)
+      const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">)
       setDisposals((prev) => [...prev, created])
-      setFilteredDisposals((prev) => [...prev, created])
-      setNewDisposal({})
-      onClose()
+      toast({
+        title: "Desincorporación creada",
+        description: "La desincorporación se ha creado exitosamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
     } catch (error) {
-      // Manejo de error
+      toast({
+        title: "Error",
+        description: "Error al crear desincorporación",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+      console.error("Error al crear desincorporación:", error)
     }
   }
 
@@ -84,23 +149,35 @@ export default function DisposalsTable() {
       try {
         const { fecha, bien_id, ...updates } = newDisposal
         const updated = await updateDesincorp(selectedDisposal.id, updates)
-
         if (!updated || typeof updated.id === "undefined") {
-          // Manejo de error: no se recibió el objeto actualizado
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar la desincorporación",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          })
           return
         }
-
-        setDisposals((prev) =>
-          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
-        )
-        setFilteredDisposals((prev) =>
-          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
-        )
+        setDisposals((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)))
         setSelectedDisposal(null)
         setNewDisposal({})
         onClose()
+        toast({
+          title: "Desincorporación actualizada",
+          description: "La desincorporación se ha actualizado exitosamente",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        })
       } catch (error) {
-        // Manejo de error
+        toast({
+          title: "Error",
+          description: "Error al actualizar desincorporación",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        })
       }
     }
   }
@@ -109,36 +186,43 @@ export default function DisposalsTable() {
     try {
       await deleteDesincorp(id)
       setDisposals((prev) => prev.filter((item) => item.id !== id))
-      setFilteredDisposals((prev) => prev.filter((item) => item.id !== id))
+      toast({
+        title: "Desincorporación eliminada",
+        description: "La desincorporación se ha eliminado exitosamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
     } catch (error) {
-      // Manejo de error
+      toast({
+        title: "Error",
+        description: "Error al eliminar desincorporación",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
     }
   }
 
   const handleFilterDepartment = (deptId: string) => {
     setFilterDept(deptId)
-    applyFilters(deptId, startDate, endDate)
   }
 
   const handleFilterDate = (start: string, end: string) => {
     setStartDate(start)
-    setEndDate(end)
-    applyFilters(filterDept, start, end)
+    setEndDate(end || today)
   }
 
-  const applyFilters = (deptId: string, start: string, end: string) => {
-    let filtered = [...disposals]
-    if (deptId) {
-      filtered = filtered.filter((item) => item.dept_id === Number(deptId))
-    }
-    if (start) {
-      filtered = filtered.filter((item) => new Date(item.fecha) >= new Date(start))
-    }
-    if (end) {
-      filtered = filtered.filter((item) => new Date(item.fecha) <= new Date(end))
-    }
-    setFilteredDisposals(filtered)
-  }
+  // Filtro igual que incorporations: useMemo y compara fechas con new Date()
+  const filteredDisposals = useMemo(() => {
+    return filterDisposals(
+      disposals,
+      "",
+      filterDept,
+      startDate,
+      endDate
+    )
+  }, [disposals, filterDept, startDate, endDate])
 
   const openEditDialog = (disposal: Desincorp) => {
     setSelectedDisposal(disposal)
@@ -152,64 +236,106 @@ export default function DisposalsTable() {
     onOpen()
   }
 
-  const toggleFilters = () => setShowFilters(!showFilters)
+  if (loading) {
+    return (
+      <Center py={20}>
+        <Stack align="center" spacing={4}>
+          <Spinner size="xl" color="red.500" thickness="4px" />
+          <Heading size="md" color={textColor}>
+            Cargando desincorporaciones...
+          </Heading>
+        </Stack>
+      </Center>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert status="error" borderRadius="lg">
+        <AlertIcon />
+        <Box>
+          <AlertTitle>Error al cargar datos</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Box>
+      </Alert>
+    )
+  }
 
   return (
-    <Box pt={{ base: "100px", md: "80px", xl: "80px" }}>
-      <Stack
-        spacing={4}
-        mb={4}
-        direction={{ base: "column", md: "row" }}
-        justify="space-between"
-        align={{ base: "stretch", md: "center" }}
-      >
-        <Button
-          colorScheme="red"
-          onClick={openAddDialog}
-          size={buttonSize}
-          leftIcon={isMobile ? undefined : <FiEdit />}
-          w={{ base: "full", md: "auto" }}
-        >
-          {isMobile ? "Agregar" : "Agregar Desincorporación"}
-        </Button>
+    <Stack spacing={4}>
+      {/* Filters and Add Button Section */}
+      <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
+        <CardBody p={6}>
+          <DisposalsFilters
+            onFilterDepartment={handleFilterDepartment}
+            onFilterDate={handleFilterDate}
+            onAddClick={openAddDialog}
+            startDate={startDate}
+            endDate={endDate}
+            departments={departments}
+          />
+        </CardBody>
+      </Card>
 
-        <DisposalsFilters
-          onFilterDepartment={handleFilterDepartment}
-          onFilterDate={handleFilterDate}
-          showFilters={showFilters}
-          toggleFilters={toggleFilters}
-          startDate={startDate}
-          endDate={endDate}
-          buttonSize={buttonSize || "md"}
-          borderColor={borderColor}
-          cardBg={cardBg}
-          departments={departments}
-        />
-      </Stack>
+      {/* Content Section */}
+      <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={borderColor}>
+        <CardBody p={6}>
+          {/* Results Summary */}
+          <Flex justify="space-between" align="center" mb={4}>
+            <Box>
+              <Heading size="md" color={textColor} mb={1}>
+                Desincorporaciones
+              </Heading>
+              <Box color="gray.600" fontSize="sm">
+                {filteredDisposals.length} registro{filteredDisposals.length !== 1 ? "s" : ""} encontrado
+                {filteredDisposals.length !== 1 ? "s" : ""}
+              </Box>
+            </Box>
+          </Flex>
 
-      {!isMobile ? (
-        <DesktopTable
-          disposals={filteredDisposals}
-          borderColor={borderColor}
-          headerBg={headerBg}
-          hoverBg={hoverBg}
-          tableSize={tableSize}
-          onEdit={openEditDialog}
-          onDelete={handleDelete}
-          departments={departments}
-          concepts={concepts}
-        />
-      ) : (
-        <MobileCards
-          disposals={filteredDisposals}
-          borderColor={borderColor}
-          onEdit={openEditDialog}
-          onDelete={handleDelete}
-          departments={departments}
-          concepts={concepts}
-        />
-      )}
+          {/* Table/Cards Content */}
+          {filteredDisposals.length === 0 ? (
+            <Center py={12}>
+              <Stack align="center" spacing={4}>
+                <Box p={4} bg="gray.100" borderRadius="full">
+                  <FiTrash2 size={32} color="gray" />
+                </Box>
+                <Box textAlign="center">
+                  <Heading size="md" color="gray.500" mb={2}>
+                    No hay desincorporaciones
+                  </Heading>
+                  <Box color="gray.400" fontSize="sm">
+                    No se encontraron desincorporaciones que coincidan con los filtros aplicados
+                  </Box>
+                </Box>
+              </Stack>
+            </Center>
+          ) : !isMobile ? (
+            <DesktopTable
+              disposals={filteredDisposals}
+              borderColor={borderColor}
+              headerBg={headerBg}
+              hoverBg={hoverBg}
+              tableSize={tableSize}
+              onEdit={openEditDialog}
+              onDelete={handleDelete}
+              departments={departments}
+              concepts={concepts}
+            />
+          ) : (
+            <MobileCards
+              disposals={filteredDisposals}
+              borderColor={borderColor}
+              onEdit={openEditDialog}
+              onDelete={handleDelete}
+              departments={departments}
+              concepts={concepts}
+            />
+          )}
+        </CardBody>
+      </Card>
 
+      {/* Form Modal */}
       <DisposalsForm
         isOpen={isOpen}
         onClose={onClose}
@@ -221,7 +347,10 @@ export default function DisposalsTable() {
         isMobile={isMobile || false}
         departments={departments}
         concepts={concepts}
+        assets={assets}
+        subgroups={subgroups}
+        disposals={disposals}
       />
-    </Box>
+    </Stack>
   )
 }
