@@ -1,22 +1,51 @@
-import { Box, Flex, Text, Select, useColorModeValue } from '@chakra-ui/react';
+import { Box, Flex, Text, useColorModeValue } from '@chakra-ui/react';
 import Card from 'components/card/Card';
 import ReactApexChart from 'react-apexcharts';
-
-const estados = [
-    { label: 'Bienes', color: '#22c55e', value: 25000 },
-    { label: 'Prensa', color: '#f59e42', value: 18500 },
-    { label: 'Sistemas', color: '#3b82f6', value: 42000 },
-    { label: 'Talento Humano', color: '#ef4444', value: 12000 },
-];
+import { getDashboardCountsByDepartment, DashboardCountsByDepartment } from '../../../../api/DashboardApi';
+import React, { useEffect, useState } from 'react';
 
 const BarChart = () => {
     const textColor = useColorModeValue('secondaryGray.900', 'white');
-    const cardColor = useColorModeValue('white', 'navy.700');
 
-    const options = {
+    const [counts, setCounts] = useState<DashboardCountsByDepartment[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const response = await getDashboardCountsByDepartment();
+                setCounts(response);
+            } catch (error) {
+                console.error('Error fetching dashboard counts:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCounts();
+    }, []);
+
+    const chartLabels = counts.map(item => item.dept_nombre);
+    const chartData = counts.map(item => Number(item.total_valor));
+
+
+    const chartOptions = {
         chart: {
             type: 'bar' as const,
-            toolbar: { show: true },
+            toolbar: {
+                show: true, export: {
+                    csv: {
+                        filename: "ColumnChart"
+                    },
+                    svg: {
+                        filename: "ColumnChart"
+                    },
+                    png: {
+                        filename: "ColumnChart"
+                    }
+                },
+                tools: { download: true }
+            },
             animations: {
                 enabled: true,
                 speed: 800,
@@ -30,6 +59,9 @@ const BarChart = () => {
                 }
             }
         },
+        colors: ['#22c55e', '#f59e42', '#3b82f6', '#ef4444', '#c421a1', '#21c4c2', '#b9c421', '#f3c421', '#c421f3', '#21f3c4', '#f321c4', '#c4f321'
+            , '#c42121', '#5a21c4', '#ffdb70', '#c42170', '#c47021', '#24c421', '#2193c4', '#c2c421', '#33cdeb', '#2e81c9', '#ee6f93',
+            '#61a152', '#d2a82d', '#7321c4', '#0059ae', '#c4bf21', '#484333', '#a3a3a3'],
         plotOptions: {
             bar: {
                 borderRadius: 4,
@@ -40,22 +72,11 @@ const BarChart = () => {
         },
         dataLabels: { enabled: false },
         xaxis: {
-            categories: estados.map(e => e.label),
-            labels: {
-                style: {
-                    colors: estados.map(e => e.color),
-                    fontWeight: 700,
-                    fontSize: '14px',
-                },
-            },
+            categories: chartLabels,
+            title: { text: "Departamento" }
         },
-        colors: estados.map(e => e.color),
         yaxis: {
-            labels: {
-                style: {
-                    colors: [textColor],
-                },
-            },
+            title: { text: "Valor Total" }
         },
         grid: {
             borderColor: useColorModeValue('#E5E7EB', '#2D3748'),
@@ -65,7 +86,7 @@ const BarChart = () => {
     const series = [
         {
             name: 'Valor Total',
-            data: estados.map(e => e.value),
+            data: chartData
         },
     ];
 
@@ -86,13 +107,9 @@ const BarChart = () => {
                         Valor de activos por departamento
                     </Text>
                 </Box>
-                <Select fontSize='sm' variant='subtle' defaultValue='monthly' width='unset' fontWeight='700'>
-                    <option value='monthly'>Mensual</option>
-                    <option value='yearly'>Anual</option>
-                </Select>
             </Flex>
             <Box w="100%" h="220px">
-                <ReactApexChart options={options} series={series} type="bar" height={220} />
+                <ReactApexChart options={chartOptions} series={series} type="bar" height={220} />
             </Box>
         </Card>
     );

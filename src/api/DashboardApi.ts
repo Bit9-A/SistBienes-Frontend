@@ -63,3 +63,35 @@ export const getDashboardCountsLastWeek = async (): Promise<DashboardCountsLastW
         throw error;
     }
 };
+
+// Obtener bienes registrados por mes
+export interface DashboardCountsForMonth {
+    anio: number;
+    mes: number;
+    total_muebles: string;
+}
+export const getDashboardCountsForMonth = async (): Promise<DashboardCountsForMonth[]> => {
+    try {
+        const response = await axiosInstance.get('/furnitureForMonth');
+        return response.data.mublesPorMes;
+    } catch (error) {
+        console.error("Error fetching dashboard counts for last month:", error);
+        throw error;
+    }
+};
+
+// Obtener el total de Bienes por Departamento
+export interface DashboardCountsByDepartment {
+    dept_id: number;
+    dept_nombre: string;
+    total_valor: string;
+}
+export const getDashboardCountsByDepartment = async (): Promise<DashboardCountsByDepartment[]> => {
+    try {
+        const response = await axiosInstance.get('/totalValue');
+        return response.data.valortotal;
+    } catch (error) {
+        console.error("Error fetching dashboard counts by department:", error);
+        throw error;
+    }
+};

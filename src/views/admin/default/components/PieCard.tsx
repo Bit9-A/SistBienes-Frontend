@@ -16,7 +16,7 @@ export default function Conversion(props: { [x: string]: any }) {
 
 	// Estado
 	const [counts, setCounts] = useState<DashboardCounts[]>([]);
-
+	const [loading, setLoading] = useState(true);
 	// Fetch API
 	useEffect(() => {
 		const fetchCounts = async () => {
@@ -25,9 +25,10 @@ export default function Conversion(props: { [x: string]: any }) {
 				setCounts(response);
 			} catch (error) {
 				console.error('Error fetching dashboard counts:', error);
+			} finally {
+				setLoading(false);
 			}
 		};
-
 		fetchCounts();
 	}, []);
 
@@ -43,8 +44,8 @@ export default function Conversion(props: { [x: string]: any }) {
 	const pieChartLabels = filteredCounts.map((item) => item.label);
 
 	const colors = [
-		'#47a7f5', '#f176a0', '#87cb80', '#ffcd36', '#00dafc', '#6ea1ff', '#fa9cb9', '#a9d99a', '#ffdb70', '#33cdeb', '#2e81c9', '#ee6f93',
-		'#61a152', '#d2a82d'];
+		'#0059ae', '#ef4444', '#c4bf21', '#5a21c4', '#ffdb70', '#c42170', '#c47021', '#24c421', '#33cdeb', '#2e81c9', '#ee6f93',
+		'#61a152', '#d2a82d', '#a3a3a3'];
 
 	const percent = (value: number) => {
 		const total = filteredCounts.reduce((acc, item) => acc + item.value, 0);
@@ -62,16 +63,12 @@ export default function Conversion(props: { [x: string]: any }) {
 				mb='8px'>
 				<Box>
 					<Text fontSize="xl" fontWeight="bold" color='type.title'>
-						Bienes por Concepto de Movimiento
+						Bienes por Subgrupo
 					</Text>
 					<Text fontSize="sm" color="gray.500">
 						Distribución porcentual por categoría
 					</Text>
 				</Box>
-				<Select fontSize='sm' variant='subtle' defaultValue='monthly' width='unset' fontWeight='700'>
-					<option value='monthly'>Mensual</option>
-					<option value='yearly'>Anual</option>
-				</Select>
 			</Flex>
 
 			{/* PieChart */}

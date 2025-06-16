@@ -1,8 +1,33 @@
 // Daily Traffic Dashboards Default
 export const pieChartOptions: any = {
 	chart: {
-		width: '50px'
+		width: '50px',
+		toolbar: {
+			show: true, // Muestra el menú de herramientas
+			export: {
+				csv: {
+					filename: "PieChart"
+				},
+				svg: {
+					filename: "PieChart"
+				},
+				png: {
+					filename: "PieChart"
+				}
+			},
+			tools: {
+				download: true, // Activa el botón de descarga
+				selection: false,
+				zoom: false,
+				zoomin: false,
+				zoomout: false,
+				pan: false,
+				reset: false,
+				customIcons: []
+			}
+		},
 	},
+
 	animations: {
 		enabled: true,
 		speed: 800,
@@ -45,19 +70,31 @@ export const pieChartOptions: any = {
 	}
 };
 
-// Total Spent Default
-
-export const lineChartDataTotalSpent = [
-	{
-		name: 'Adquisiones Ultimo Mes',
-		data: [1, 2, 4, 13]
-	}
-];
-
 export const lineChartOptionsTotalSpent: any = {
 	chart: {
 		toolbar: {
-			show: false
+			show: true,
+			export: {
+				csv: {
+					filename: "LineChart"
+				},
+				svg: {
+					filename: "LineChart"
+				},
+				png: {
+					filename: "LineChart"
+				}
+			},
+			tools: {
+				download: true,
+				selection: false,
+				zoom: false,
+				zoomin: false,
+				zoomout: false,
+				pan: false,
+				reset: false,
+				customIcons: []
+			}
 		},
 		dropShadow: {
 			enabled: true,
@@ -65,21 +102,20 @@ export const lineChartOptionsTotalSpent: any = {
 			left: 0,
 			blur: 10,
 			opacity: 0.1,
-			color: '#00dafc'
+			color: '#3421c4'
 		}
-
 	},
-	colors: ['#00dafc'],
+	colors: ['#42f5a7'],
 	fill: {
 		type: 'gradient',
 		gradient: {
-			shade: 'dark',
-			gradientToColors: ['#FDD835'],
+			shade: 'light',
+			gradientToColors: ['#3421c4'],
 			shadeIntensity: 1,
 			type: 'horizontal',
 			opacityFrom: 1,
 			opacityTo: 1,
-			stops: [0, 100, 100, 100]
+			stops: [0, 100]
 		},
 	},
 	markers: {
@@ -109,7 +145,6 @@ export const lineChartOptionsTotalSpent: any = {
 	},
 	xaxis: {
 		type: 'numeric',
-		categories: ['ENE', 'FEB', 'MAR', 'ABR'],
 		labels: {
 			style: {
 				colors: '#A3AED0',
@@ -137,6 +172,5 @@ export const lineChartOptionsTotalSpent: any = {
 			opacity: 0.5
 		}
 	},
-
 	color: ['#7551FF']
 };
