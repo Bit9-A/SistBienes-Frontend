@@ -1,99 +1,174 @@
-import { Box, Button, Input, FormLabel, Stack, Text, Select, Collapse, Flex } from "@chakra-ui/react"
-import { FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi"
+"use client"
+
+import {
+  Box,
+  Input,
+  Select,
+  Button,
+  Flex,
+  FormControl,
+  FormLabel,
+  InputGroup,
+  InputLeftElement,
+  Stack,
+  Divider,
+  useColorModeValue,
+  Icon,
+  Text,
+  Badge,
+  useBreakpointValue,
+} from "@chakra-ui/react"
+import { FiCalendar, FiX, FiFilter, FiUsers, FiPlus } from "react-icons/fi"
 import type { Department } from "api/SettingsApi"
 
 interface DisposalsFiltersProps {
   onFilterDepartment: (deptId: string) => void
   onFilterDate: (startDate: string, endDate: string) => void
-  showFilters: boolean
-  toggleFilters: () => void
+  onAddClick: () => void
   startDate: string
   endDate: string
-  buttonSize: string
-  borderColor: string
-  cardBg: string
   departments: Department[]
 }
 
 export default function DisposalsFilters({
   onFilterDepartment,
   onFilterDate,
-  showFilters,
-  toggleFilters,
+  onAddClick,
   startDate,
   endDate,
-  buttonSize,
-  borderColor,
-  cardBg,
   departments,
 }: DisposalsFiltersProps) {
+  // Theme colors for better visual consistency
+  const cardBg = useColorModeValue("white", "gray.800")
+  const borderColor = useColorModeValue("gray.200", "gray.700")
+  const badgeBg = useColorModeValue("red.50", "red.900")
+  const badgeColor = useColorModeValue("red.600", "red.200")
+
+  // Responsive values
+  const buttonSize = useBreakpointValue({ base: "md", md: "lg" })
+  const isMobile = useBreakpointValue({ base: true, md: false })
+
+  // Count active filters
+  const activeFiltersCount = [startDate, endDate].filter(Boolean).length
+
   return (
-    <>
-      <Button
-        variant="outline"
-        leftIcon={showFilters ? <FiChevronUp /> : <FiChevronDown />}
-        onClick={toggleFilters}
-        size={buttonSize}
-        w={{ base: "full", md: "auto" }}
-      >
+    <Box>
+      {/* Header with Filters Title and Add Button */}
+      <Flex mb={4} justify="space-between" align="center" flexWrap="wrap" gap={4}>
         <Flex align="center" gap={2}>
-          <FiFilter />
-          <Text>Filtros</Text>
+          <Icon as={FiFilter} color="red.500" />
+          <Text fontWeight="medium">Filtros</Text>
+          {activeFiltersCount > 0 && (
+            <Badge borderRadius="full" px={2} bg={badgeBg} color={badgeColor}>
+              {activeFiltersCount}
+            </Badge>
+          )}
         </Flex>
-      </Button>
 
-      <Collapse in={showFilters} animateOpacity>
-        <Box p={4} mb={4} border="1px" borderColor={borderColor} borderRadius="md" bg={cardBg}>
-          <Stack spacing={4} direction={{ base: "column", md: "row" }}>
-            <Box flex="1">
-              <FormLabel htmlFor="date-filter" fontSize="sm" mb={1}>
-                Filtrar por Fecha
-              </FormLabel>
-              <Stack direction={{ base: "column", sm: "row" }} spacing={2} align="center">
-                <Input
-                  type="date"
-                  size="sm"
-                  value={startDate}
-                  onChange={(e) => onFilterDate(e.target.value, endDate)}
-                  placeholder="Fecha inicial"
-                />
-                <Text display={{ base: "none", sm: "block" }}>a</Text>
-                <Input
-                  type="date"
-                  size="sm"
-                  value={endDate}
-                  onChange={(e) => onFilterDate(startDate, e.target.value)}
-                  placeholder="Fecha final"
-                />
-                {(startDate || endDate) && (
-                  <Button size="sm" variant="ghost" onClick={() => onFilterDate("", "")}>
-                    Limpiar
-                  </Button>
-                )}
-              </Stack>
-            </Box>
+        <Flex gap={2} align="center">
+          {(startDate || endDate) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              colorScheme="red"
+              onClick={() => onFilterDate("", "")}
+              leftIcon={<FiX />}
+            >
+              Limpiar filtros
+            </Button>
+          )}
 
-            <Box flex="1">
-              <FormLabel htmlFor="dept-filter" fontSize="sm" mb={1}>
-                Filtrar por Departamento
-              </FormLabel>
-              <Select
-                id="dept-filter"
-                placeholder="Todos los departamentos"
-                size="sm"
-                onChange={(e) => onFilterDepartment(e.target.value)}
-              >
-                <option value="">Todos los departamentos</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id.toString()}>
-                    {dept.nombre}
-                  </option>
-                ))}
-              </Select>
-            </Box>
-          </Stack>
-        </Box>
-      </Collapse>
-    </>
+          <Button
+            colorScheme="purple"
+            bgColor="type.primary"
+            onClick={onAddClick}
+            size={buttonSize}
+            leftIcon={<FiPlus />}
+            boxShadow="lg"
+            _hover={{
+              transform: "translateY(-2px)",
+              boxShadow: "xl",
+            }}
+            transition="all 0.2s"
+            w={{ base: "full", md: "auto" }}
+            minW={{ base: "full", md: "200px" }}
+          >
+            {isMobile ? "Agregar" : "Nueva Desincorporación"}
+          </Button>
+        </Flex>
+      </Flex>
+
+      <Divider mb={4} />
+
+      {/* Filter Controls */}
+      <Stack direction={{ base: "column", md: "row" }} spacing={4} align={{ base: "stretch", md: "flex-end" }}>
+        <FormControl>
+          <FormLabel htmlFor="fecha-inicial" fontSize="sm" fontWeight="medium" mb={1}>
+            Fecha inicial
+          </FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiCalendar} color="gray.400" />
+            </InputLeftElement>
+            <Input
+              id="fecha-inicial"
+              type="date"
+              size="md"
+              value={startDate}
+              onChange={(e) => onFilterDate(e.target.value, endDate)}
+              pl={10}
+              borderRadius="md"
+            />
+          </InputGroup>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel htmlFor="fecha-final" fontSize="sm" fontWeight="medium" mb={1}>
+            Fecha final
+          </FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiCalendar} color="gray.400" />
+            </InputLeftElement>
+            <Input
+              id="fecha-final"
+              type="date"
+              size="md"
+              value={endDate}
+              onChange={(e) => onFilterDate(startDate, e.target.value)}
+              pl={10}
+              borderRadius="md"
+            />
+          </InputGroup>
+        </FormControl>
+
+        <FormControl>
+          <FormLabel htmlFor="departamento" fontSize="sm" fontWeight="medium" mb={1}>
+            Departamento
+          </FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiUsers} color="gray.400" />
+            </InputLeftElement>
+            <Select
+              id="departamento"
+              size="md"
+              placeholder="Selecciona un departamento"
+              onChange={(e) => onFilterDepartment(e.target.value)}
+              pl={10}
+              borderRadius="md"
+              defaultValue="all"
+            >
+              <option value="all">Todos los departamentos</option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id.toString()}>
+                  {dept.nombre}
+                </option>
+              ))}
+            </Select>
+          </InputGroup>
+        </FormControl>
+      </Stack>
+    </Box>
   )
 }

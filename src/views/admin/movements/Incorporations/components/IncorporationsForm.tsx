@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
+  ModalFooter,
   ModalCloseButton,
   Button,
-  Grid,
-  GridItem,
+  FormControl,
   FormLabel,
   Input,
   Select,
+  Stack,
+  Textarea,
+  useToast,
 } from '@chakra-ui/react';
 import type { Incorp } from 'api/IncorpApi';
-import { handleCreateIncorp } from '../utils/IncorporationsLogic';
-import type { Department, ConceptoMovimiento } from 'api/SettingsApi';
-import { MovableAsset } from 'api/AssetsApi';
+import type { Department, ConceptoMovimiento, SubGroup } from 'api/SettingsApi';
+import type { MovableAsset } from 'api/AssetsApi';
 import AssetsTableCustom from 'views/admin/inventory/components/AssetsTableCustom';
-import { SubGroup } from 'api/SettingsApi';
 
 interface IncorporationsFormProps {
   isOpen: boolean;
@@ -34,9 +34,8 @@ interface IncorporationsFormProps {
   concepts: ConceptoMovimiento[];
   assets: MovableAsset[];
   subgroups: SubGroup[];
-  userDepartmentId?: number;
-  onCreated?: (nuevos: Incorp[]) => void;
   incorporations: Incorp[];
+  onCreated?: (nuevos: Incorp[]) => void;
 }
 
 export default function IncorporationsForm({
@@ -50,113 +49,122 @@ export default function IncorporationsForm({
   isMobile,
   departments,
   concepts,
-  subgroups,
   assets,
-  userDepartmentId,
-  onCreated,
+  subgroups,
   incorporations,
+  onCreated,
 }: IncorporationsFormProps) {
   const [showAssetSelector, setShowAssetSelector] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([]);
-  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(undefined);
+  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(
+    undefined,
+  );
+  const toast = useToast();
 
-  // Para editar, carga el bien seleccionado en el array para mostrarlo en el input
+  // Cuando seleccionas para editar, carga el bien seleccionado en el array para mostrarlo en el input
   useEffect(() => {
     if (selectedIncorporation) {
-      const asset = assets.find((a) => a.id === selectedIncorporation.bien_id);
-      setSelectedAssets(asset ? [asset] : []);
-      setNewIncorporation({
-        ...selectedIncorporation,
-        concepto_id: selectedIncorporation.concepto_id,
-        dept_id: selectedIncorporation.dept_id,
-      });
       setSelectedDeptId(selectedIncorporation.dept_id);
+      setSelectedAssets(
+        assets.filter((a) => a.id === selectedIncorporation.bien_id),
+      );
+      setNewIncorporation(selectedIncorporation);
     } else {
+      setSelectedDeptId(undefined);
       setSelectedAssets([]);
       setNewIncorporation({});
-      setSelectedDeptId(undefined);
     }
     // eslint-disable-next-line
   }, [selectedIncorporation, assets]);
+
+  // Bienes ya incorporados en el departamento seleccionado
+  const bienesIncorporadosEnDept = useMemo(() => {
+    if (!selectedDeptId) return [];
+    return incorporations
+      .filter((i) => i.dept_id === selectedDeptId && i.isActive)
+      .map((i) => i.bien_id);
+  }, [incorporations, selectedDeptId]);
+
+  // Bienes disponibles para incorporar en el departamento seleccionado
+  const bienesDisponibles = useMemo(() => {
+    if (!selectedDeptId) return [];
+    return assets.filter(
+      (a) =>
+        a.dept_id === selectedDeptId &&
+        !bienesIncorporadosEnDept.includes(a.id),
+    );
+  }, [assets, bienesIncorporadosEnDept, selectedDeptId]);
 
   // Cuando seleccionas bienes, guarda los bienes y cierra el modal de selección
   const handleSelectAssets = (assetsSeleccionados: MovableAsset[]) => {
     setSelectedAssets(assetsSeleccionados);
     setShowAssetSelector(false);
-    setNewIncorporation({
-      ...newIncorporation,
-      bien_id:
-        assetsSeleccionados.length === 1
-          ? assetsSeleccionados[0].id
-          : undefined,
-    });
+    if (assetsSeleccionados.length === 1) {
+      setNewIncorporation({
+        ...newIncorporation,
+        bien_id: assetsSeleccionados[0].id,
+        valor: assetsSeleccionados[0].valor_total,
+      });
+    }
   };
 
+  // Cambiar departamento
   const handleDeptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const deptId = Number(e.target.value);
     setSelectedDeptId(deptId);
-    setNewIncorporation({ ...newIncorporation, dept_id: deptId });
     setSelectedAssets([]);
+    setNewIncorporation({
+      ...newIncorporation,
+      dept_id: deptId,
+      bien_id: undefined,
+      valor: undefined,
+    });
   };
 
-  // Al agregar, crea un registro por cada bien seleccionado
+  // Guardar varias incorporaciones
   const handleAddMultiple = async () => {
+    if (!selectedDeptId || selectedAssets.length === 0) {
+      toast({
+        title: 'Campos requeridos',
+        description: 'Seleccione un departamento y al menos un bien.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     const nuevos: Incorp[] = [];
     for (const asset of selectedAssets) {
-      try {
-        const dataToSend = {
-          ...newIncorporation,
-          bien_id: asset.id,
-          fecha:
-            typeof newIncorporation.fecha === 'string'
-              ? newIncorporation.fecha
-              : new Date().toISOString().slice(0, 10),
-          valor: asset.valor_total || 0,
-          cantidad: asset.cantidad || 1,
-        };
-        const newIncorp = await handleCreateIncorp(dataToSend as any, () => {});
-        nuevos.push(newIncorp);
-      } catch (error) {
-        // Manejo de error individual
-      }
+      const dataToSend: Partial<Incorp> = {
+        bien_id: asset.id,
+        fecha: newIncorporation.fecha ?? '',
+        valor: asset.valor_total,
+        cantidad: 1,
+        concepto_id: Number(newIncorporation.concepto_id),
+        dept_id: selectedDeptId,
+      };
+      await handleAdd(dataToSend);
+      nuevos.push(dataToSend as Incorp);
     }
     setSelectedAssets([]);
+    setShowAssetSelector(false);
+    setNewIncorporation({});
     onClose();
-    onCreated?.(nuevos);
+    if (onCreated) onCreated(nuevos);
   };
-
-  // Solo muestra bienes que NO están oficializados en el departamento seleccionado
-  const bienesDisponibles = useMemo(() => {
-    if (!selectedDeptId) return [];
-    const bienesIncorporadosEnDept = incorporations
-      .filter(i => i.dept_id === selectedDeptId && i.isActive)
-      .map(i => i.bien_id);
-
-    return assets.filter(a => !bienesIncorporadosEnDept.includes(a.id));
-  }, [assets, incorporations, selectedDeptId]);
-
-  // Solo habilita el botón en editar si ambos campos están llenos
-  const editDisabled =
-    !newIncorporation.concepto_id || !newIncorporation.dept_id;
-
-  // Solo habilita el botón en agregar si hay bienes y ambos campos están llenos
-  const addDisabled =
-    selectedAssets.length === 0 ||
-    !newIncorporation.concepto_id ||
-    !newIncorporation.dept_id;
 
   return (
     <>
-      {/* Modal de selección de bienes solo en modo agregar */}
-      {!selectedIncorporation && showAssetSelector && (
+      {/* Modal de selección de bienes */}
+      {showAssetSelector && (
         <AssetsTableCustom
           isOpen={showAssetSelector}
           onClose={() => setShowAssetSelector(false)}
           assets={bienesDisponibles}
           departments={departments}
           subgroups={subgroups}
-          mode={userDepartmentId ? 'department' : 'all'}
-          departmentId={userDepartmentId}
+          mode="department"
+          departmentId={selectedDeptId}
           onSelect={handleSelectAssets}
         />
       )}
@@ -167,167 +175,149 @@ export default function IncorporationsForm({
           <ModalHeader>
             {selectedIncorporation
               ? 'Editar Incorporación'
-              : 'Agregar Incorporación'}
+              : 'Nueva Incorporación'}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Grid
-              templateColumns={{ base: '1fr', md: '1fr 3fr' }}
-              gap={4}
-              mb={4}
-            >
-              {/* Departamento (editable, primero) */}
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel htmlFor="departamento">Departamento</FormLabel>
-              </GridItem>
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <Select
-                  id="departamento"
-                  value={selectedDeptId || ""}
-                  onChange={handleDeptChange}
-                  placeholder="Seleccionar departamento"
-                  isDisabled={!!selectedIncorporation}
-                >
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.nombre}
-                    </option>
-                  ))}
-                </Select>
-              </GridItem>
-
-              {/* N° Identificación */}
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel
-                  htmlFor="bienes"
-                  textAlign={{ base: 'left', md: 'right' }}
-                >
-                  N° Identificación
-                </FormLabel>
-              </GridItem>
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <Input
-                  id="bienes"
-                  type="text"
-                  value={
-                    selectedIncorporation
-                      ? assets.find(
-                          (a) => a.id === selectedIncorporation.bien_id,
-                        )?.numero_identificacion || ''
-                      : selectedAssets
-                          .map((a) => a.numero_identificacion)
-                          .join(', ')
-                  }
-                  isReadOnly
-                  placeholder="Seleccionar bienes"
-                  onClick={
-                    !selectedIncorporation && selectedDeptId
-                      ? () => setShowAssetSelector(true)
-                      : undefined
-                  }
-                  cursor={
-                    !selectedIncorporation && selectedDeptId
-                      ? 'pointer'
-                      : 'not-allowed'
-                  }
-                  isDisabled={!selectedDeptId || !!selectedIncorporation}
-                />
-                {!selectedIncorporation && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (selectedAssets.length > 1) {
+                handleAddMultiple();
+              } else if (selectedAssets.length === 1) {
+                handleAdd({
+                  ...newIncorporation,
+                  bien_id: selectedAssets[0].id,
+                  valor: selectedAssets[0].valor_total,
+                  dept_id: selectedDeptId,
+                  cantidad: 1,
+                });
+                setSelectedAssets([]);
+                setShowAssetSelector(false);
+                setNewIncorporation({});
+                onClose();
+              } else {
+                handleEdit();
+              }
+            }}
+          >
+            <ModalBody>
+              <Stack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Departamento</FormLabel>
+                  <Select
+                    name="dept_id"
+                    value={selectedDeptId ?? ''}
+                    onChange={handleDeptChange}
+                    disabled={!!selectedIncorporation} // Deshabilita si estás editando
+                  >
+                    <option value="">Seleccione</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.nombre}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Bien(es)</FormLabel>
+                  <Input
+                    value={selectedAssets
+                      .map((a) => a.numero_identificacion)
+                      .join(', ')}
+                    isReadOnly
+                    placeholder="Seleccione bienes"
+                    onClick={() =>
+                      selectedDeptId &&
+                      !selectedIncorporation &&
+                      setShowAssetSelector(true)
+                    }
+                    cursor={
+                      selectedDeptId && !selectedIncorporation
+                        ? 'pointer'
+                        : 'not-allowed'
+                    }
+                  />
                   <Button
                     mt={2}
                     size="sm"
-                    onClick={() => setShowAssetSelector(true)}
-                    isDisabled={!selectedDeptId}
+                    onClick={() =>
+                      selectedDeptId &&
+                      !selectedIncorporation &&
+                      setShowAssetSelector(true)
+                    }
+                    isDisabled={!selectedDeptId || !!selectedIncorporation}
                   >
                     Buscar bienes
                   </Button>
-                )}
-              </GridItem>
-
-              {/* Cantidad y Fecha SOLO en modo editar */}
-              {selectedIncorporation && (
-                <>
-                  {/* Cantidad */}
-                  <GridItem colSpan={{ base: 1, md: 1 }}>
-                    <FormLabel textAlign={{ base: 'left', md: 'right' }}>
-                      Cantidad
-                    </FormLabel>
-                  </GridItem>
-                  <GridItem colSpan={{ base: 1, md: 1 }}>
-                    <Input
-                      type="number"
-                      value={selectedIncorporation.cantidad}
-                      isReadOnly
-                      placeholder="Cantidad"
-                    />
-                  </GridItem>
-
-                  {/* Fecha */}
-                  <GridItem colSpan={{ base: 1, md: 1 }}>
-                    <FormLabel textAlign={{ base: 'left', md: 'right' }}>
-                      Fecha
-                    </FormLabel>
-                  </GridItem>
-                  <GridItem colSpan={{ base: 1, md: 1 }}>
-                    <Input
-                      type="date"
-                      value={selectedIncorporation.fecha?.slice(0, 10)}
-                      isReadOnly
-                      placeholder="Fecha"
-                    />
-                  </GridItem>
-                </>
-              )}
-
-              {/* Concepto (editable) */}
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <FormLabel
-                  htmlFor="concepto"
-                  textAlign={{ base: 'left', md: 'right' }}
-                >
-                  Concepto
-                </FormLabel>
-              </GridItem>
-              <GridItem colSpan={{ base: 1, md: 1 }}>
-                <Select
-                  id="concepto"
-                  value={
-                    selectedIncorporation
-                      ? newIncorporation.concepto_id?.toString() ||
-                        selectedIncorporation.concepto_id?.toString() ||
-                        ''
-                      : newIncorporation.concepto_id?.toString() || ''
-                  }
-                  onChange={(e) =>
-                    setNewIncorporation({
-                      ...newIncorporation,
-                      concepto_id: Number.parseInt(e.target.value),
-                    })
-                  }
-                  placeholder="Seleccionar concepto"
-                  isDisabled={false}
-                >
-                  {concepts.map((concept) => (
-                    <option key={concept.id} value={concept.id.toString()}>
-                      {concept.nombre}
-                    </option>
-                  ))}
-                </Select>
-              </GridItem>
-            </Grid>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              colorScheme="purple"
-              onClick={selectedIncorporation ? handleEdit : handleAddMultiple}
-              isDisabled={selectedIncorporation ? editDisabled : addDisabled}
-            >
-              {selectedIncorporation ? 'Guardar Cambios' : 'Agregar'}
-            </Button>
-          </ModalFooter>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Fecha</FormLabel>
+                  <Input
+                    name="fecha"
+                    type="date"
+                    value={newIncorporation.fecha ?? ''}
+                    onChange={(e) =>
+                      setNewIncorporation({
+                        ...newIncorporation,
+                        fecha: e.target.value,
+                      })
+                    }
+                    disabled={!!selectedIncorporation} // Deshabilita si estás editando
+                  />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Concepto</FormLabel>
+                  <Select
+                    name="concepto_id"
+                    value={newIncorporation.concepto_id ?? ''}
+                    onChange={(e) =>
+                      setNewIncorporation({
+                        ...newIncorporation,
+                        concepto_id: Number(e.target.value),
+                      })
+                    }
+                  >
+                    <option value="">Seleccione</option>
+                    {concepts.map((concept) => (
+                      <option key={concept.id} value={concept.id}>
+                        {concept.nombre}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Observaciones</FormLabel>
+                  <Textarea
+                    name="observaciones"
+                    value={newIncorporation.observaciones ?? ''}
+                    onChange={(e) =>
+                      setNewIncorporation({
+                        ...newIncorporation,
+                        observaciones: e.target.value,
+                      })
+                    }
+                  />
+                </FormControl>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="purple"
+                type="submit"
+                isDisabled={
+                  !selectedDeptId ||
+                  selectedAssets.length === 0 ||
+                  !newIncorporation.fecha ||
+                  !newIncorporation.concepto_id
+                }
+              >
+                {selectedIncorporation ? 'Guardar cambios' : 'Agregar'}
+              </Button>
+            </ModalFooter>
+          </form>
         </ModalContent>
       </Modal>
     </>

@@ -1,34 +1,41 @@
-"use client"
-
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
+  ModalFooter,
   ModalCloseButton,
   Button,
-  Grid,
-  GridItem,
+  FormControl,
   FormLabel,
   Input,
   Select,
-} from "@chakra-ui/react"
-import type { Desincorp } from "api/IncorpApi"
-import type { Department, ConceptoMovimiento } from "api/SettingsApi"
+  Stack,
+  Textarea,
+  useToast,
+} from "@chakra-ui/react";
+import AssetsTableCustom from "views/admin/inventory/components/AssetsTableCustom";
+import type { Desincorp } from "api/IncorpApi";
+import type { Department, ConceptoMovimiento, SubGroup } from "api/SettingsApi";
+import type { MovableAsset } from "api/AssetsApi";
 
 interface DisposalsFormProps {
-  isOpen: boolean
-  onClose: () => void
-  selectedDisposal: Desincorp | null
-  newDisposal: Partial<Desincorp>
-  setNewDisposal: (disposal: Partial<Desincorp>) => void
-  handleAdd: () => void
-  handleEdit: () => void
-  isMobile: boolean
-  departments: Department[]
-  concepts: ConceptoMovimiento[]
+  isOpen: boolean;
+  onClose: () => void;
+  selectedDisposal: Desincorp | null;
+  newDisposal: Partial<Desincorp>;
+  setNewDisposal: (disposal: Partial<Desincorp>) => void;
+  handleAdd: (disposalData?: Partial<Desincorp>) => void;
+  handleEdit: () => void;
+  isMobile: boolean;
+  departments: Department[];
+  concepts: ConceptoMovimiento[];
+  assets: MovableAsset[];
+  subgroups: SubGroup[];
+  disposals: Desincorp[];
+  onCreated?: (nuevos: Desincorp[]) => void;
 }
 
 export default function DisposalsForm({
@@ -42,156 +49,266 @@ export default function DisposalsForm({
   isMobile,
   departments,
   concepts,
+  assets,
+  subgroups,
+  disposals,
+  onCreated,
 }: DisposalsFormProps) {
+  const [showAssetSelector, setShowAssetSelector] = useState(false);
+  const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([]);
+  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(undefined);
+  const toast = useToast();
+
+  // Cuando seleccionas para editar, carga el bien seleccionado en el array para mostrarlo en el input
+  useEffect(() => {
+    if (selectedDisposal) {
+      setSelectedDeptId(selectedDisposal.dept_id);
+      setSelectedAssets(
+        assets.filter((a) => a.id === selectedDisposal.bien_id)
+      );
+      setNewDisposal(selectedDisposal);
+    } else {
+      setSelectedDeptId(undefined);
+      setSelectedAssets([]);
+      setNewDisposal({});
+    }
+    // eslint-disable-next-line
+  }, [selectedDisposal, assets]);
+
+  // Bienes ya desincorporados en el departamento seleccionado
+  const bienesDesincorporadosEnDept = useMemo(() => {
+    if (!selectedDeptId) return [];
+    return disposals
+      .filter((d) => d.dept_id === selectedDeptId)
+      .map((d) => d.bien_id);
+  }, [disposals, selectedDeptId]);
+
+  // Bienes disponibles para desincorporar en el departamento seleccionado
+  const bienesDisponibles = useMemo(() => {
+    if (!selectedDeptId) return [];
+    return assets.filter(
+      (a) => a.dept_id === selectedDeptId && !bienesDesincorporadosEnDept.includes(a.id)
+    );
+  }, [assets, bienesDesincorporadosEnDept, selectedDeptId]);
+
+  // Cuando seleccionas bienes, guarda los bienes y cierra el modal de selección
+  const handleSelectAssets = (assetsSeleccionados: MovableAsset[]) => {
+    setSelectedAssets(assetsSeleccionados);
+    setShowAssetSelector(false);
+    if (assetsSeleccionados.length === 1) {
+      setNewDisposal({
+        ...newDisposal,
+        bien_id: assetsSeleccionados[0].id,
+        valor: assetsSeleccionados[0].valor_total,
+      });
+    }
+  };
+
+  // Cambiar departamento
+  const handleDeptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const deptId = Number(e.target.value);
+    setSelectedDeptId(deptId);
+    setSelectedAssets([]);
+    setNewDisposal({
+      ...newDisposal,
+      dept_id: deptId,
+      bien_id: undefined,
+      valor: undefined,
+    });
+  };
+
+  // Guardar varias desincorporaciones
+  const handleAddMultiple = async () => {
+    if (!selectedDeptId || selectedAssets.length === 0) {
+      toast({
+        title: "Campos requeridos",
+        description: "Seleccione un departamento y al menos un bien.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    const nuevos: Desincorp[] = [];
+    for (const asset of selectedAssets) {
+      const dataToSend: Partial<Desincorp> = {
+        bien_id: asset.id,
+        fecha: newDisposal.fecha ?? "",
+        valor: asset.valor_total,
+        cantidad: 1,
+        concepto_id: Number(newDisposal.concepto_id),
+        dept_id: selectedDeptId,
+      };
+      await handleAdd(dataToSend);
+      nuevos.push(dataToSend as Desincorp);
+    }
+    setSelectedAssets([]);
+    setShowAssetSelector(false);
+    setNewDisposal({});
+    onClose();
+    if (onCreated) onCreated(nuevos);
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "lg"}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
-          {selectedDisposal ? "Editar Desincorporación" : "Agregar Desincorporación"}
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Grid templateColumns={{ base: "1fr", md: "1fr 3fr" }} gap={4} mb={4}>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="bien_id" textAlign={{ base: "left", md: "right" }}>
-                N° Identificación
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="bien_id"
-                type="number"
-                value={newDisposal.bien_id || ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    bien_id: Number.parseInt(e.target.value),
-                  })
-                }
-                isReadOnly={!!selectedDisposal}
-              />
-            </GridItem>
+    <>
+      {/* Modal de selección de bienes */}
+      {showAssetSelector && (
+        <AssetsTableCustom
+          isOpen={showAssetSelector}
+          onClose={() => setShowAssetSelector(false)}
+          assets={bienesDisponibles}
+          departments={departments}
+          subgroups={subgroups}
+          mode="department"
+          departmentId={selectedDeptId}
+          onSelect={handleSelectAssets}
+        />
+      )}
 
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="fecha" textAlign={{ base: "left", md: "right" }}>
-                Fecha
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="fecha"
-                type="date"
-                value={newDisposal.fecha ? newDisposal.fecha.slice(0, 10) : ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    fecha: e.target.value,
-                  })
+      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "lg"}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {selectedDisposal ? "Editar Desincorporación" : "Nueva Desincorporación"}
+          </ModalHeader>
+          <ModalCloseButton />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (selectedAssets.length > 1) {
+                handleAddMultiple();
+              } else if (selectedAssets.length === 1) {
+                handleAdd({
+                  ...newDisposal,
+                  bien_id: selectedAssets[0].id,
+                  valor: selectedAssets[0].valor_total,
+                  dept_id: selectedDeptId,
+                  cantidad: 1,
+                });
+                setSelectedAssets([]);
+                setShowAssetSelector(false);
+                setNewDisposal({});
+                onClose();
+              } else {
+                handleEdit();
+              }
+            }}
+          >
+            <ModalBody>
+              <Stack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Departamento</FormLabel>
+                  <Select
+                    name="dept_id"
+                    value={selectedDeptId ?? ""}
+                    onChange={handleDeptChange}
+                    disabled={!!selectedDisposal} // Deshabilita si estás editando
+                  >
+                    <option value="">Seleccione</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.nombre}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Bien(es)</FormLabel>
+                  <Input
+                    value={selectedAssets.map((a) => a.numero_identificacion).join(", ")}
+                    isReadOnly
+                    placeholder="Seleccione bienes"
+                    onClick={() =>
+                      selectedDeptId &&
+                      !selectedDisposal &&
+                      setShowAssetSelector(true)
+                    }
+                    cursor={
+                      selectedDeptId && !selectedDisposal
+                        ? "pointer"
+                        : "not-allowed"
+                    }
+                  />
+                  <Button
+                    mt={2}
+                    size="sm"
+                    onClick={() =>
+                      selectedDeptId &&
+                      !selectedDisposal &&
+                      setShowAssetSelector(true)
+                    }
+                    isDisabled={!selectedDeptId || !!selectedDisposal}
+                  >
+                    Buscar bienes
+                  </Button>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Fecha</FormLabel>
+                  <Input
+                    name="fecha"
+                    type="date"
+                    value={newDisposal.fecha ?? ""}
+                    onChange={(e) =>
+                      setNewDisposal({ ...newDisposal, fecha: e.target.value })
+                    }
+                    disabled={!!selectedDisposal} // Deshabilita si estás editando
+                  />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Concepto</FormLabel>
+                  <Select
+                    name="concepto_id"
+                    value={newDisposal.concepto_id ?? ""}
+                    onChange={(e) =>
+                      setNewDisposal({
+                        ...newDisposal,
+                        concepto_id: Number(e.target.value),
+                      })
+                    }
+                  >
+                    <option value="">Seleccione</option>
+                    {concepts.map((concept) => (
+                      <option key={concept.id} value={concept.id}>
+                        {concept.nombre}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Observaciones</FormLabel>
+                  <Textarea
+                    name="observaciones"
+                    value={newDisposal.observaciones ?? ""}
+                    onChange={(e) =>
+                      setNewDisposal({
+                        ...newDisposal,
+                        observaciones: e.target.value,
+                      })
+                    }
+                  />
+                </FormControl>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="purple"
+                type="submit"
+                isDisabled={
+                  !selectedDeptId ||
+                  selectedAssets.length === 0 ||
+                  !newDisposal.fecha ||
+                  !newDisposal.concepto_id
                 }
-                isReadOnly={!!selectedDisposal}
-              />
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="valor" textAlign={{ base: "left", md: "right" }}>
-                Valor
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="valor"
-                type="number"
-                step="0.01"
-                value={newDisposal.valor ?? ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    valor: e.target.value === "" ? 0 : Number.parseFloat(e.target.value),
-                  })
-                }
-              />
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="cantidad" textAlign={{ base: "left", md: "right" }}>
-                Cantidad
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Input
-                id="cantidad"
-                type="number"
-                value={newDisposal.cantidad || ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    cantidad: Number.parseInt(e.target.value),
-                  })
-                }
-              />
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="concepto" textAlign={{ base: "left", md: "right" }}>
-                Concepto
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Select
-                id="concepto"
-                value={newDisposal.concepto_id?.toString() || ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    concepto_id: Number.parseInt(e.target.value),
-                  })
-                }
-                placeholder="Seleccionar concepto"
               >
-                {concepts.map((concept) => (
-                  <option key={concept.id} value={concept.id.toString()}>
-                    {concept.nombre}
-                  </option>
-                ))}
-              </Select>
-            </GridItem>
-
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <FormLabel htmlFor="departamento" textAlign={{ base: "left", md: "right" }}>
-                Departamento
-              </FormLabel>
-            </GridItem>
-            <GridItem colSpan={{ base: 1, md: 1 }}>
-              <Select
-                id="departamento"
-                value={newDisposal.dept_id?.toString() || ""}
-                onChange={(e) =>
-                  setNewDisposal({
-                    ...newDisposal,
-                    dept_id: Number.parseInt(e.target.value),
-                  })
-                }
-                placeholder="Seleccionar departamento"
-              >
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id.toString()}>
-                    {dept.nombre}
-                  </option>
-                ))}
-              </Select>
-            </GridItem>
-          </Grid>
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button colorScheme="red" onClick={selectedDisposal ? handleEdit : handleAdd}>
-            {selectedDisposal ? "Guardar Cambios" : "Agregar"}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  )
+                {selectedDisposal ? "Guardar cambios" : "Agregar"}
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+    </>
+  );
 }

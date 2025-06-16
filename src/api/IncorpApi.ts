@@ -60,6 +60,7 @@ export interface Desincorp {
   dept_nombre?: string;
   concepto_nombre?: string;
   dept_id: number;
+  observaciones?: string;
   } ;
 
 //app.use("/desincorp", desincorp);
