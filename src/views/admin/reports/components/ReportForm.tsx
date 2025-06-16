@@ -1,158 +1,213 @@
-"use client";
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useState } from "react"
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
+  ModalFooter,
   ModalCloseButton,
   Button,
-  Grid,
-  GridItem,
+  FormControl,
   FormLabel,
   Input,
   Select,
   Textarea,
+  Stack,
   Box,
-} from '@chakra-ui/react';
-import { getProfile } from 'api/UserApi';
-import { MovableAsset, getAssets } from 'api/AssetsApi';
-import AssetsTableCustom from 'views/admin/inventory/components/AssetsTableCustom';
-import { Department, SubGroup, getDepartments, getSubGroupsM } from 'api/SettingsApi';
-import { MissingGood } from 'api/ReportApi';
-import * as ReportUtils from "../utils/ReportUtils";
+} from "@chakra-ui/react"
+import { type MissingGoods } from "api/ReportApi"
+import { type Department } from "api/SettingsApi"
+import { MovableAsset } from "api/AssetsApi"
+import AssetsTableCustom from "views/admin/inventory/components/AssetsTableCustom"
+import { getProfile } from "api/UserApi"
 
 interface ReportFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onCreateReport: (newMissingGood: Omit<MissingGood, "id">) => Promise<void>;
+  isOpen: boolean
+  onClose: () => void
+  selectedMissingGood: MissingGoods | null
+  newMissingGood: Partial<MissingGoods>
+  setNewMissingGood: (mg: Partial<MissingGoods>) => void
+  handleAdd: (mgData?: Partial<MissingGoods>) => void
+  handleEdit: () => void
+  isMobile: boolean
+  departments: Department[]
+  missingGoods: MissingGoods[]
+  assets: MovableAsset[]
 }
 
-const ReportForm: React.FC<ReportFormProps> = ({ isOpen, onClose, onCreateReport }) => {
-  const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([]);
-  const [profile, setProfile] = useState<any>(null);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [subgroups, setSubgroups] = useState<SubGroup[]>([]);
-  const [unidad, setUnidad] = useState<string>("");
-  const [observaciones, setObservaciones] = useState<string>("");
-  const [assets, setAssets] = useState<MovableAsset[]>([]);
-  const [showAssetSelector, setShowAssetSelector] = useState(false);
-  const [selectedAssetId, setSelectedAssetId] = useState<number | null>(null);
+export default function ReportForm({
+  isOpen,
+  onClose,
+  selectedMissingGood,
+  newMissingGood,
+  setNewMissingGood,
+  handleAdd,
+  handleEdit,
+  isMobile,
+  departments,
+  missingGoods,
+  assets = [],
+}: ReportFormProps) {
+  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(undefined)
+  const [showAssetSelector, setShowAssetSelector] = useState(false)
+  const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([])
+  const [usuarioId, setUsuarioId] = useState<number | null>(null)
 
+  // Cargar usuario logueado
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userProfile = await getProfile();
-        setProfile(userProfile);
-        const departmentsData = await getDepartments();
-        setDepartments(departmentsData);
-         const subgroupsData = await getSubGroupsM();
-        setSubgroups(subgroupsData);
-        const assetsData = await getAssets();
-        setAssets(assetsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+    getProfile().then(profile => setUsuarioId(profile.id))
+  }, [])
 
-    fetchData();
-  }, []);
-
-    const handleAssetSelect = (selected: MovableAsset[]) => {
-    setSelectedAssets(selected);
-  };
-
-  const handleCreateReport = async () => {
-    try {
-      if (!selectedAssets || selectedAssets.length === 0) {
-        alert("Por favor, selecciona al menos un bien para reportar.");
-        return;
-      }
-
-      const profile = await getProfile();
-      const asset = selectedAssets[0];
-
-      const newMissingGood: Omit<MissingGood, "id"> = {
-        unidad: Number(unidad) || 0,
-        existencias: 0,
-        diferencia_cantidad: 0,
-        diferencia_valor: 0,
-        funcionario_id: profile?.id || 0,
-        jefe_id: 0, // You might need to fetch this
-        observaciones: observaciones,
-        fecha: new Date().toISOString(),
-        bien_id: asset.id,
-        dept_id: asset.dept_id,
-        funcionario_nombre: "",
-        jefe_nombre: "",
-        departamento: "",
-        numero_identificacion: ""
-      };
-      onCreateReport(newMissingGood);
-      onClose();
-    } catch (error) {
-      console.error("Error creating missing asset report:", error);
-      throw error;
+  // Resetear al abrir/cerrar modal
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedDeptId(undefined)
+      setSelectedAssets([])
+      setNewMissingGood({})
     }
-  };
+  }, [isOpen, setNewMissingGood])
+
+  // Cuando seleccionas bienes, guarda los bienes y cierra el modal de selección
+  const handleSelectAssets = (assetsSeleccionados: MovableAsset[]) => {
+    setSelectedAssets(assetsSeleccionados)
+    setShowAssetSelector(false)
+    setNewMissingGood({
+      ...newMissingGood,
+      bien_id: assetsSeleccionados.length === 1 ? assetsSeleccionados[0].id : undefined,
+    })
+  }
+
+  // Guardar varios bienes faltantes
+  const handleAddMultiple = async () => {
+    if (!selectedDeptId || !usuarioId || selectedAssets.length === 0) return
+    for (const asset of selectedAssets) {
+      const dataToSend: Partial<MissingGoods> = {
+        unidad: selectedDeptId,
+        existencias: 1,
+        diferencia_cantidad: 1,
+        diferencia_valor: -Math.abs(asset.valor_total || 0),
+        funcionario_id: usuarioId,
+        jefe_id: newMissingGood.jefe_id ? Number(newMissingGood.jefe_id) : 0,
+        observaciones: newMissingGood.observaciones ?? "",
+        fecha: newMissingGood.fecha ?? new Date().toISOString().slice(0, 10),
+        bien_id: asset.id,
+      }
+      await handleAdd(dataToSend)
+    }
+    setSelectedAssets([])
+    onClose()
+  }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="4xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Reportar Bienes Faltantes</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-            <GridItem>
-              <FormLabel>Unidad (Departamento)</FormLabel>
-              <Input
-                placeholder="Ejemplo: Recursos Humanos"
-                value={unidad}
-                onChange={(e) => setUnidad(e.target.value)}
-              />
-            </GridItem>
-            <GridItem>
-              <FormLabel>Observaciones</FormLabel>
-              <Textarea
-                placeholder="Ejemplo: Escritorio no encontrado durante la auditoría."
-                value={observaciones}
-                onChange={(e) => setObservaciones(e.target.value)}
-              />
-            </GridItem>
-          </Grid>
-           <AssetsTableCustom
-            isOpen={showAssetSelector}
-            onClose={() => setShowAssetSelector(false)}
-            assets={assets}
-            departments={departments}
-            subgroups={subgroups}
-            mode="all"
-            onSelect={handleAssetSelect}
-          />
-           <Button
+    <>
+      {/* Modal de selección de bienes */}
+      {showAssetSelector && (
+        <AssetsTableCustom
+          isOpen={showAssetSelector}
+          onClose={() => setShowAssetSelector(false)}
+          assets={assets.filter(a => a.dept_id === selectedDeptId)}
+          departments={departments}
+          subgroups={[]} // Si tienes subgrupos, pásalos aquí
+          mode="department"
+          departmentId={selectedDeptId}
+          onSelect={handleSelectAssets}
+        />
+      )}
+
+      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "lg"}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Agregar bien(es) faltante(s)</ModalHeader>
+          <ModalCloseButton />
+          <form
+            onSubmit={e => {
+              e.preventDefault()
+              handleAddMultiple()
+            }}
+          >
+            <ModalBody>
+              <Stack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Departamento</FormLabel>
+                  <Select
+                    name="unidad"
+                    value={selectedDeptId ?? ""}
+                    onChange={e => {
+                      setSelectedDeptId(Number(e.target.value))
+                      setSelectedAssets([])
+                    }}
+                  >
+                    <option value="">Seleccione</option>
+                    {departments.map(dept => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.nombre}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Bien(es)</FormLabel>
+                  <Input
+                    value={selectedAssets.map(a => a.numero_identificacion).join(", ")}
+                    isReadOnly
+                    placeholder="Seleccione bienes"
+                    onClick={() => selectedDeptId && setShowAssetSelector(true)}
+                    cursor={selectedDeptId ? "pointer" : "not-allowed"}
+                  />
+                  <Button
                     mt={2}
                     size="sm"
-                    onClick={() => setShowAssetSelector(true)}
-                >
+                    onClick={() => selectedDeptId && setShowAssetSelector(true)}
+                    isDisabled={!selectedDeptId}
+                  >
                     Buscar bienes
-                </Button>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={handleCreateReport}>
-            Guardar
-          </Button>
-          <Button variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-};
-
-export default ReportForm;
-
+                  </Button>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Fecha</FormLabel>
+                  <Input
+                    name="fecha"
+                    type="date"
+                    value={newMissingGood.fecha ?? ""}
+                    onChange={e => setNewMissingGood({ ...newMissingGood, fecha: e.target.value })}
+                  />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Jefe ID</FormLabel>
+                  <Input
+                    name="jefe_id"
+                    type="number"
+                    value={newMissingGood.jefe_id ?? ""}
+                    onChange={e => setNewMissingGood({ ...newMissingGood, jefe_id: Number(e.target.value) })}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Observaciones</FormLabel>
+                  <Textarea
+                    name="observaciones"
+                    value={newMissingGood.observaciones ?? ""}
+                    onChange={e => setNewMissingGood({ ...newMissingGood, observaciones: e.target.value })}
+                  />
+                </FormControl>
+                {/* Los campos existencias, diferencia_cantidad, diferencia_valor y funcionario_id se envían automáticamente */}
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="purple"
+                type="submit"
+                isDisabled={!selectedDeptId || selectedAssets.length === 0 || !newMissingGood.fecha || !newMissingGood.jefe_id}
+              >
+                Agregar
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+    </>
+  )
+}

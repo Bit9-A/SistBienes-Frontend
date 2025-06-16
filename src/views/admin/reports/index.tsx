@@ -3,202 +3,272 @@
 import { useState, useEffect, useMemo } from "react"
 import {
   Box,
-  Flex,
-  Heading,
-  useColorModeValue,
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
   useDisclosure,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Badge,
-  Text,
-  InputGroup,
-  InputLeftElement,
-  Input,
-  Select,
-  Stack,
-  Center,
-  Divider,
-  Icon,
+  useColorModeValue,
   useBreakpointValue,
-  HStack,
-  Container,
+  Stack,
+  Heading,
+  Card,
+  CardBody,
+  Flex,
   Spinner,
+  Center,
   Alert,
   AlertIcon,
   AlertTitle,
   AlertDescription,
   useToast,
+  Text,
+  InputGroup,
+  InputLeftElement,
+  Input,
+  Select,
+  Divider,
+  Icon,
+  Button,
+  Badge,
+  HStack,
+  Container,
+  CardHeader,
 } from "@chakra-ui/react"
-import { FiPlus, FiSearch, FiFilter, FiX, FiFileText, FiUsers } from "react-icons/fi"
+import { FiAlertTriangle, FiSearch, FiFilter, FiX, FiCalendar, FiPlus, FiUsers } from "react-icons/fi"
 import { v4 as uuidv4 } from "uuid"
-import * as ReportUtils from "./utils/ReportUtils"
-import type { MissingGood } from "api/ReportApi"
+import {
+  type MissingGoods,
+  getMissingGoods,
+  createMissingGood,
+  updateMissingGood,
+  deleteMissingGood,
+} from "api/ReportApi"
+import { type Department, getDepartments } from "api/SettingsApi"
 import ReportForm from "./components/ReportForm"
-import { getProfile } from "api/UserApi"
+import MobileCard from "./components/MobileCard"
+import { getAssets, type MovableAsset } from "api/AssetsApi"
 
 const ITEMS_PER_PAGE = 10
 
-const MissingAssetsReport = () => {
-  const [missingAssets, setMissingAssets] = useState<MissingGood[]>([])
-  const [filteredAssets, setFilteredAssets] = useState<MissingGood[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterDepartment, setFilterDepartment] = useState("all")
+export default function MissingGoodsTable() {
+  const [missingGoods, setMissingGoods] = useState<MissingGoods[]>([])
+  const [filteredMissingGoods, setFilteredMissingGoods] = useState<MissingGoods[]>([])
+  const [selectedMissingGood, setSelectedMissingGood] = useState<MissingGoods | null>(null)
+  const [newMissingGood, setNewMissingGood] = useState<Partial<MissingGoods>>({})
+  const [filterDept, setFilterDept] = useState<string>("all")
+  const [startDate, setStartDate] = useState<string>("")
+  const [endDate, setEndDate] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState<string>("")
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isBienes, setIsBienes] = useState(false)
-  const [deptId, setDeptId] = useState<number | null>(null)
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [assets, setAssets] = useState<MovableAsset[]>([])
   const toast = useToast()
 
   // Theme colors
   const bgColor = useColorModeValue("gray.50", "gray.900")
+  const borderColor = useColorModeValue("gray.200", "gray.700")
+  const headerBg = useColorModeValue("gray.100", "gray.800")
+  const hoverBg = useColorModeValue("gray.50", "gray.700")
   const cardBg = useColorModeValue("white", "gray.800")
   const textColor = useColorModeValue("gray.800", "white")
-  const headerBg = useColorModeValue("gray.100", "gray.800")
-  const borderColor = useColorModeValue("gray.200", "gray.700")
-  const hoverBg = useColorModeValue("gray.50", "gray.700")
   const badgeBg = useColorModeValue("blue.50", "blue.900")
   const badgeColor = useColorModeValue("blue.600", "blue.200")
 
   // Responsive values
+  const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
   const buttonSize = useBreakpointValue({ base: "md", md: "lg" })
 
   // Get unique departments for filter
-  const departmentOptions = [...new Set(missingAssets.map((asset) => asset.departamento).filter(Boolean))].sort()
+  const departmentOptions = [...new Set(missingGoods.map((good) => good.departamento).filter(Boolean))].sort()
 
   // Apply filters
   useEffect(() => {
-    let filtered = [...missingAssets]
+    let filtered = [...missingGoods]
 
     // Search filter
     if (searchQuery) {
       filtered = filtered.filter(
-        (asset) =>
-          asset.funcionario_nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          asset.jefe_nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          asset.departamento?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          asset.numero_identificacion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          asset.observaciones?.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+        (good) =>
+          good.funcionario_nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          good.jefe_nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          good.departamento?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          good.numero_identificacion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          good.observaciones?.toLowerCase().includes(searchQuery.toLowerCase()) 
+        )
     }
 
     // Department filter
-    if (filterDepartment !== "all") {
-      filtered = filtered.filter((asset) => asset.departamento === filterDepartment)
+    if (filterDept !== "all") {
+      filtered = filtered.filter((good) => good.departamento === filterDept)
     }
 
-    setFilteredAssets(filtered)
+    // Date filter
+    if (startDate) {
+      filtered = filtered.filter((good) => new Date(good.fecha) >= new Date(startDate))
+    }
+
+    if (endDate) {
+      filtered = filtered.filter((good) => new Date(good.fecha) <= new Date(endDate))
+    }
+
+    setFilteredMissingGoods(filtered)
     setCurrentPage(1) // Reset to first page when filters change
-  }, [missingAssets, searchQuery, filterDepartment])
+  }, [missingGoods, searchQuery, filterDept, startDate, endDate])
 
   // Pagination
-  const totalPages = Math.ceil(filteredAssets.length / ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(filteredMissingGoods.length / ITEMS_PER_PAGE)
 
-  const paginatedAssets = useMemo(() => {
+  const paginatedGoods = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredAssets.slice(start, start + ITEMS_PER_PAGE)
-  }, [filteredAssets, currentPage])
+    return filteredMissingGoods.slice(start, start + ITEMS_PER_PAGE)
+  }, [filteredMissingGoods, currentPage])
 
   // Reset page if out of range
   if (currentPage > totalPages && totalPages > 0) {
     setCurrentPage(1)
   }
 
+  // Load data on mount
   useEffect(() => {
-    const fetchMissingAssets = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
         setError(null)
-
-        const profile = await getProfile()
-        let assets: MissingGood[] = []
-        setIsAdmin(profile?.nombre_tipo_usuario === "Administrador")
-        setIsBienes(profile?.dept_id === 1)
-        setDeptId(profile?.dept_id)
-
-        if (profile?.nombre_tipo_usuario === "Administrador" || profile?.dept_id === 1) {
-          // Admins and Bienes see all
-          assets = await ReportUtils.getMissingAssets()
-        } else {
-          // Others see only their department
-          assets = (await ReportUtils.getMissingAssets()).filter((asset) => asset.unidad === profile?.dept_id)
-        }
-        setMissingAssets(assets)
+        const [data, deptData, assetsData] = await Promise.all([getMissingGoods(), getDepartments(), getAssets()])
+        setDepartments(deptData)
+        setMissingGoods(data)
+        setAssets(assetsData)
       } catch (error) {
-        console.error("Error al cargar los bienes faltantes:", error)
         setError("Error al cargar los datos. Por favor, intenta nuevamente.")
+        console.error("Error fetching data:", error)
       } finally {
         setLoading(false)
       }
     }
-
-    fetchMissingAssets()
+    fetchData()
   }, [])
 
-  const handleCreateReport = async (newMissingGood: Omit<MissingGood, "id">) => {
+  const openEditDialog = (mg: MissingGoods) => {
+    setSelectedMissingGood(mg)
+    setNewMissingGood(mg)
+    onOpen()
+  }
+
+  const openAddDialog = () => {
+    setSelectedMissingGood(null)
+    setNewMissingGood({})
+    onOpen()
+  }
+
+  // Crear bien faltante
+  const handleAdd = async (mgData?: Partial<MissingGoods>) => {
     try {
-      const profile = await getProfile()
-
-      const updatedMissingGood = {
-        ...newMissingGood,
-        funcionario_id: profile?.id || 0,
-        fecha: new Date().toISOString(),
-        funcionario_nombre: "",
-        jefe_nombre: "",
-        departamento: "",
-        numero_identificacion: "",
+      if (!mgData) return
+      const payload = {
+        unidad: Number(mgData.unidad),
+        existencias: Number(mgData.existencias),
+        diferencia_cantidad: Number(mgData.diferencia_cantidad),
+        diferencia_valor: Number(mgData.diferencia_valor),
+        funcionario_id: Number(mgData.funcionario_id),
+        jefe_id: Number(mgData.jefe_id),
+        observaciones: mgData.observaciones ?? "",
+        fecha: mgData.fecha ?? "",
+        bien_id: Number(mgData.bien_id),
       }
-
-      await ReportUtils.createMissingAsset(updatedMissingGood)
-
-      // Refresh the list after creating the reports
-      const updatedAssets = await ReportUtils.getMissingAssets()
-      setMissingAssets(updatedAssets)
-
+      const created = await createMissingGood(payload as any)
+      setMissingGoods((prev) => [created, ...prev])
       toast({
-        title: "Reporte creado",
-        description: "El reporte de bien faltante se ha creado exitosamente",
+        title: "Bien faltante agregado",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+      onClose()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el bien faltante",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleEdit = async () => {
+    try {
+      if (!selectedMissingGood || !newMissingGood) return
+      const payload = {
+        unidad: Number(newMissingGood.unidad),
+        existencias: Number(newMissingGood.existencias),
+        diferencia_cantidad: Number(newMissingGood.diferencia_cantidad),
+        diferencia_valor: Number(newMissingGood.diferencia_valor),
+        funcionario_id: Number(newMissingGood.funcionario_id),
+        jefe_id: Number(newMissingGood.jefe_id),
+        observaciones: newMissingGood.observaciones ?? "",
+        fecha: newMissingGood.fecha ?? "",
+        bien_id: Number(newMissingGood.bien_id),
+      }
+      const updated = await updateMissingGood(selectedMissingGood.id, payload as any)
+      setMissingGoods((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+      toast({
+        title: "Bien faltante actualizado",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+      onClose()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el bien faltante",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  // Eliminar bien faltante
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteMissingGood(id)
+      setMissingGoods((prev) => prev.filter((item) => item.id !== id))
+      toast({
+        title: "Bien faltante eliminado",
+        description: "El registro se ha eliminado exitosamente",
         status: "success",
         duration: 3000,
         isClosable: true,
       })
     } catch (error) {
-      console.error("Error creating missing asset report:", error)
       toast({
         title: "Error",
-        description: "Error al crear el reporte",
+        description: "Error al eliminar registro",
         status: "error",
         duration: 3000,
         isClosable: true,
       })
-      throw error
     }
   }
 
   // Count active filters
-  const activeFiltersCount = [searchQuery, filterDepartment !== "all" ? filterDepartment : ""].filter(Boolean).length
+  const activeFiltersCount = [searchQuery, filterDept !== "all" ? filterDept : "", startDate, endDate].filter(
+    Boolean,
+  ).length
 
   const clearAllFilters = () => {
     setSearchQuery("")
-    setFilterDepartment("all")
+    setFilterDept("all")
+    setStartDate("")
+    setEndDate("")
     setCurrentPage(1)
   }
 
   // Pagination info
-  const startRow = filteredAssets.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1
-  const endRow = Math.min(currentPage * ITEMS_PER_PAGE, filteredAssets.length)
+  const startRow = filteredMissingGoods.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1
+  const endRow = Math.min(currentPage * ITEMS_PER_PAGE, filteredMissingGoods.length)
 
   if (loading) {
     return (
@@ -206,9 +276,9 @@ const MissingAssetsReport = () => {
         <Container maxW="7xl">
           <Center py={20}>
             <Stack align="center" spacing={4}>
-              <Spinner size="xl" color="purple.500" thickness="4px" />
+              <Spinner size="xl" color="blue.500" thickness="4px" />
               <Heading size="md" color={textColor}>
-                Cargando reportes...
+                Cargando bienes faltantes...
               </Heading>
             </Stack>
           </Center>
@@ -224,7 +294,7 @@ const MissingAssetsReport = () => {
           <Alert status="error" borderRadius="lg" mt={8}>
             <AlertIcon />
             <Box>
-              <AlertTitle>Error al cargar reportes</AlertTitle>
+              <AlertTitle>Error al cargar datos</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Box>
           </Alert>
@@ -247,23 +317,23 @@ const MissingAssetsReport = () => {
             >
               <Box>
                 <Flex align="center" gap={3} mb={2}>
-                  <Box p={2} bg="purple.100" borderRadius="lg">
-                    <FiFileText size={24} color="purple" />
+                  <Box p={2} bg="blue.100" borderRadius="lg">
+                    <FiAlertTriangle size={24} color="orange" />
                   </Box>
                   <Heading size="lg" fontWeight="bold" color={textColor}>
-                    Reportes de Bienes Faltantes
+                    Gestión de Bienes Faltantes
                   </Heading>
                 </Flex>
                 <Box color="gray.600" fontSize="sm">
-                  Gestión y seguimiento de bienes reportados como faltantes
+                  Control y seguimiento de bienes reportados como faltantes en el inventario
                 </Box>
               </Box>
 
               <Button
                 bgColor="type.primary"
-                colorScheme="purple"
+                color="white"
                 leftIcon={<FiPlus />}
-                onClick={onOpen}
+                onClick={openAddDialog}
                 size={buttonSize}
                 boxShadow="lg"
                 _hover={{
@@ -274,7 +344,7 @@ const MissingAssetsReport = () => {
                 w={{ base: "full", lg: "auto" }}
                 minW="200px"
               >
-                Nuevo Reporte
+                Reportar Bien Faltante
               </Button>
             </Flex>
           </CardHeader>
@@ -285,8 +355,8 @@ const MissingAssetsReport = () => {
           <CardBody p={6}>
             <Flex mb={4} justify="space-between" align="center" flexWrap="wrap" gap={2}>
               <Flex align="center" gap={2}>
-                <Icon as={FiFilter} color="purple.500" />
-                <Text fontWeight="medium">Filtros de Reportes</Text>
+                <Icon as={FiFilter} color="blue.500" />
+                <Text fontWeight="medium">Filtros de Búsqueda</Text>
                 {activeFiltersCount > 0 && (
                   <Badge borderRadius="full" px={2} bg={badgeBg} color={badgeColor}>
                     {activeFiltersCount}
@@ -295,7 +365,7 @@ const MissingAssetsReport = () => {
               </Flex>
 
               {activeFiltersCount > 0 && (
-                <Button size="sm" variant="ghost" colorScheme="purple" leftIcon={<FiX />} onClick={clearAllFilters}>
+                <Button size="sm" variant="ghost" colorScheme="blue" leftIcon={<FiX />} onClick={clearAllFilters}>
                   Limpiar filtros
                 </Button>
               )}
@@ -303,32 +373,69 @@ const MissingAssetsReport = () => {
 
             <Divider mb={4} />
 
-            <Stack direction={{ base: "column", md: "row" }} spacing={4}>
-              <InputGroup flex="2">
-                <InputLeftElement pointerEvents="none">
-                  <Icon as={FiSearch} color="gray.400" />
-                </InputLeftElement>
-                <Input
-                  placeholder="Buscar por funcionario, jefe, departamento, identificación u observaciones..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  borderRadius="md"
-                />
-              </InputGroup>
+            <Stack spacing={4}>
+              {/* Search and Department Filter */}
+              <Stack direction={{ base: "column", md: "row" }} spacing={4}>
+                <InputGroup flex="2">
+                  <InputLeftElement pointerEvents="none">
+                    <Icon as={FiSearch} color="gray.400" />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="Buscar por funcionario, jefe, departamento, bien, identificación u observaciones..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    borderRadius="md"
+                  />
+                </InputGroup>
 
-              <Select
-                flex="1"
-                value={filterDepartment}
-                onChange={(e) => setFilterDepartment(e.target.value)}
-                borderRadius="md"
-              >
-                <option value="all">Todos los departamentos</option>
-                {departmentOptions.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </Select>
+                <Select flex="1" value={filterDept} onChange={(e) => setFilterDept(e.target.value)} borderRadius="md">
+                  <option value="all">Todos los departamentos</option>
+                  {departmentOptions.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </Select>
+              </Stack>
+
+              {/* Date Filters */}
+              <Stack direction={{ base: "column", md: "row" }} spacing={4} align="flex-end">
+                <Box flex="1">
+                  <Text fontSize="sm" fontWeight="medium" mb={1}>
+                    Fecha desde
+                  </Text>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <Icon as={FiCalendar} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      borderRadius="md"
+                      pl={10}
+                    />
+                  </InputGroup>
+                </Box>
+
+                <Box flex="1">
+                  <Text fontSize="sm" fontWeight="medium" mb={1}>
+                    Fecha hasta
+                  </Text>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <Icon as={FiCalendar} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      borderRadius="md"
+                      pl={10}
+                    />
+                  </InputGroup>
+                </Box>
+              </Stack>
             </Stack>
           </CardBody>
         </Card>
@@ -343,114 +450,162 @@ const MissingAssetsReport = () => {
                   Bienes Faltantes
                 </Heading>
                 <Box color="gray.600" fontSize="sm">
-                  {filteredAssets.length} reporte{filteredAssets.length !== 1 ? "s" : ""} encontrado
-                  {filteredAssets.length !== 1 ? "s" : ""}
+                  {filteredMissingGoods.length} registro{filteredMissingGoods.length !== 1 ? "s" : ""} encontrado
+                  {filteredMissingGoods.length !== 1 ? "s" : ""}
                 </Box>
               </Box>
             </Flex>
 
             {/* Table Content */}
-            {filteredAssets.length === 0 ? (
+            {filteredMissingGoods.length === 0 ? (
               <Center py={12}>
                 <Stack align="center" spacing={4}>
                   <Box p={4} bg="gray.100" borderRadius="full">
-                    <FiFileText size={32} color="gray" />
+                    <FiAlertTriangle size={32} color="gray" />
                   </Box>
                   <Box textAlign="center">
                     <Heading size="md" color="gray.500" mb={2}>
-                      No hay reportes
+                      No hay bienes faltantes
                     </Heading>
                     <Box color="gray.400" fontSize="sm">
                       {activeFiltersCount > 0
-                        ? "No se encontraron reportes que coincidan con los filtros"
-                        : "No hay reportes de bienes faltantes registrados"}
+                        ? "No se encontraron registros que coincidan con los filtros"
+                        : "No hay bienes faltantes registrados"}
                     </Box>
                   </Box>
                 </Stack>
               </Center>
             ) : (
               <>
-                <TableContainer
-                  border="1px"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  overflow="auto"
-                  mb={4}
-                >
-                  <Table variant="simple" size={tableSize}>
-                    <Thead bg={headerBg}>
-                      <Tr>
-                        <Th>N°</Th>
-                        <Th>Unidad de Trabajo</Th>
-                        <Th>Existencias</Th>
-                        <Th>Diferencia Cantidad</Th>
-                        <Th>Diferencia Valor</Th>
-                        <Th>Funcionario</Th>
-                        <Th>Jefe</Th>
-                        <Th>Observaciones</Th>
-                        <Th>N° Identificación</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {paginatedAssets
-                        .filter((item) => item && typeof item.id !== "undefined")
-                        .map((asset, index) => (
-                          <Tr key={uuidv4()} _hover={{ bg: hoverBg }} transition="background 0.2s">
-                            <Td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</Td>
-                            <Td>
-                              <Badge variant="outline" colorScheme="purple">
-                                {asset.departamento}
-                              </Badge>
-                            </Td>
-                            <Td>
-                              <Text fontWeight="medium">{asset.existencias}</Text>
-                            </Td>
-                            <Td>
-                              <Badge colorScheme={asset.diferencia_cantidad > 0 ? "red" : "green"} variant="subtle">
-                                {asset.diferencia_cantidad}
-                              </Badge>
-                            </Td>
-                            <Td>
-                              <Text fontSize="sm" color="gray.600">
-                                {Number(asset.diferencia_valor).toFixed(2)}
-                              </Text>
-                            </Td>
-                            <Td>
-                              <Flex align="center" gap={2}>
-                                <Icon as={FiUsers} color="gray.500" />
-                                <Text fontWeight="medium">{asset.funcionario_nombre}</Text>
-                              </Flex>
-                            </Td>
-                            <Td>
-                              <Text fontSize="sm">{asset.jefe_nombre}</Text>
-                            </Td>
-                            <Td>
-                              <Text fontSize="sm" noOfLines={2} maxW="200px">
-                                {asset.observaciones}
-                              </Text>
-                            </Td>
-                            <Td>
-                              <Text fontSize="sm" fontFamily="mono" color="gray.600">
-                                {asset.numero_identificacion}
-                              </Text>
-                            </Td>
-                          </Tr>
-                        ))}
-                    </Tbody>
-                  </Table>
-                </TableContainer>
+                {!isMobile ? (
+                  <Box>
+                    <Box border="1px" borderColor={borderColor} borderRadius="lg" boxShadow="sm" overflow="auto" mb={4}>
+                      <Box as="table" w="100%" >
+                        <Box as="thead" bg={headerBg}>
+                          <Box as="tr">
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              N°
+                            </Box>
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              Bien
+                            </Box>
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              Departamento
+                            </Box>
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              Existencias
+                            </Box>
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              Diferencia Cantidad
+                            </Box>
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              Diferencia Valor
+                            </Box>
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              Funcionario
+                            </Box>
+                            <Box as="th" p={3} textAlign="left" fontWeight="medium" fontSize="sm">
+                              Fecha
+                            </Box>
+                            <Box as="th" p={3} textAlign="center" fontWeight="medium" fontSize="sm">
+                              Acciones
+                            </Box>
+                          </Box>
+                        </Box>
+                        <Box as="tbody">
+                          {paginatedGoods
+                            .filter((item) => item && typeof item.id !== "undefined")
+                            .map((good, index) => (
+                              <Box key={uuidv4()} as="tr" _hover={{ bg: hoverBg }} transition="background 0.2s">
+                                <Box as="td" p={3}>
+                                  <Text fontSize="sm" color={textColor}>
+                                    {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                                  </Text>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Text fontSize="sm" color={textColor}>
+                                    {good.numero_identificacion}
+                                  </Text>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Badge variant="outline" colorScheme="blue">
+                                    {good.departamento}
+                                  </Badge>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Text fontSize="sm" color={textColor}>
+                                    {good.existencias}
+                                  </Text>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Badge colorScheme={good.diferencia_cantidad > 0 ? "red" : "green"} variant="subtle">
+                                    {good.diferencia_cantidad}
+                                  </Badge>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Text fontSize="sm" color={textColor}>
+                                    {Number(good.diferencia_valor).toFixed(2)}
+                                  </Text>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Flex align="center" gap={2}>
+                                    <Icon as={FiUsers} color="gray.500" />
+                                    <Text fontSize="sm" color={textColor}>
+                                      {good.funcionario_nombre}
+                                    </Text>
+                                  </Flex>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Text fontSize="sm" color={textColor}>
+                                    {new Date(good.fecha).toLocaleDateString("es-ES")}
+                                  </Text>
+                                </Box>
+                                <Box as="td" p={3}>
+                                  <Flex justify="center" gap={2}>
+                                    <Button
+                                      size="sm"
+                                      colorScheme="blue"
+                                      variant="ghost"
+                                      onClick={() => openEditDialog(good)}
+                                    >
+                                      Editar
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      colorScheme="red"
+                                      variant="ghost"
+                                      onClick={() => handleDelete(good.id)}
+                                    >
+                                      Eliminar
+                                    </Button>
+                                  </Flex>
+                                </Box>
+                              </Box>
+                            ))}
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                ) : (
+                  <MobileCard
+                    missingGoods={paginatedGoods}
+                    borderColor={borderColor}
+                    departments={departments}
+                    onEdit={openEditDialog}
+                    onDelete={handleDelete}
+                  />
+                )}
 
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <Flex justify="space-between" align="center" mt={4}>
                     <Text color="gray.600" fontSize="sm">
-                      Mostrando {startRow}-{endRow} de {filteredAssets.length} reportes
+                      Mostrando {startRow}-{endRow} de {filteredMissingGoods.length} registros
                     </Text>
                     <HStack spacing={2}>
                       <Button
                         size="sm"
-                        colorScheme="purple"
+                        colorScheme="blue"
                         variant="outline"
                         isDisabled={currentPage === 1}
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -461,10 +616,10 @@ const MissingAssetsReport = () => {
                         <Button
                           key={i + 1}
                           size="sm"
-                          bgColor={currentPage === i + 1 ? "purple.500" : undefined}
+                          bgColor={currentPage === i + 1 ? "type.primary" : undefined}
                           color={currentPage === i + 1 ? "white" : undefined}
                           variant={currentPage === i + 1 ? "solid" : "outline"}
-                          colorScheme="purple"
+                          colorScheme="blue"
                           onClick={() => setCurrentPage(i + 1)}
                         >
                           {i + 1}
@@ -472,7 +627,7 @@ const MissingAssetsReport = () => {
                       ))}
                       <Button
                         size="sm"
-                        colorScheme="purple"
+                        colorScheme="blue"
                         variant="outline"
                         isDisabled={currentPage === totalPages}
                         onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
@@ -487,11 +642,21 @@ const MissingAssetsReport = () => {
           </CardBody>
         </Card>
 
-        {/* Report Form Modal */}
-        <ReportForm isOpen={isOpen} onClose={onClose} onCreateReport={handleCreateReport} />
+        {/* Form Modal */}
+        <ReportForm
+          assets={assets}
+          isOpen={isOpen}
+          onClose={onClose}
+          selectedMissingGood={selectedMissingGood}
+          newMissingGood={newMissingGood}
+          setNewMissingGood={setNewMissingGood}
+          handleAdd={handleAdd}
+          handleEdit={handleEdit}
+          isMobile={isMobile || false}
+          departments={departments}
+          missingGoods={missingGoods}
+        />
       </Container>
     </Box>
   )
 }
-
-export default MissingAssetsReport

@@ -1,47 +1,38 @@
-import { MissingGood } from "api/ReportApi";
-import * as ReportApi from "api/ReportApi";
+import { MissingGoods } from "api/ReportApi";
 
-// Obtener todos los bienes faltantes
-export const getMissingAssets = async (): Promise<MissingGood[]> => {
-  try {
-    return await ReportApi.getMissingGoods();
-  } catch (error) {
-    console.error("Error al obtener los bienes faltantes:", error);
-    throw error;
-  }
-};
+// Filtrar bienes faltantes por búsqueda, departamento y fechas
+export const filterMissingGoods = (
+  missingGoods: MissingGoods[],
+  searchQuery: string,
+  selectedDept: string,
+  startDate: string,
+  endDate: string
+) => {
+  const query = searchQuery.toLowerCase();
 
-// Crear un bien faltante
-export const createMissingAsset = async (
-  missingGoodData: Omit<MissingGood, "id">
-): Promise<MissingGood> => {
-  try {
-    return await ReportApi.createMissingGood(missingGoodData);
-  } catch (error) {
-    console.error("Error al crear un bien faltante:", error);
-    throw error;
-  }
-};
+  return missingGoods.filter((mg) => {
+    // Normaliza la fecha a YYYY-MM-DD
+    const mgDateStr = mg.fecha ? new Date(mg.fecha).toISOString().slice(0, 10) : "";
 
-// Actualizar un bien faltante
-export const updateMissingAsset = async (
-  id: number,
-  updates: Partial<Omit<MissingGood, "id">>
-): Promise<MissingGood> => {
-  try {
-    return await ReportApi.updateMissingGood(id, updates);
-  } catch (error) {
-    console.error("Error al actualizar un bien faltante:", error);
-    throw error;
-  }
-};
+    // Filtro por departamento
+    const matchesDept =
+      selectedDept === "all" ||
+      mg.unidad?.toString() === selectedDept ||
+      mg.departamento?.toLowerCase().includes(selectedDept.toLowerCase());
 
-// Eliminar un bien faltante
-export const deleteMissingAsset = async (id: number): Promise<void> => {
-  try {
-    await ReportApi.deleteMissingGood(id);
-  } catch (error) {
-    console.error("Error al eliminar un bien faltante:", error);
-    throw error;
-  }
-};
+    // Filtro por fechas
+    const matchesStart = !startDate || mgDateStr >= startDate;
+    const matchesEnd = !endDate || mgDateStr <= endDate;
+
+    // Filtro por búsqueda (puedes ajustar los campos a buscar)
+    const matchesQuery =
+      mg.funcionario_nombre?.toLowerCase().includes(query) ||
+      mg.jefe_nombre?.toLowerCase().includes(query) ||
+      mg.departamento?.toLowerCase().includes(query) ||
+      mg.numero_identificacion?.toLowerCase().includes(query) ||
+      mg.observaciones?.toLowerCase().includes(query) ||
+      mg.bien_id?.toString().includes(query);
+
+    return matchesDept && matchesStart && matchesEnd && (query === "" || matchesQuery);
+  });
+  };
