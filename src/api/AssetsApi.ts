@@ -65,6 +65,7 @@ export const createAsset = async (assetData: MovableAsset) => {
     try {
         
         const response = await axiosInstance.post('/furniture', assetData);
+        console.log('Asset created successfully:', response.data); // Imprime el mensaje del servidor
         return response.data; // Devuelve el activo creado
     } catch (error:any) {
         console.error('Error creating asset:', error.response?.data || error.message); // Imprime el mensaje del servidor

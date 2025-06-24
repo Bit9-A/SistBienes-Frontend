@@ -28,7 +28,9 @@ export const getComponentsByBienId = async (bien_id: number): Promise<Component[
 
 // Crear un nuevo componente
 export const createComponent = async (componentData: Omit<Component, "id">): Promise<Component> => {
+  console.log("Creating component with data:", componentData);
   const response = await axiosInstance.post("/components", componentData);
+  console.log("Response from createComponent:", response.data);
   return response.data.component as Component;
 };
 
