@@ -450,6 +450,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                       <Tooltip label="Editar" placement="top" hasArrow>
                         <IconButton
                           aria-label="Editar bien"
+                          colorScheme='blue'
                           icon={<FiEdit />}
                           size="sm"
                           onClick={() => onEdit(asset)}
@@ -457,6 +458,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                       </Tooltip>
                       <Tooltip label="Eliminar" placement="top" hasArrow>
                         <IconButton
+                        colorScheme='red'
                           aria-label="Eliminar bien"
                           icon={<FiTrash2 />}
                           size="sm"

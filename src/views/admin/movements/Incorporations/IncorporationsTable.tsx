@@ -234,122 +234,124 @@ export default function IncorporationsTable() {
     onOpen()
   }
 
-  if (loading) {
-    return (
-      <Center py={20}>
-        <Stack align="center" spacing={4}>
-          <Spinner size="xl" color="purple.500" thickness="4px" />
-          <Heading size="md" color={textColor}>
-            Cargando incorporaciones...
-          </Heading>
-        </Stack>
-      </Center>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert status="error" borderRadius="lg">
-        <AlertIcon />
-        <Box>
-          <AlertTitle>Error al cargar datos</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Box>
-      </Alert>
-    )
-  }
 
   return (
-    <Stack spacing={4}>
-      {/* Filters and Add Button Section */}
+  <Stack spacing={4}>
+    {/* Loading/Error overlays */}
+    {(loading || error) && (
       <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
         <CardBody p={6}>
-          <IncorporationsFilters
-            onFilterDepartment={handleFilterDepartment}
-            onFilterDate={handleFilterDate}
-            onAddClick={openAddDialog}
-            startDate={startDate}
-            endDate={endDate}
-            departments={departments}
-          />
-        </CardBody>
-      </Card>
-
-      {/* Content Section */}
-      <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={borderColor}>
-        <CardBody p={6}>
-          {/* Results Summary */}
-          <Flex justify="space-between" align="center" mb={4}>
-            <Box>
-              <Heading size="md" color={textColor} mb={1}>
-                Incorporaciones
-              </Heading>
-              <Box color="gray.600" fontSize="sm">
-                {filteredIncorporations.length} registro{filteredIncorporations.length !== 1 ? "s" : ""} encontrado
-                {filteredIncorporations.length !== 1 ? "s" : ""}
-              </Box>
-            </Box>
-          </Flex>
-
-          {/* Table/Cards Content */}
-          {filteredIncorporations.length === 0 ? (
-            <Center py={12}>
+          {loading ? (
+            <Center py={20}>
               <Stack align="center" spacing={4}>
-                <Box p={4} bg="gray.100" borderRadius="full">
-                  <FiPackage size={32} color="gray" />
-                </Box>
-                <Box textAlign="center">
-                  <Heading size="md" color="gray.500" mb={2}>
-                    No hay incorporaciones
-                  </Heading>
-                  <Box color="gray.400" fontSize="sm">
-                    No se encontraron incorporaciones que coincidan con los filtros aplicados
-                  </Box>
-                </Box>
+                <Spinner size="xl" color="purple.500" thickness="4px" />
+                <Heading size="md" color={textColor}>
+                  Cargando incorporaciones...
+                </Heading>
               </Stack>
             </Center>
-          ) : !isMobile ? (
-            <DesktopTable
-              incorporations={filteredIncorporations}
-              borderColor={borderColor}
-              headerBg={headerBg}
-              hoverBg={hoverBg}
-              tableSize={tableSize}
-              onEdit={openEditDialog}
-              onDelete={handleDelete}
-            />
           ) : (
-            <MobileCards
-              incorporations={filteredIncorporations}
-              borderColor={borderColor}
-              departments={departments}
-              concepts={concepts}
-              onEdit={openEditDialog}
-              onDelete={handleDelete}
-            />
+            <Alert status="error" borderRadius="lg">
+              <AlertIcon />
+              <Box>
+                <AlertTitle>Error al cargar datos</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Box>
+            </Alert>
           )}
         </CardBody>
       </Card>
+    )}
 
-      {/* Form Modal */}
-      <IncorporationsForm
-        isOpen={isOpen}
-        onClose={onClose}
-        selectedIncorporation={selectedIncorporation}
-        newIncorporation={newIncorporation}
-        setNewIncorporation={setNewIncorporation}
-        handleAdd={handleAdd}
-        handleEdit={handleEdit}
-        isMobile={isMobile || false}
-        assets={assets}
-        departments={departments}
-        subgroups={subgroups}
-        concepts={concepts}
-        incorporations={incorporations}
-        onCreated={(nuevos) => {
-          setIncorporations((prev) => [...prev, ...nuevos])
-        }}
-      />
-    </Stack>
-  )
+    {/* Filters and Add Button Section */}
+    <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
+      <CardBody p={6}>
+        <IncorporationsFilters
+          onFilterDepartment={handleFilterDepartment}
+          onFilterDate={handleFilterDate}
+          onAddClick={openAddDialog}
+          startDate={startDate}
+          endDate={endDate}
+          departments={departments}
+        />
+      </CardBody>
+    </Card>
+
+    {/* Content Section */}
+    <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={borderColor}>
+      <CardBody p={6}>
+        {/* Results Summary */}
+        <Flex justify="space-between" align="center" mb={4}>
+          <Box>
+            <Heading size="md" color={textColor} mb={1}>
+              Incorporaciones
+            </Heading>
+            <Box color="gray.600" fontSize="sm">
+              {filteredIncorporations.length} registro{filteredIncorporations.length !== 1 ? "s" : ""} encontrado
+              {filteredIncorporations.length !== 1 ? "s" : ""}
+            </Box>
+          </Box>
+        </Flex>
+
+        {/* Table/Cards Content */}
+        {filteredIncorporations.length === 0 ? (
+          <Center py={12}>
+            <Stack align="center" spacing={4}>
+              <Box p={4} bg="gray.100" borderRadius="full">
+                <FiPackage size={32} color="gray" />
+              </Box>
+              <Box textAlign="center">
+                <Heading size="md" color="gray.500" mb={2}>
+                  No hay incorporaciones
+                </Heading>
+                <Box color="gray.400" fontSize="sm">
+                  No se encontraron incorporaciones que coincidan con los filtros aplicados
+                </Box>
+              </Box>
+            </Stack>
+          </Center>
+        ) : !isMobile ? (
+          <DesktopTable
+            incorporations={filteredIncorporations}
+            borderColor={borderColor}
+            headerBg={headerBg}
+            hoverBg={hoverBg}
+            tableSize={tableSize}
+            onEdit={openEditDialog}
+            onDelete={handleDelete}
+          />
+        ) : (
+          <MobileCards
+            incorporations={filteredIncorporations}
+            borderColor={borderColor}
+            departments={departments}
+            concepts={concepts}
+            onEdit={openEditDialog}
+            onDelete={handleDelete}
+          />
+        )}
+      </CardBody>
+    </Card>
+
+    {/* Form Modal */}
+    <IncorporationsForm
+      isOpen={isOpen}
+      onClose={onClose}
+      selectedIncorporation={selectedIncorporation}
+      newIncorporation={newIncorporation}
+      setNewIncorporation={setNewIncorporation}
+      handleAdd={handleAdd}
+      handleEdit={handleEdit}
+      isMobile={isMobile || false}
+      assets={assets}
+      departments={departments}
+      subgroups={subgroups}
+      concepts={concepts}
+      incorporations={incorporations}
+      onCreated={(nuevos) => {
+        setIncorporations((prev) => [...prev, ...nuevos])
+      }}
+    />
+  </Stack>
+)
 }
