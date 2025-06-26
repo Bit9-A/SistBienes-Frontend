@@ -6,7 +6,16 @@ import React, { useEffect, useState } from 'react';
 import Card from 'components/card/Card';
 import PieChart from 'components/charts/PieChart';
 import { pieChartOptions } from 'variables/charts';
-
+import {
+	Modal,
+	ModalOverlay,
+	ModalContent,
+	ModalHeader,
+	ModalBody,
+	ModalCloseButton,
+	Button,
+	useDisclosure,
+} from '@chakra-ui/react';
 export default function Conversion(props: { [x: string]: any }) {
 	const { ...rest } = props;
 
@@ -17,6 +26,7 @@ export default function Conversion(props: { [x: string]: any }) {
 	// Estado
 	const [counts, setCounts] = useState<DashboardCounts[]>([]);
 	const [loading, setLoading] = useState(true);
+	const { isOpen, onOpen, onClose } = useDisclosure();
 	// Fetch API
 	useEffect(() => {
 		const fetchCounts = async () => {
@@ -31,6 +41,14 @@ export default function Conversion(props: { [x: string]: any }) {
 		};
 		fetchCounts();
 	}, []);
+
+	useEffect(() => {
+
+		window.openPieModal = onOpen;
+		return () => {
+			delete window.openPieModal;
+		};
+	}, [onOpen]);
 
 	// Filtrado y formato
 	const filteredCounts = counts
@@ -68,6 +86,7 @@ export default function Conversion(props: { [x: string]: any }) {
 					<Text fontSize="sm" color="gray.500">
 						Distribución porcentual por categoría
 					</Text>
+
 				</Box>
 			</Flex>
 
@@ -83,58 +102,32 @@ export default function Conversion(props: { [x: string]: any }) {
 					legend: { show: false },
 				}}
 			/>
-			{/* Tarjeta de leyenda */}
-			<Card
-				bg={cardColor}
-				flexDirection='row'
-				w='100%'
-				p='15px'
-				px='20px'
-				mt='15px'
-				mx='auto'>
-				<Flex
-					wrap="wrap"
-					justify="center"
-					gap="20px"
-					w="100%">
-					{filteredCounts.map((item, index) => (
-						<Flex
-							key={index}
-							direction='column'
-							align='center'
-							textAlign="center"
-							maxW="160px"
-							minW="120px"
-							flex="1 1 120px"
-							mb="10px"
-						>
-							<Flex align='center' mb='5px'>
+			<Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+				<ModalOverlay />
+				<ModalContent>
+					<ModalHeader>Porcentajes por categoría</ModalHeader>
+					<ModalCloseButton />
+					<ModalBody>
+						{filteredCounts.map((item, index) => (
+							<Flex key={index} align="center" mb={2}>
 								<Box
-									h='8px'
-									w='8px'
+									h="10px"
+									w="10px"
 									bg={colors[index % colors.length]}
-									borderRadius='50%'
-									me='4px'
-									flexShrink={0}
+									borderRadius="full"
+									mr={3}
 								/>
-								<Text
-									fontSize='xs'
-									color='secondaryGray.600'
-									fontWeight='700'
-									isTruncated
-									maxW="120px"
-									title={item.label}
-								>
+								<Text flex="1" fontWeight="500" fontSize="sm">
 									{item.label}
 								</Text>
+								<Text fontWeight="bold" fontSize="sm">
+									{percent(item.value)}
+								</Text>
 							</Flex>
-							<Text fontSize='lg' color={textColor} fontWeight='700'>
-								{percent(item.value)}
-							</Text>
-						</Flex>
-					))}
-				</Flex>
-			</Card>
+						))}
+					</ModalBody>
+				</ModalContent>
+			</Modal>
 		</Card>
 	);
 }
