@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Table,
@@ -46,6 +46,7 @@ interface AssetTableProps {
   onEdit: (asset: any) => void;
   onDelete: (asset: any) => void;
   isLoading?: boolean;
+  userProfile?: any; // <-- agrega esto
 }
 
 export const AssetTable: React.FC<AssetTableProps> = ({
@@ -53,8 +54,11 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   onEdit,
   onDelete,
   isLoading = false,
+  userProfile = null, // <-- agrega esto
 }) => {
   // Colores del tema
+  const isAdminOrBienes =
+    userProfile?.tipo_usuario === 1 || userProfile?.dept_nombre === 'Bienes';
   const headerBg = useColorModeValue('gray.100', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
@@ -69,6 +73,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = assets.slice(indexOfFirstItem, indexOfLastItem);
+  const [canFilterByDept, setCanFilterByDept] = useState(false);
 
   // Cambiar de página
   const goToPage = (pageNumber: number) => {
@@ -175,10 +180,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   if (isLoading) {
     return (
       <Box py={12} textAlign="center">
-        <Spinner
-          size="xl"
-          color="type.primary"
-        />
+        <Spinner size="xl" color="type.primary" />
         <Text mt={4}>Cargando bienes...</Text>
       </Box>
     );
@@ -191,12 +193,8 @@ export const AssetTable: React.FC<AssetTableProps> = ({
         <Box mb={2}>
           <FiDatabase size={40} />
         </Box>
-        <Text fontWeight="bold">
-          No hay bienes registrados
-        </Text>
-        <Text color="gray.500">
-          Agregue nuevos bienes para verlos aquí
-        </Text>
+        <Text fontWeight="bold">No hay bienes registrados</Text>
+        <Text color="gray.500">Agregue nuevos bienes para verlos aquí</Text>
       </Box>
     );
   }
@@ -207,40 +205,45 @@ export const AssetTable: React.FC<AssetTableProps> = ({
       <Box>
         <VStack spacing={4}>
           {currentItems.map((asset) => (
-            <Card
-              key={uuidv4()}
-              width="100%"
-            >
+            <Card key={uuidv4()} width="100%">
               <CardHeader pb={2}>
                 <Flex justifyContent="space-between" alignItems="center">
-                  <Text>
-                    {asset.numero_identificacion}
-                  </Text>
+                  <Text>{asset.numero_identificacion}</Text>
                   <HStack spacing={2}>
-                    <IconButton
-                      aria-label="Editar bien"
-                      icon={<FiEdit />}
-                      size="sm"
-                      onClick={() => onEdit(asset)}
-                    />
-                    <IconButton
-                      aria-label="Eliminar bien"
-                      icon={<FiTrash2 />}
-                      size="sm"
-                      onClick={() => onDelete(asset)}
-                    />
+                    {isAdminOrBienes && (
+                      <>
+                        <Tooltip label="Editar" placement="top" hasArrow>
+                          <IconButton
+                            aria-label="Editar bien"
+                            colorScheme="blue"
+                            icon={<FiEdit />}
+                            size="sm"
+                            onClick={() => onEdit(asset)}
+                          />
+                        </Tooltip>
+                        <Tooltip label="Eliminar" placement="top" hasArrow>
+                          <IconButton
+                            colorScheme="red"
+                            aria-label="Eliminar bien"
+                            icon={<FiTrash2 />}
+                            size="sm"
+                            onClick={() => onDelete(asset)}
+                          />
+                        </Tooltip>
+                      </>
+                    )}
                   </HStack>
                 </Flex>
                 {asset.id_estado && (
-                  <Badge mt={2}>
-                    {getStatusName(asset.id_estado).name}
-                  </Badge>
+                  <Badge mt={2}>{getStatusName(asset.id_estado).name}</Badge>
                 )}
               </CardHeader>
               <CardBody pt={0}>
                 <SimpleGrid columns={2} spacing={3}>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Descripción</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Descripción
+                    </Text>
                     <Text>
                       {asset.nombre_descripcion}
                       {asset.isComputer === 1 &&
@@ -264,31 +267,45 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                     </Text>
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Serial</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Serial
+                    </Text>
                     <Text>{asset.numero_serial || 'N/A'}</Text>
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Departamento</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Departamento
+                    </Text>
                     <Text>{asset.dept_nombre || 'Sin Departamento'}</Text>
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Marca</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Marca
+                    </Text>
                     <Text>{asset.marca_id || 'Sin Marca'}</Text>
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Modelo</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Modelo
+                    </Text>
                     <Text>{asset.modelo_id || 'Sin Modelo'}</Text>
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Cantidad</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Cantidad
+                    </Text>
                     <Text>{asset.cantidad || 'N/A'}</Text>
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Valor Total</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Valor Total
+                    </Text>
                     <Text>{formatCurrency(asset.valor_total)}</Text>
                   </Box>
                   <Box>
-                    <Text fontWeight="bold" fontSize="sm">Fecha</Text>
+                    <Text fontWeight="bold" fontSize="sm">
+                      Fecha
+                    </Text>
                     <Text>{formatDate(asset.fecha)}</Text>
                   </Box>
                 </SimpleGrid>
@@ -332,17 +349,17 @@ export const AssetTable: React.FC<AssetTableProps> = ({
         boxShadow="sm"
         overflowX="auto"
         sx={{
-          scrollbarHeight: "8px",
-          scrollbarColor: "#888 #e0e0e0",
-          "&::-webkit-scrollbar": {
-            height: "8px",
+          scrollbarHeight: '8px',
+          scrollbarColor: '#888 #e0e0e0',
+          '&::-webkit-scrollbar': {
+            height: '8px',
           },
-          "&::-webkit-scrollbar-thumb": {
-            background: "#888",
-            borderRadius: "4px",
+          '&::-webkit-scrollbar-thumb': {
+            background: '#888',
+            borderRadius: '4px',
           },
-          "&::-webkit-scrollbar-track": {
-            background: "#e0e0e0",
+          '&::-webkit-scrollbar-track': {
+            background: '#e0e0e0',
           },
         }}
       >
@@ -432,15 +449,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                   <Td>{asset.numero_serial || 'Sin Numero Serial'}</Td>
                   <Td>{asset.marca_id || 'Sin Marca'}</Td>
                   <Td>{asset.modelo_id || 'Sin Modelo'}</Td>
-                  <Td>
-                    {asset.id_estado ? (
-                      <Badge>
-                        {getStatusName(asset.id_estado).name}
-                      </Badge>
-                    ) : (
-                      '—'
-                    )}
-                  </Td>
+                  <Td>{asset.estado_nombre || 'Sin estado'}</Td>
                   <Td>{asset.cantidad}</Td>
                   <Td>{formatCurrency(asset.valor_unitario)}</Td>
                   <Td>{formatCurrency(asset.valor_total)}</Td>
@@ -450,7 +459,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                       <Tooltip label="Editar" placement="top" hasArrow>
                         <IconButton
                           aria-label="Editar bien"
-                          colorScheme='blue'
+                          colorScheme="blue"
                           icon={<FiEdit />}
                           size="sm"
                           onClick={() => onEdit(asset)}
@@ -458,7 +467,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                       </Tooltip>
                       <Tooltip label="Eliminar" placement="top" hasArrow>
                         <IconButton
-                        colorScheme='red'
+                          colorScheme="red"
                           aria-label="Eliminar bien"
                           icon={<FiTrash2 />}
                           size="sm"
@@ -503,8 +512,8 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                 <Button
                   key={pageToShow}
                   onClick={() => goToPage(pageToShow)}
-                  variant={currentPage === pageToShow ? "solid" : "outline"}
-                  colorScheme={currentPage === pageToShow ? "purple" : "gray"}
+                  variant={currentPage === pageToShow ? 'solid' : 'outline'}
+                  colorScheme={currentPage === pageToShow ? 'purple' : 'gray'}
                   size="sm"
                 >
                   {pageToShow}
@@ -523,4 +532,4 @@ export const AssetTable: React.FC<AssetTableProps> = ({
       </Flex>
     </Box>
   );
-}
+};

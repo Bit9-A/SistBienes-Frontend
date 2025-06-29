@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -14,20 +14,30 @@ import {
   Container,
   Badge,
   Icon,
-} from "@chakra-ui/react";
-import { BsBox2 } from "react-icons/bs";
-import { FiPackage } from "react-icons/fi";
-import { AssetTable } from "./components/AssetTable";
-import { AssetForm } from "./components/AssetForm";
-import { AssetFilters } from "./components/AssetFilters";
+} from '@chakra-ui/react';
+import { BsBox2 } from 'react-icons/bs';
+import { FiPackage } from 'react-icons/fi';
+import { AssetTable } from './components/AssetTable';
+import { AssetForm } from './components/AssetForm';
+import { AssetFilters } from './components/AssetFilters';
 import {
   handleAddAsset,
   handleEditAsset,
   handleDeleteAsset,
-} from "./utils/inventoryUtils";
-import { getAssets, getMarcas, getModelos, MovableAsset } from "../../../api/AssetsApi";
-import { getDepartments, getSubGroupsM, getParroquias } from "../../../api/SettingsApi";
-import axiosInstance from "../../../utils/axiosInstance"
+} from './utils/inventoryUtils';
+import {
+  getAssets,
+  getMarcas,
+  getModelos,
+  MovableAsset,
+} from '../../../api/AssetsApi';
+import {
+  getDepartments,
+  getSubGroupsM,
+  getParroquias,
+} from '../../../api/SettingsApi';
+import axiosInstance from '../../../utils/axiosInstance';
+import { getProfile } from 'api/UserApi';
 
 export default function Inventory() {
   const [assets, setAssets] = useState([]);
@@ -39,34 +49,44 @@ export default function Inventory() {
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-const [assetStates, setAssetStates] = useState([]);
+  const [assetStates, setAssetStates] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  const [canFilterByDept, setCanFilterByDept] = useState(false);
+  const [userAssets, setUserAssets] = useState([]);
 
-
-    //Obtener los estados de bienes /goods-status
+  //Obtener los estados de bienes /goods-status
   const getAssetStates = async () => {
-    const response = await axiosInstance.get('/goods-status')
-    return response.data.statusGoods
-  }
+    const response = await axiosInstance.get('/goods-status');
+    return response.data.statusGoods;
+  };
   // Filtros
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [filters, setFilters] = useState({
     departmentId: undefined,
-    date: "",
-    order: "recent",
+    date: '',
+    order: 'recent',
   });
 
   // Colores y estilos
-  const cardBg = useColorModeValue("white", "gray.700");
-  const tabBorderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.800", "white");
-  const hoverBg = useColorModeValue("gray.100", "gray.700");
-  const bg = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const tabBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const hoverBg = useColorModeValue('gray.100', 'gray.700');
+  const bg = useColorModeValue('gray.50', 'gray.900');
 
   // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [assetsData, departmentsData, subgroupsData, marcasData, modelosData, parishData,assetStatesData] = await Promise.all([
+        const [
+          assetsData,
+          departmentsData,
+          subgroupsData,
+          marcasData,
+          modelosData,
+          parishData,
+          assetStatesData,
+        ] = await Promise.all([
           getAssets(),
           getDepartments(),
           getSubGroupsM(),
@@ -83,42 +103,80 @@ const [assetStates, setAssetStates] = useState([]);
         setParroquias(parishData);
         setAssetStates(assetStatesData);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       }
     };
 
     fetchData();
   }, []);
 
+  //Solo mostrar assets del departamento del usuario autenticado
+useEffect(() => {
+  const fetchUserProfile = async () => {
+    try {
+      const profile = await getProfile();
+      setUserProfile(profile);
+
+      if (profile?.tipo_usuario === 1 || profile?.dept_nombre === 'Bienes') {
+        setUserAssets(assets);
+        setCanFilterByDept(true);
+      } else if (profile?.dept_id) {
+        const filtered = assets.filter(
+          (asset) => asset.dept_id === profile.dept_id,
+        );
+        setUserAssets(filtered);
+        setCanFilterByDept(false);
+      } else {
+        setUserAssets(assets);
+        setCanFilterByDept(false);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUserAssets(assets);
+      setCanFilterByDept(false);
+    }
+  };
+
+  fetchUserProfile();
+}, [assets]);
+
   // Filtrar assets cada vez que cambian los filtros o los assets originales
-  useEffect(() => {
-    let filtered = [...assets];
-    if (filters.departmentId) {
-      filtered = filtered.filter(a => a.dept_id === filters.departmentId);
-    }
-    if (filters.date) {
-      filtered = filtered.filter(a => a.fecha && a.fecha.startsWith(filters.date));
-    }
-    if (filters.order === "recent") {
-      filtered = filtered.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
-    } else {
-      filtered = filtered.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
-    }
-    setFilteredAssets(filtered);
-  }, [assets, filters]);
+ useEffect(() => {
+  let filtered = [...userAssets];
+  if (canFilterByDept && filters.departmentId) {
+    filtered = filtered.filter((a) => a.dept_id === filters.departmentId);
+  }
+  if (filters.date) {
+    filtered = filtered.filter(
+      (a) => a.fecha && a.fecha.startsWith(filters.date),
+    );
+  }
+  if (filters.order === 'recent') {
+    filtered = filtered.sort(
+      (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+    );
+  } else {
+    filtered = filtered.sort(
+      (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
+    );
+  }
+  setFilteredAssets(filtered);
+}, [userAssets, filters, canFilterByDept]);
 
   // Handlers
   const handleFormSubmit = async (asset: MovableAsset) => {
     try {
       if (isEditing) {
-        await handleEditAsset(asset.id, asset, setAssets, () => setIsFormOpen(false));
+        await handleEditAsset(asset.id, asset, setAssets, () =>
+          setIsFormOpen(false),
+        );
       } else {
         await handleAddAsset(asset, setAssets, () => setIsFormOpen(false));
       }
       setSelectedAsset(null);
       setIsEditing(false);
     } catch (error) {
-      console.error("Error saving asset:", error);
+      console.error('Error saving asset:', error);
     }
   };
 
@@ -126,7 +184,7 @@ const [assetStates, setAssetStates] = useState([]);
     try {
       await handleDeleteAsset(assetId, setAssets);
     } catch (error) {
-      console.error("Error deleting asset:", error);
+      console.error('Error deleting asset:', error);
     }
   };
 
@@ -141,26 +199,33 @@ const [assetStates, setAssetStates] = useState([]);
   // Tabs (solo uno activo en este ejemplo)
   const tabs = [
     {
-      id: "inventory",
-      label: "Inventario",
+      id: 'inventory',
+      label: 'Inventario',
       icon: FiPackage,
-      color: "purple",
-      description: "Gestión de bienes muebles",
+      color: 'purple',
+      description: 'Gestión de bienes muebles',
     },
   ];
-  const [activeTab] = useState("inventory");
+  const [activeTab] = useState('inventory');
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
 
   return (
-    <Box minH="100vh" bg={bg} pt={{ base: "130px", md: "80px", xl: "80px" }}>
+    <Box minH="100vh" bg={bg} pt={{ base: '130px', md: '80px', xl: '80px' }}>
       <Container maxW="7xl" py={6}>
         {/* Main Header */}
-        <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={tabBorderColor} mb={6}>
+        <Card
+          bg={cardBg}
+          shadow="lg"
+          borderRadius="xl"
+          border="1px"
+          borderColor={tabBorderColor}
+          mb={6}
+        >
           <CardHeader>
             <Flex
-              direction={{ base: "column", lg: "row" }}
+              direction={{ base: 'column', lg: 'row' }}
               justify="space-between"
-              align={{ base: "start", lg: "center" }}
+              align={{ base: 'start', lg: 'center' }}
               gap={4}
             >
               <Box>
@@ -193,29 +258,36 @@ const [assetStates, setAssetStates] = useState([]);
         </Card>
 
         {/* Tab Navigation (solo un tab en este caso, pero puedes agregar más) */}
-        <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={tabBorderColor} mb={6}>
+        <Card
+          bg={cardBg}
+          shadow="md"
+          borderRadius="xl"
+          border="1px"
+          borderColor={tabBorderColor}
+          mb={6}
+        >
           <CardBody p={4}>
-            <Stack direction={{ base: "column", md: "row" }} spacing={2}>
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={2}>
               {tabs.map((tab) => (
                 <Button
                   key={tab.id}
-                  variant={activeTab === tab.id ? "solid" : "ghost"}
-                  colorScheme={activeTab === tab.id ? tab.color : "gray"}
-                  bg={activeTab === tab.id ? `${tab.color}.500` : "transparent"}
-                  color={activeTab === tab.id ? "white" : textColor}
+                  variant={activeTab === tab.id ? 'solid' : 'ghost'}
+                  colorScheme={activeTab === tab.id ? tab.color : 'gray'}
+                  bg={activeTab === tab.id ? `${tab.color}.500` : 'transparent'}
+                  color={activeTab === tab.id ? 'white' : textColor}
                   borderRadius="lg"
                   // onClick={() => setActiveTab(tab.id)} // Si agregas más tabs, habilita esto
                   _hover={{
                     bg: activeTab === tab.id ? `${tab.color}.600` : hoverBg,
-                    transform: "translateY(-1px)",
+                    transform: 'translateY(-1px)',
                   }}
                   transition="all 0.2s"
                   leftIcon={<Icon as={tab.icon} />}
                   size="lg"
                   fontWeight="medium"
-                  flex={{ base: "1", md: "auto" }}
+                  flex={{ base: '1', md: 'auto' }}
                   minW="200px"
-                  boxShadow={activeTab === tab.id ? "md" : "none"}
+                  boxShadow={activeTab === tab.id ? 'md' : 'none'}
                   isActive={activeTab === tab.id}
                 >
                   <Box textAlign="left">
@@ -233,12 +305,26 @@ const [assetStates, setAssetStates] = useState([]);
         {/* Tab Content */}
         <Box>
           {/* Filtros y tabla de bienes */}
-          <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={tabBorderColor} mb={6}>
+          <Card
+            bg={cardBg}
+            shadow="md"
+            borderRadius="xl"
+            border="1px"
+            borderColor={tabBorderColor}
+            mb={6}
+          >
             <CardBody>
-              <Flex justify="space-between" align="center" mb={4} wrap="wrap" gap={4}>
+              <Flex
+                justify="space-between"
+                align="center"
+                mb={4}
+                wrap="wrap"
+                gap={4}
+              >
                 <AssetFilters
                   departments={departments}
                   onFilter={handleFilter}
+                  canFilterByDept={canFilterByDept}
                 />
                 <Button
                   bgColor="type.primary"
@@ -263,6 +349,7 @@ const [assetStates, setAssetStates] = useState([]);
                     setIsFormOpen(true);
                   }}
                   onDelete={(asset) => handleDelete(asset.id)}
+                  userProfile={userProfile} // <-- agrega esto
                 />
               </Box>
               {isFormOpen && (
@@ -276,7 +363,7 @@ const [assetStates, setAssetStates] = useState([]);
                   marcas={marcas}
                   modelos={modelos}
                   parroquias={parroquias}
-                  assetStates={assetStates} 
+                  assetStates={assetStates}
                 />
               )}
             </CardBody>

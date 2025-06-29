@@ -17,7 +17,7 @@ import {
   Text,
   Badge,
   useBreakpointValue,
-    Button,
+  Button,
 } from "@chakra-ui/react";
 import { FiCalendar, FiX, FiFilter, FiUsers, FiChevronDown } from "react-icons/fi";
 
@@ -28,11 +28,13 @@ interface AssetFiltersProps {
     date?: string;
     order?: "recent" | "oldest";
   }) => void;
+  canFilterByDept?: boolean; // <-- NUEVO
 }
 
 export const AssetFilters: React.FC<AssetFiltersProps> = ({
   departments,
   onFilter,
+  canFilterByDept = false, // <-- NUEVO
 }) => {
   const [departmentId, setDepartmentId] = useState<number | undefined>();
   const [date, setDate] = useState<string>("");
@@ -44,7 +46,7 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
 
   // Contar filtros activos
   const activeFiltersCount = [
-    departmentId !== undefined,
+    canFilterByDept ? departmentId !== undefined : false,
     !!date,
     order !== "recent",
   ].filter(Boolean).length;
@@ -52,12 +54,12 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
   // Filtrar automáticamente al cambiar cualquier filtro
   useEffect(() => {
     onFilter({
-      departmentId,
+      departmentId: canFilterByDept ? departmentId : undefined,
       date,
       order,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departmentId, date, order]);
+  }, [departmentId, date, order, canFilterByDept]);
 
   const handleClear = () => {
     setDepartmentId(undefined);
@@ -102,33 +104,35 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
 
       {/* Filter Controls */}
       <Stack direction={{ base: "column", md: "row" }} spacing={4} align={{ base: "stretch", md: "flex-end" }}>
-        <FormControl>
-          <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
-            Departamento
-          </FormLabel>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none">
-              <Icon as={FiUsers} color="gray.400" />
-            </InputLeftElement>
-            <Select
-              placeholder="Todos los departamentos"
-              value={departmentId !== undefined ? departmentId : ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                setDepartmentId(value ? Number(value) : undefined);
-              }}
-              pl={10}
-              borderRadius="md"
-              icon={<FiChevronDown />}
-            >
-              {departments.map((dep) => (
-                <option key={dep.id} value={dep.id}>
-                  {dep.nombre}
-                </option>
-              ))}
-            </Select>
-          </InputGroup>
-        </FormControl>
+        {canFilterByDept && (
+          <FormControl>
+            <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
+              Departamento
+            </FormLabel>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={FiUsers} color="gray.400" />
+              </InputLeftElement>
+              <Select
+                placeholder="Todos los departamentos"
+                value={departmentId !== undefined ? departmentId : ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setDepartmentId(value ? Number(value) : undefined);
+                }}
+                pl={10}
+                borderRadius="md"
+                icon={<FiChevronDown />}
+              >
+                {departments.map((dep) => (
+                  <option key={dep.id} value={dep.id}>
+                    {dep.nombre}
+                  </option>
+                ))}
+              </Select>
+            </InputGroup>
+          </FormControl>
+        )}
         <FormControl>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
             Fecha

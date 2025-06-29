@@ -23,6 +23,7 @@ export interface UserProfile {
   nombre_completo: string
   telefono?: string
   dept_id: number
+  dept_nombre: string
   cedula: string
   username: string
 }

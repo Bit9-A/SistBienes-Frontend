@@ -66,32 +66,50 @@ export default function DisposalsTable() {
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
   // Load data on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const [data, deptData, conceptData, assetData, subGroupData] = await Promise.all([
-          getDesincorps(),
-          getDepartments(),
-          getConceptosMovimientoDesincorporacion(),
-          getAssets(),
-          getSubGroupsM(),
-        ])
-        setAssets(assetData)
-        setSubgroups(subGroupData)
-        setDepartments(deptData)
-        setConcepts(conceptData)
-        setDisposals(data)
-      } catch (error) {
-        setError("Error al cargar los datos. Por favor, intenta nuevamente.")
-        console.error("Error fetching data:", error)
-      } finally {
-        setLoading(false)
-      }
+ useEffect(() => {
+  const fetchCatalogs = async () => {
+    try {
+      const [deptData, conceptData, assetData, subGroupData] = await Promise.all([
+        getDepartments(),
+        getConceptosMovimientoDesincorporacion(),
+        getAssets(),
+        getSubGroupsM(),
+      ]);
+      setDepartments(deptData);
+      setConcepts(conceptData);
+      setAssets(assetData);
+      setSubgroups(subGroupData);
+    } catch (error) {
+      setError("Error al cargar catálogos.");
+      console.error("Error fetching catalogs:", error);
     }
-    fetchData()
-  }, [])
+  };
+
+  const fetchDisposals = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getDesincorps();
+      setDisposals(data);
+    } catch (error: any) {
+      if (
+        error?.response?.status === 404 &&
+        error?.response?.data?.message === "No se encontraron desincorporaciones"
+      ) {
+        setDisposals([]); // No hay registros, pero no es un error
+        setError(null);
+      } else {
+        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
+        console.error("Error fetching data:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchCatalogs();
+  fetchDisposals();
+}, []);
 
   const handleAdd = async (disposalData?: Partial<Desincorp>) => {
     const data = disposalData || newDisposal

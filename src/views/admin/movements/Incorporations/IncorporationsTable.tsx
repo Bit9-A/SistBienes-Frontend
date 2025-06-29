@@ -61,33 +61,51 @@ export default function IncorporationsTable() {
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
   // Load data on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-
-        const [data, deptData, conceptData, assetData, subGroupData] = await Promise.all([
-          getIncorps(),
-          getDepartments(),
-          getConceptosMovimientoIncorporacion(),
-          getAssets(),
-          getSubGroupsM(),
-        ])
-        setAssets(assetData)
-        setSubgroups(subGroupData)
-        setDepartments(deptData)
-        setConcepts(conceptData)
-        setIncorporations(data)
-      } catch (error) {
-        setError("Error al cargar los datos. Por favor, intenta nuevamente.")
-        console.error("Error fetching data:", error)
-      } finally {
-        setLoading(false)
-      }
+useEffect(() => {
+  const fetchCatalogs = async () => {
+    try {
+      const [deptData, conceptData, assetData, subGroupData] = await Promise.all([
+        getDepartments(),
+        getConceptosMovimientoIncorporacion(),
+        getAssets(),
+        getSubGroupsM(),
+      ]);
+      setDepartments(deptData);
+      setConcepts(conceptData);
+      setAssets(assetData);
+      setSubgroups(subGroupData);
+    } catch (error) {
+      setError("Error al cargar catálogos.");
+      console.error("Error fetching catalogs:", error);
     }
-    fetchData()
-  }, [])
+  };
+
+  const fetchIncorporations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getIncorps();
+      setIncorporations(data);
+    } catch (error: any) {
+      if (
+        error?.response?.status === 404 &&
+        error?.response?.data?.message === "No se encontraron incorporaciones"
+      ) {
+        setIncorporations([]); // No hay registros, pero no es un error
+        setError(null);
+      } else {
+        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
+        console.error("Error fetching data:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchCatalogs();
+  fetchIncorporations();
+}, []);
+
 
   const handleAdd = async (incorpData?: Partial<Incorp>) => {
     const data = incorpData || newIncorporation
