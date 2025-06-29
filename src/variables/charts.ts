@@ -1,4 +1,6 @@
-// Daily Traffic Dashboards Default
+import { BsInfoCircle } from "react-icons/bs"; // o cualquier icono SVG
+import { ApexOptions } from "apexcharts";
+
 export const pieChartOptions: any = {
 	chart: {
 		width: '50px',
@@ -13,7 +15,7 @@ export const pieChartOptions: any = {
 				},
 				png: {
 					filename: "PieChart"
-				}
+				},
 			},
 			tools: {
 				download: true, // Activa el botón de descarga
@@ -23,7 +25,21 @@ export const pieChartOptions: any = {
 				zoomout: false,
 				pan: false,
 				reset: false,
-				customIcons: []
+				customIcons: [
+					{
+						icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0059ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="8"/></svg>`,
+						index: -1,
+						title: "Ver porcentajes",
+						class: "custom-toolbar-info",
+						click: function (chart: ApexCharts,
+							options: ApexOptions,
+							e: MouseEvent) {
+							if (window && typeof window.openPieModal === "function") {
+								window.openPieModal();
+							}
+						}
+					}
+				]
 			}
 		},
 	},

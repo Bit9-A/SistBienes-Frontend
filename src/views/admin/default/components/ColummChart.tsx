@@ -108,8 +108,32 @@ const BarChart = () => {
                     </Text>
                 </Box>
             </Flex>
-            <Box w="100%" h="220px">
-                <ReactApexChart options={chartOptions} series={series} type="bar" height={220} />
+            <Box w="100%" h="220px" overflowX="auto">
+                <Box minW={`${chartLabels.length * 120}px`} h="220px">
+                    <ReactApexChart
+                        options={{
+                            ...chartOptions,
+                            chart: {
+                                ...chartOptions.chart,
+                                width: chartLabels.length * 120,
+                                height: 320,
+                                toolbar: chartOptions.chart.toolbar,
+                            },
+                            xaxis: {
+                                ...chartOptions.xaxis,
+                                labels: {
+                                    rotate: -45,
+                                    style: { fontSize: '10px' },
+                                    trim: false,
+                                },
+                            },
+                        }}
+                        series={series}
+                        type="bar"
+                        height={320}
+                        width={chartLabels.length * 120}
+                    />
+                </Box>
             </Box>
         </Card>
     );
