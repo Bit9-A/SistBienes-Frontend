@@ -37,6 +37,9 @@ import { type ConceptoMovimiento, getConceptosMovimientoDesincorporacion } from 
 import { type MovableAsset, getAssets } from "api/AssetsApi"
 import { type SubGroup, getSubGroupsM } from "api/SettingsApi"
 
+import { getProfile } from "api/UserApi";
+import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
+
 export default function DisposalsTable() {
   const today = new Date().toISOString().slice(0, 10)
   const [disposals, setDisposals] = useState<Desincorp[]>([])
@@ -52,6 +55,11 @@ export default function DisposalsTable() {
   const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([])
   const [assets, setAssets] = useState<MovableAsset[]>([])
   const [subgroups, setSubgroups] = useState<SubGroup[]>([])
+
+  const [userProfile, setUserProfile] = useState<any>(null);
+const [profileDisposals, setProfileDisposals] = useState<Desincorp[]>([]);
+  
+  const [canFilterByDept, setCanFilterByDept] = useState(false);
   const toast = useToast()
 
   // UI theme values
@@ -64,6 +72,21 @@ export default function DisposalsTable() {
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
+
+
+useEffect(() => {
+  const fetchProfileAndFilter = async () => {
+    const profile = await getProfile();
+    setUserProfile(profile);
+    const { filtered, canFilterByDept } = filterByUserProfile(disposals, profile);
+    setProfileDisposals(filtered);
+    setCanFilterByDept(canFilterByDept);
+  };
+  fetchProfileAndFilter();
+}, [disposals]);
+
+
+
 
   // Load data on mount
  useEffect(() => {
@@ -232,15 +255,15 @@ export default function DisposalsTable() {
   }
 
   // Filtro igual que incorporations: useMemo y compara fechas con new Date()
-  const filteredDisposals = useMemo(() => {
-    return filterDisposals(
-      disposals,
-      "",
-      filterDept,
-      startDate,
-      endDate
-    )
-  }, [disposals, filterDept, startDate, endDate])
+ const filteredDisposals = useMemo(() => {
+  return filterDisposals(
+    profileDisposals,
+    "",
+    filterDept,
+    startDate,
+    endDate
+  );
+}, [profileDisposals, filterDept, startDate, endDate]);
 
   const openEditDialog = (disposal: Desincorp) => {
     setSelectedDisposal(disposal)
@@ -368,6 +391,7 @@ export default function DisposalsTable() {
         assets={assets}
         subgroups={subgroups}
         disposals={disposals}
+        userProfile={userProfile} // Pasar el perfil del usuario si es necesario
       />
     </Stack>
   )

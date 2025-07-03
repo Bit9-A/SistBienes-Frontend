@@ -155,9 +155,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" isCentered>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent >
         <ModalHeader>Crear Nuevo Usuario</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
