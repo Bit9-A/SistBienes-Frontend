@@ -167,6 +167,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
       }
       formData.cantidad = 1;
       formData.isComputer = 1;
+      formData.valor_total = formData.valor_unitario * formData.cantidad;
       const date = new Date(formData.fecha);
       formData.fecha = date.toISOString().split('T')[0];
       try {

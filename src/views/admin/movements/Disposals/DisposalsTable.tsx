@@ -57,7 +57,7 @@ export default function DisposalsTable() {
   const [subgroups, setSubgroups] = useState<SubGroup[]>([])
 
   const [userProfile, setUserProfile] = useState<any>(null);
-const [profileDisposals, setProfileDisposals] = useState<Desincorp[]>([]);
+  const [profileDisposals, setProfileDisposals] = useState<Desincorp[]>([]);
   
   const [canFilterByDept, setCanFilterByDept] = useState(false);
   const toast = useToast()
@@ -314,6 +314,7 @@ useEffect(() => {
             startDate={startDate}
             endDate={endDate}
             departments={departments}
+            canFilterByDept={canFilterByDept}
           />
         </CardBody>
       </Card>

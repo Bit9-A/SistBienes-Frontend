@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -29,7 +29,7 @@ import {
   getAssets,
   getMarcas,
   getModelos,
-  MovableAsset,
+  type MovableAsset,
 } from '../../../api/AssetsApi';
 import {
   getDepartments,
@@ -59,12 +59,14 @@ export default function Inventory() {
     const response = await axiosInstance.get('/goods-status');
     return response.data.statusGoods;
   };
+
   // Filtros
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [filters, setFilters] = useState({
     departmentId: undefined,
     date: '',
     order: 'recent',
+    search: '', // <-- agrega esto para evitar el error
   });
 
   // Colores y estilos
@@ -95,6 +97,7 @@ export default function Inventory() {
           getParroquias(),
           getAssetStates(),
         ]);
+
         setAssets(assetsData);
         setDepartments(departmentsData);
         setSubgroups(subgroupsData);
@@ -111,58 +114,69 @@ export default function Inventory() {
   }, []);
 
   //Solo mostrar assets del departamento del usuario autenticado
-useEffect(() => {
-  const fetchUserProfile = async () => {
-    try {
-      const profile = await getProfile();
-      setUserProfile(profile);
-
-      if (profile?.tipo_usuario === 1 || profile?.dept_nombre === 'Bienes') {
-        setUserAssets(assets);
-        setCanFilterByDept(true);
-      } else if (profile?.dept_id) {
-        const filtered = assets.filter(
-          (asset) => asset.dept_id === profile.dept_id,
-        );
-        setUserAssets(filtered);
-        setCanFilterByDept(false);
-      } else {
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const profile = await getProfile();
+        setUserProfile(profile);
+        if (profile?.tipo_usuario === 1 || profile?.dept_nombre === 'Bienes') {
+          setUserAssets(assets);
+          setCanFilterByDept(true);
+        } else if (profile?.dept_id) {
+          const filtered = assets.filter(
+            (asset) => asset.dept_id === profile.dept_id,
+          );
+          setUserAssets(filtered);
+          setCanFilterByDept(false);
+        } else {
+          setUserAssets(assets);
+          setCanFilterByDept(false);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
         setUserAssets(assets);
         setCanFilterByDept(false);
       }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setUserAssets(assets);
-      setCanFilterByDept(false);
-    }
-  };
+    };
 
-  fetchUserProfile();
-}, [assets]);
+    fetchUserProfile();
+  }, [assets]);
 
   // Filtrar assets cada vez que cambian los filtros o los assets originales
- useEffect(() => {
-  let filtered = [...userAssets];
-  if (canFilterByDept && filters.departmentId) {
-    filtered = filtered.filter((a) => a.dept_id === filters.departmentId);
-  }
-  if (filters.date) {
-    filtered = filtered.filter(
-      (a) => a.fecha && a.fecha.startsWith(filters.date),
-    );
-  }
-  if (filters.order === 'recent') {
-    filtered = filtered.sort(
-      (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
-    );
-  } else {
-    filtered = filtered.sort(
-      (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
-    );
-  }
-  setFilteredAssets(filtered);
-}, [userAssets, filters, canFilterByDept]);
+  useEffect(() => {
+    let filtered = [...userAssets];
 
+    if (canFilterByDept && filters.departmentId) {
+      filtered = filtered.filter((a) => a.dept_id === filters.departmentId);
+    }
+
+    if (filters.date) {
+      filtered = filtered.filter(
+        (a) => a.fecha && a.fecha.startsWith(filters.date),
+      );
+    }
+
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter((a) =>
+        Object.values(a).some(
+          (val) => val && String(val).toLowerCase().includes(searchLower),
+        ),
+      );
+    }
+
+    if (filters.order === 'recent') {
+      filtered = filtered.sort(
+        (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+      );
+    } else {
+      filtered = filtered.sort(
+        (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
+      );
+    }
+
+    setFilteredAssets(filtered);
+  }, [userAssets, filters, canFilterByDept]);
   // Handlers
   const handleFormSubmit = async (asset: MovableAsset) => {
     try {
@@ -193,6 +207,7 @@ useEffect(() => {
       departmentId: newFilters.departmentId,
       date: newFilters.date,
       order: newFilters.order,
+      search: newFilters.search, // <-- agrega esto
     });
   };
 
@@ -206,12 +221,18 @@ useEffect(() => {
       description: 'Gestión de bienes muebles',
     },
   ];
+
   const [activeTab] = useState('inventory');
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
 
   return (
     <Box minH="100vh" bg={bg} pt={{ base: '130px', md: '80px', xl: '80px' }}>
-      <Container maxW="7xl" py={6}>
+      <Container
+        maxW="100vw"
+        px={{ base: 2, md: 4 }}
+        py={{ base: 2, md: 4 }}
+        w="full"
+      >
         {/* Main Header */}
         <Card
           bg={cardBg}
@@ -219,25 +240,33 @@ useEffect(() => {
           borderRadius="xl"
           border="1px"
           borderColor={tabBorderColor}
-          mb={6}
+          mb={{ base: 4, md: 6 }}
         >
-          <CardHeader>
+          <CardHeader p={{ base: 4, md: 6 }}>
             <Flex
               direction={{ base: 'column', lg: 'row' }}
               justify="space-between"
               align={{ base: 'start', lg: 'center' }}
-              gap={4}
+              gap={{ base: 3, md: 4 }}
             >
               <Box>
-                <Flex align="center" gap={3} mb={2}>
-                  <Box p={2} bg="blue.100" borderRadius="lg">
+                <Flex align="center" gap={{ base: 2, md: 3 }} mb={2}>
+                  <Box p={{ base: 1.5, md: 2 }} bg="blue.100" borderRadius="lg">
                     <FiPackage size={24} color="#0059ae" />
                   </Box>
-                  <Heading size="lg" fontWeight="bold" color={textColor}>
+                  <Heading
+                    size={{ base: 'md', md: 'lg' }}
+                    fontWeight="bold"
+                    color={textColor}
+                  >
                     Gestión de Bienes
                   </Heading>
                 </Flex>
-                <Box color="gray.600" fontSize="sm">
+                <Box
+                  color="gray.600"
+                  fontSize={{ base: 'xs', md: 'sm' }}
+                  display={{ base: 'none', sm: 'block' }}
+                >
                   Sistema integral para la administración de bienes muebles
                 </Box>
               </Box>
@@ -245,10 +274,11 @@ useEffect(() => {
                 <Badge
                   colorScheme={activeTabData.color}
                   variant="subtle"
-                  px={3}
+                  px={{ base: 2, md: 3 }}
                   py={1}
                   borderRadius="full"
-                  fontSize="sm"
+                  fontSize={{ base: 'xs', md: 'sm' }}
+                  mt={{ base: 2, lg: 0 }}
                 >
                   {activeTabData.label}
                 </Badge>
@@ -257,17 +287,20 @@ useEffect(() => {
           </CardHeader>
         </Card>
 
-        {/* Tab Navigation (solo un tab en este caso, pero puedes agregar más) */}
+        {/* Tab Navigation */}
         <Card
           bg={cardBg}
           shadow="md"
           borderRadius="xl"
           border="1px"
           borderColor={tabBorderColor}
-          mb={6}
+          mb={{ base: 4, md: 6 }}
         >
-          <CardBody p={4}>
-            <Stack direction={{ base: 'column', md: 'row' }} spacing={2}>
+          <CardBody p={{ base: 3, md: 4 }}>
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              spacing={{ base: 2, md: 2 }}
+            >
               {tabs.map((tab) => (
                 <Button
                   key={tab.id}
@@ -276,23 +309,28 @@ useEffect(() => {
                   bg={activeTab === tab.id ? `${tab.color}.500` : 'transparent'}
                   color={activeTab === tab.id ? 'white' : textColor}
                   borderRadius="lg"
-                  // onClick={() => setActiveTab(tab.id)} // Si agregas más tabs, habilita esto
                   _hover={{
                     bg: activeTab === tab.id ? `${tab.color}.600` : hoverBg,
                     transform: 'translateY(-1px)',
                   }}
                   transition="all 0.2s"
                   leftIcon={<Icon as={tab.icon} />}
-                  size="lg"
+                  size={{ base: 'md', md: 'lg' }}
                   fontWeight="medium"
                   flex={{ base: '1', md: 'auto' }}
-                  minW="200px"
+                  minW={{ base: 'auto', md: '200px' }}
                   boxShadow={activeTab === tab.id ? 'md' : 'none'}
                   isActive={activeTab === tab.id}
+                  w={{ base: 'full', md: 'auto' }}
                 >
                   <Box textAlign="left">
-                    <Box>{tab.label}</Box>
-                    <Box fontSize="xs" opacity={0.8} fontWeight="normal">
+                    <Box fontSize={{ base: 'sm', md: 'md' }}>{tab.label}</Box>
+                    <Box
+                      fontSize={{ base: '2xs', md: 'xs' }}
+                      opacity={0.8}
+                      fontWeight="normal"
+                      display={{ base: 'none', md: 'block' }}
+                    >
                       {tab.description}
                     </Box>
                   </Box>
@@ -311,36 +349,54 @@ useEffect(() => {
             borderRadius="xl"
             border="1px"
             borderColor={tabBorderColor}
-            mb={6}
+            mb={{ base: 4, md: 6 }}
           >
-            <CardBody>
+            <CardBody p={{ base: 3, md: 4 }}>
               <Flex
+                direction={{ base: 'column', lg: 'row' }}
                 justify="space-between"
-                align="center"
-                mb={4}
-                wrap="wrap"
-                gap={4}
+                align={{ base: 'stretch', lg: 'center' }}
+                mb={{ base: 3, md: 4 }}
+                gap={{ base: 3, md: 4 }}
               >
-                <AssetFilters
-                  departments={departments}
-                  onFilter={handleFilter}
-                  canFilterByDept={canFilterByDept}
-                />
+                <Box
+                  flex={{ base: '1', lg: 'auto' }}
+                  w={{ base: 'full', lg: 'auto' }}
+                >
+                  <AssetFilters
+                    departments={departments}
+                    onFilter={handleFilter}
+                    canFilterByDept={canFilterByDept}
+                  />
+                </Box>
                 <Button
                   bgColor="type.primary"
                   colorScheme="purple"
-                  size="md"
+                  size={{ base: 'md', md: 'md' }}
                   leftIcon={<BsBox2 />}
                   onClick={() => {
                     setSelectedAsset(null);
                     setIsEditing(false);
                     setIsFormOpen(true);
                   }}
+                  w={{ base: 'full', lg: 'auto' }}
+                  minW={{ base: 'auto', lg: '160px' }}
+                  fontSize={{ base: 'sm', md: 'md' }}
                 >
-                  Agregar Bien
+                  <Box display={{ base: 'none', sm: 'block' }}>
+                    Agregar Bien
+                  </Box>
+                  <Box display={{ base: 'block', sm: 'none' }}>Agregar</Box>
                 </Button>
               </Flex>
-              <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="sm">
+
+              <Box
+                bg={cardBg}
+                p={{ base: 2, md: 4 }}
+                borderRadius="lg"
+                boxShadow="sm"
+                overflowX="auto"
+              >
                 <AssetTable
                   assets={filteredAssets}
                   onEdit={(asset) => {
@@ -349,9 +405,10 @@ useEffect(() => {
                     setIsFormOpen(true);
                   }}
                   onDelete={(asset) => handleDelete(asset.id)}
-                  userProfile={userProfile} // <-- agrega esto
+                  userProfile={userProfile}
                 />
               </Box>
+
               {isFormOpen && (
                 <AssetForm
                   isOpen={isFormOpen}

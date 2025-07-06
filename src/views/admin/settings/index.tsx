@@ -67,7 +67,10 @@ const Settings = () => {
 
   return (
     <Box minH="100vh" bg={bgColor} pt={paddingTop}>
-      <Container maxW="7xl" py={6}>
+      <Container   maxW="100vw"
+  px={{ base: 2, md: 4 }}
+  py={{ base: 2, md: 4 }}
+  w="full">
         {/* Header Section */}
         <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={borderColor} mb={6}>
           <CardHeader>
