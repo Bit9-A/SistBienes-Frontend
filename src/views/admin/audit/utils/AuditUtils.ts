@@ -5,6 +5,7 @@ import {
 } from "api/AuditApi";
 
 import { getProfile } from "api/UserApi";
+import { type MovableAsset, updateAsset } from "api/AssetsApi";
 
 // Guardar entrada de usuario (inicio de sesión)
 export const logUserEntry = async () => {
@@ -133,6 +134,28 @@ export const createNewAudit = async (auditData: Omit<Audit, "id">) => {
   } catch (error) {
     console.error("Error creando auditoría:", error);
     throw error;
+  }
+};
+
+export const handleEditAsset = async (
+  assetId: number,
+  updatedAsset: Partial<MovableAsset>,
+  setAssets: React.Dispatch<React.SetStateAction<MovableAsset[]>>,
+  onClose: () => void,
+  logDetails: string // Add logDetails parameter
+) => {
+  try {
+    const updated = await updateAsset(assetId, updatedAsset as MovableAsset);
+    setAssets((prev) =>
+      prev.map((asset) => (asset.id === updated.id ? updated : asset))
+    );
+    onClose();
+    await logCustomAction({
+      accion: "Editar Bien",
+      detalles: logDetails, // Use logDetails here
+    });
+  } catch (error) {
+    console.error("Error al actualizar el bien:", error);
   }
 };
 

@@ -63,7 +63,7 @@ export const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({ asset, isO
 
   // Verificar si es computadora
   const isComputer = asset?.isComputer === 1
-
+console.log("Asset: ", asset)
   // Cargar componentes cuando se abre el modal y es una computadora
 useEffect(() => {
   if (isOpen && asset && isComputer) {

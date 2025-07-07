@@ -43,7 +43,8 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
     assetId: number,
     updatedAsset: Partial<MovableAsset>,
     setAssets: React.Dispatch<React.SetStateAction<MovableAsset[]>>,
-    onClose: () => void
+    onClose: () => void,
+    logDetails: string // Add logDetails parameter
   ) => {
     try {
       const updated = await updateAsset(assetId, updatedAsset as MovableAsset);
@@ -53,7 +54,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       onClose();
       await logCustomAction({
         accion: "Editar Bien",
-        detalles: `Se editó el bien con ID: ${assetId}`,
+        detalles: logDetails, // Use logDetails here
       });
     } catch (error) {
       console.error("Error al actualizar el bien:", error);
