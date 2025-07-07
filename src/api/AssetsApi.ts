@@ -7,7 +7,8 @@ export interface MovableAsset {
   numero_serial: string;
   grupo: number;
   subgrupo_id: string;
-  subgrupo_nombre?: string;      // Nuevo: nombre del subgrupo
+  subgrupo_nombre?: string;  
+  subgrupo_codigo?:string;    // Nuevo: nombre del subgrupo
   cantidad: number;
   descripcion: string;
   marca_id?: number;

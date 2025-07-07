@@ -21,6 +21,7 @@
     "apexcharts": "3.50.0",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.3.7",
     "html-to-image": "^1.11.13",

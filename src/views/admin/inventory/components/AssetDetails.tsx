@@ -56,7 +56,7 @@ export const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({ asset, isO
 
   const cardBg = useColorModeValue("white", "gray.700")
   const borderColor = useColorModeValue("gray.200", "gray.600")
-  const tabActiveBg = useColorModeValue("blue.500", "blue.600")
+  const tabActiveBg = useColorModeValue("type.primary", "type.primary")
   const tabInactiveBg = useColorModeValue("gray.100", "gray.600")
 
   const toast = useToast()
@@ -266,7 +266,7 @@ useEffect(() => {
               color={activeTab === "details" ? "white" : "gray.600"}
               borderRadius={isComputer ? "md 0 0 md" : "md"}
               _hover={{
-                bg: activeTab === "details" ? "blue.600" : "gray.200",
+                bg: activeTab === "details" ? "type.primary" : "gray.200",
               }}
               size="md"
               flex={1}
@@ -280,7 +280,7 @@ useEffect(() => {
                 color={activeTab === "components" ? "white" : "gray.600"}
                 borderRadius="0 md md 0"
                 _hover={{
-                  bg: activeTab === "components" ? "blue.600" : "gray.200",
+                  bg: activeTab === "components" ? "type.primary" : "gray.200",
                 }}
                 size="md"
                 flex={1}
@@ -297,7 +297,7 @@ useEffect(() => {
               <Card bg={cardBg} border="1px" borderColor={borderColor}>
                 <CardBody>
                   <VStack spacing={4} align="stretch">
-                    <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                    <Text fontSize="lg" fontWeight="bold" color="type.primary">
                       Información Básica
                     </Text>
 
@@ -333,7 +333,7 @@ useEffect(() => {
                           <Badge colorScheme={isComputer ? "blue" : "gray"} variant="subtle">
                             {isComputer ? "Computadora" : "Bien General"}
                           </Badge>
-                          {isComputer && <Icon as={FiCpu} color="blue.500" boxSize={4} />}
+                          {isComputer && <Icon as={FiCpu} color="type.primary" boxSize={4} />}
                         </HStack>
                       </Box>
 
@@ -375,7 +375,7 @@ useEffect(() => {
               <Card bg={cardBg} border="1px" borderColor={borderColor}>
                 <CardBody>
                   <VStack spacing={4} align="stretch">
-                    <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                    <Text fontSize="lg" fontWeight="bold" color="type.primary">
                       Especificaciones Técnicas
                     </Text>
 
@@ -430,7 +430,7 @@ useEffect(() => {
               <Card bg={cardBg} border="1px" borderColor={borderColor}>
                 <CardBody>
                   <VStack spacing={4} align="stretch">
-                    <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                    <Text fontSize="lg" fontWeight="bold" color="type.primary">
                       Información Financiera
                     </Text>
 
@@ -468,20 +468,20 @@ useEffect(() => {
             <Box>
               {loadingComponents ? (
                 <Flex justify="center" align="center" py={10}>
-                  <Spinner size="xl" color="blue.500" />
+                  <Spinner size="xl" color="type.primary" />
                   <Text ml={4}>Cargando componentes...</Text>
                 </Flex>
               ) : isEditingComponents ? (
                 <VStack spacing={4} align="stretch">
                   <HStack justify="space-between" align="center">
-                    <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                    <Text fontSize="lg" fontWeight="bold" color="type.primary">
                       Editar Componentes
                     </Text>
                     <HStack spacing={2}>
                       <Button size="sm" variant="outline" onClick={handleCancelEdit}>
                         Cancelar
                       </Button>
-                      <Button size="sm" colorScheme="blue" onClick={handleSaveComponents}>
+                      <Button size="sm" color="white" colorScheme="purple" bg={"type.primary"} onClick={handleSaveComponents}>
                         Guardar
                       </Button>
                     </HStack>
@@ -497,17 +497,17 @@ useEffect(() => {
                   <Text fontSize="sm" color="gray.400" textAlign="center">
                     Esta computadora no tiene componentes registrados
                   </Text>
-                  <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={handleEditComponents}>
+                  <Button leftIcon={<FiPlus />} color="type.title" onClick={handleEditComponents}>
                     Agregar Componentes
                   </Button>
                 </VStack>
               ) : (
                 <VStack spacing={4} align="stretch">
                   <HStack justify="space-between" align="center">
-                    <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                    <Text fontSize="lg" fontWeight="bold" color="type.primary">
                       Componentes de la Computadora ({components.length})
                     </Text>
-                    <Button leftIcon={<FiEdit />} size="sm" colorScheme="blue" onClick={handleEditComponents}>
+                    <Button leftIcon={<FiEdit />} size="sm" color="type.title" colorScheme="white" onClick={handleEditComponents}>
                       Editar
                     </Button>
                   </HStack>
@@ -524,7 +524,7 @@ useEffect(() => {
                       >
                         <CardBody>
                           <HStack spacing={3} align="start">
-                            <Icon as={getComponentIcon(component.nombre)} color="blue.500" boxSize={5} mt={1} />
+                            <Icon as={getComponentIcon(component.nombre)} color="type.primary" boxSize={5} mt={1} />
                             <VStack align="start" spacing={1} flex={1}>
                               <Text fontWeight="bold" fontSize="md">
                                 {component.nombre}

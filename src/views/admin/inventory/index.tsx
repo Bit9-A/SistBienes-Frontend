@@ -38,6 +38,8 @@ import {
 } from '../../../api/SettingsApi';
 import axiosInstance from '../../../utils/axiosInstance';
 import { getProfile } from 'api/UserApi';
+import { exportBM1WithMarkers } from 'views/admin/inventory/utils/inventoryExcel';
+import { ExportBM1Modal } from './components/ExportBM1Modal';
 
 export default function Inventory() {
   const [assets, setAssets] = useState([]);
@@ -53,6 +55,7 @@ export default function Inventory() {
   const [userProfile, setUserProfile] = useState(null);
   const [canFilterByDept, setCanFilterByDept] = useState(false);
   const [userAssets, setUserAssets] = useState([]);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   //Obtener los estados de bienes /goods-status
   const getAssetStates = async () => {
@@ -64,9 +67,10 @@ export default function Inventory() {
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [filters, setFilters] = useState({
     departmentId: undefined,
-    date: '',
+    startDate: '',
+    endDate: '',
     order: 'recent',
-    search: '', // <-- agrega esto para evitar el error
+    search: '',
   });
 
   // Colores y estilos
@@ -75,6 +79,12 @@ export default function Inventory() {
   const textColor = useColorModeValue('gray.800', 'white');
   const hoverBg = useColorModeValue('gray.100', 'gray.700');
   const bg = useColorModeValue('gray.50', 'gray.900');
+
+  const nombreDepartamentoSeleccionado = (() => {
+    if (!filters.departmentId) return '';
+    const dept = departments.find((d) => d.id === filters.departmentId);
+    return dept ? dept.nombre : '';
+  })();
 
   // Fetch data
   useEffect(() => {
@@ -150,9 +160,14 @@ export default function Inventory() {
       filtered = filtered.filter((a) => a.dept_id === filters.departmentId);
     }
 
-    if (filters.date) {
+    if (filters.startDate) {
       filtered = filtered.filter(
-        (a) => a.fecha && a.fecha.startsWith(filters.date),
+        (a) => a.fecha && new Date(a.fecha) >= new Date(filters.startDate),
+      );
+    }
+    if (filters.endDate) {
+      filtered = filtered.filter(
+        (a) => a.fecha && new Date(a.fecha) <= new Date(filters.endDate),
       );
     }
 
@@ -205,9 +220,10 @@ export default function Inventory() {
   const handleFilter = (newFilters: any) => {
     setFilters({
       departmentId: newFilters.departmentId,
-      date: newFilters.date,
+      startDate: newFilters.startDate,
+      endDate: newFilters.endDate,
       order: newFilters.order,
-      search: newFilters.search, // <-- agrega esto
+      search: newFilters.search,
     });
   };
 
@@ -342,6 +358,22 @@ export default function Inventory() {
 
         {/* Tab Content */}
         <Box>
+          <Flex alignContent={'flex-end'} justifyContent={'flex-end'} mb={4}>
+            
+            {/*Si el usuario es administrador o de bienes*/}
+            <Button
+              colorScheme="green"
+              onClick={() => {
+                if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === 'Bienes')) {
+                  setIsExportModalOpen(true);
+                } else {
+                  exportBM1WithMarkers(userProfile?.dept_id, userProfile?.dept_nombre);
+                }
+              }}
+            >
+              Exportar a Excel
+            </Button>
+          </Flex>
           {/* Filtros y tabla de bienes */}
           <Card
             bg={cardBg}
@@ -369,27 +401,29 @@ export default function Inventory() {
                     canFilterByDept={canFilterByDept}
                   />
                 </Box>
-                <Button
-                  bgColor="type.primary"
-                  colorScheme="purple"
-                  size={{ base: 'md', md: 'md' }}
-                  leftIcon={<BsBox2 />}
-                  onClick={() => {
-                    setSelectedAsset(null);
-                    setIsEditing(false);
-                    setIsFormOpen(true);
-                  }}
-                  w={{ base: 'full', lg: 'auto' }}
-                  minW={{ base: 'auto', lg: '160px' }}
-                  fontSize={{ base: 'sm', md: 'md' }}
-                >
-                  <Box display={{ base: 'none', sm: 'block' }}>
-                    Agregar Bien
-                  </Box>
-                  <Box display={{ base: 'block', sm: 'none' }}>Agregar</Box>
-                </Button>
+                <Flex gap={2} align="center">
+                  {/* Aquí puedes agregar el botón de importar si lo necesitas */}
+                  <Button
+                    bgColor="type.primary"
+                    colorScheme="purple"
+                    size={{ base: 'md', md: 'md' }}
+                    leftIcon={<BsBox2 />}
+                    onClick={() => {
+                      setSelectedAsset(null);
+                      setIsEditing(false);
+                      setIsFormOpen(true);
+                    }}
+                    w={{ base: 'full', lg: 'auto' }}
+                    minW={{ base: 'auto', lg: '160px' }}
+                    fontSize={{ base: 'sm', md: 'md' }}
+                  >
+                    <Box display={{ base: 'none', sm: 'block' }}>
+                      Agregar Bien
+                    </Box>
+                    <Box display={{ base: 'block', sm: 'none' }}>Agregar</Box>
+                  </Button>
+                </Flex>
               </Flex>
-
               <Box
                 bg={cardBg}
                 p={{ base: 2, md: 4 }}
@@ -423,6 +457,13 @@ export default function Inventory() {
                   assetStates={assetStates}
                 />
               )}
+
+              <ExportBM1Modal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                departments={departments}
+                onExport={exportBM1WithMarkers}
+              />
             </CardBody>
           </Card>
         </Box>

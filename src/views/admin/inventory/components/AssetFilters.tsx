@@ -31,7 +31,8 @@ interface AssetFiltersProps {
   departments: { id: number; nombre: string }[];
   onFilter: (filters: {
     departmentId?: number;
-    date?: string;
+    startDate?: string;
+    endDate?: string;
     order?: 'recent' | 'oldest';
     search?: string;
   }) => void;
@@ -44,7 +45,8 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
   canFilterByDept = false,
 }) => {
   const [departmentId, setDepartmentId] = useState<number | undefined>();
-  const [date, setDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [order, setOrder] = useState<'recent' | 'oldest'>('recent');
   const [search, setSearch] = useState<string>('');
 
@@ -55,32 +57,37 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
   // Contar filtros activos
   const activeFiltersCount = [
     canFilterByDept ? departmentId !== undefined : false,
-    !!date,
+    !!startDate,
+    !!endDate,
     order !== 'recent',
     !!search, // <-- nuevo
   ].filter(Boolean).length;
 
-  useEffect(() => {
-    onFilter({
-      departmentId: canFilterByDept ? departmentId : undefined,
-      date,
-      order,
-      search, // <-- nuevo
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departmentId, date, order, canFilterByDept, search]);
+useEffect(() => {
+  onFilter({
+    departmentId: canFilterByDept ? departmentId : undefined,
+    startDate,
+    endDate,
+    order,
+    search,
+  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [departmentId, startDate, endDate, order, canFilterByDept, search]);
 
-  const handleClear = () => {
-    setDepartmentId(undefined);
-    setDate('');
-    setOrder('recent');
-    onFilter({
-      departmentId: undefined,
-      date: '',
-      order: 'recent',
-    });
-  };
-
+const handleClear = () => {
+  setDepartmentId(undefined);
+  setStartDate('');
+  setEndDate('');
+  setOrder('recent');
+  setSearch('');
+  onFilter({
+    departmentId: undefined,
+    startDate: '',
+    endDate: '',
+    order: 'recent',
+    search: '',
+  });
+};
   return (
     <Box>
       {/* Header with Filters Title and Clear Button */}
@@ -172,7 +179,7 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
 
         <FormControl>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
-            Fecha
+            Fecha desde
           </FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none">
@@ -180,8 +187,25 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
             </InputLeftElement>
             <Input
               type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              pl={10}
+              borderRadius="md"
+            />
+          </InputGroup>
+        </FormControl>
+        <FormControl>
+          <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
+            Fecha hasta
+          </FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiCalendar} color="gray.400" />
+            </InputLeftElement>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
               pl={10}
               borderRadius="md"
             />
