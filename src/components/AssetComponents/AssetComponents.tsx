@@ -1,21 +1,23 @@
+"use client"
+
 import React from "react"
 import {
   Box,
   VStack,
-  Heading,
   HStack,
-  Icon,
   Text,
-  Divider,
   FormControl,
   FormLabel,
   Input,
   FormErrorMessage,
   Button,
-  CloseButton,
+  IconButton,
   SimpleGrid,
+  useColorModeValue,
+  Divider,
+  Icon,
 } from "@chakra-ui/react"
-import { FiCpu, FiHardDrive, FiBox, FiPlus } from "react-icons/fi"
+import { FiPlus, FiTrash2, FiCpu, FiHardDrive, FiBox } from "react-icons/fi"
 
 export interface ComponentData {
   tipo: string // Ej: "TM", "CPU", "RAM", "HDD", "SSD", "PS"
@@ -28,18 +30,10 @@ interface AssetComponentsProps {
   setComponents: React.Dispatch<React.SetStateAction<ComponentData[]>>
 }
 
-const BASE_COMPONENTS = [
-  { tipo: "TM", label: "Tarjeta Madre", icon: FiBox, color: "blue.500" },
-  { tipo: "CPU", label: "Procesador", icon: FiCpu, color: "green.500" },
-  { tipo: "RAM", label: "RAM", icon: FiBox, color: "orange.500" },
-  { tipo: "HDD", label: "Disco Duro (HDD)", icon: FiHardDrive, color: "purple.500" },
-  { tipo: "PS", label: "Fuente de Poder", icon: FiBox, color: "purple.500" },
-]
+const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setComponents }) => {
+  const borderColor = useColorModeValue("gray.200", "gray.600")
+  const cardBg = useColorModeValue("white", "gray.700")
 
-const AssetComponents: React.FC<AssetComponentsProps> = ({
-  components,
-  setComponents,
-}) => {
   // Inicializar componentes fijos si el array está vacío
   React.useEffect(() => {
     if (components.length === 0) {
@@ -48,232 +42,277 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({
         { tipo: "CPU", nombre: "", numero_serial: "" },
         { tipo: "RAM", nombre: "", numero_serial: "" },
         { tipo: "HDD", nombre: "", numero_serial: "" },
+        { tipo: "SSD", nombre: "", numero_serial: "" },
         { tipo: "PS", nombre: "", numero_serial: "" },
       ])
     }
     // eslint-disable-next-line
   }, [])
 
-  // Agregar RAM
+  // Agregar RAM adicional
   const handleAddRam = () => {
-    // Inserta después del último RAM
-    const lastRamIdx = components.map(c => c.tipo).lastIndexOf("RAM")
+    const lastRamIdx = components.map((c) => c.tipo).lastIndexOf("RAM")
     const newArr = [...components]
     newArr.splice(lastRamIdx + 1, 0, { tipo: "RAM", nombre: "", numero_serial: "" })
     setComponents(newArr)
   }
 
-  // Agregar Disco Duro HDD
+  // Agregar HDD adicional
   const handleAddHDD = () => {
-    // Inserta después del último HDD
-    const lastHddIdx = components.map(c => c.tipo).lastIndexOf("HDD")
+    const lastHddIdx = components.map((c) => c.tipo).lastIndexOf("HDD")
     const newArr = [...components]
     newArr.splice(lastHddIdx + 1, 0, { tipo: "HDD", nombre: "", numero_serial: "" })
     setComponents(newArr)
   }
 
-  // Agregar Disco Duro SSD (al final de los discos)
+  // Agregar SSD adicional
   const handleAddSSD = () => {
-    // Inserta después del último SSD o HDD
-    const lastDiskIdx = Math.max(
-      components.map(c => c.tipo).lastIndexOf("HDD"),
-      components.map(c => c.tipo).lastIndexOf("SSD")
-    )
-    const insertIdx = lastDiskIdx >= 0 ? lastDiskIdx + 1 : components.length - 1
+    const lastSsdIdx = components.map((c) => c.tipo).lastIndexOf("SSD")
     const newArr = [...components]
-    newArr.splice(insertIdx, 0, { tipo: "SSD", nombre: "", numero_serial: "" })
+    newArr.splice(lastSsdIdx + 1, 0, { tipo: "SSD", nombre: "", numero_serial: "" })
     setComponents(newArr)
   }
 
-  // Eliminar RAM o Disco Duro extra (no los fijos)
+  // Eliminar componente extra
   const handleRemove = (idx: number) => {
-    setComponents(prev => prev.filter((_, i) => i !== idx))
+    setComponents((prev) => prev.filter((_, i) => i !== idx))
   }
 
-  // Cambiar nombre o serial de un componente
+  // Cambiar descripción o serial de un componente
   const handleChange = (idx: number, field: "nombre" | "numero_serial", value: string) => {
-    setComponents(prev =>
-      prev.map((c, i) => (i === idx ? { ...c, [field]: value } : c))
-    )
+    setComponents((prev) => prev.map((c, i) => (i === idx ? { ...c, [field]: value } : c)))
   }
 
   // Para mostrar el label correcto y numerar RAM y discos
   const getLabel = (comp: ComponentData, idx: number) => {
     if (comp.tipo === "RAM") {
-      const ramIndexes = components
-        .map((c, i) => (c.tipo === "RAM" ? i : -1))
-        .filter(i => i !== -1)
-      if (ramIndexes.length === 1) return "RAM"
+      const ramIndexes = components.map((c, i) => (c.tipo === "RAM" ? i : -1)).filter((i) => i !== -1)
+      if (ramIndexes.length === 1) return "Memoria RAM"
       const ramIndex = ramIndexes.indexOf(idx) + 1
-      return `RAM ${ramIndex}`
+      return `Memoria RAM ${ramIndex}`
     }
     if (comp.tipo === "HDD") {
-      const hddIndexes = components
-        .map((c, i) => (c.tipo === "HDD" ? i : -1))
-        .filter(i => i !== -1)
-      if (hddIndexes.length === 1) return "Disco Duro HDD"
+      const hddIndexes = components.map((c, i) => (c.tipo === "HDD" ? i : -1)).filter((i) => i !== -1)
+      if (hddIndexes.length === 1) return "Disco Duro (HDD)"
       const hddIndex = hddIndexes.indexOf(idx) + 1
-      return `Disco Duro HDD ${hddIndex}`
+      return `Disco Duro ${hddIndex} (HDD)`
     }
     if (comp.tipo === "SSD") {
-      const ssdIndexes = components
-        .map((c, i) => (c.tipo === "SSD" ? i : -1))
-        .filter(i => i !== -1)
-      if (ssdIndexes.length === 1) return "Disco Duro SSD"
+      const ssdIndexes = components.map((c, i) => (c.tipo === "SSD" ? i : -1)).filter((i) => i !== -1)
+      if (ssdIndexes.length === 1) return "Disco Sólido (SSD)"
       const ssdIndex = ssdIndexes.indexOf(idx) + 1
-      return `Disco Duro SSD ${ssdIndex}`
+      return `Disco Sólido ${ssdIndex} (SSD)`
     }
     if (comp.tipo === "TM") return "Tarjeta Madre"
-    if (comp.tipo === "CPU") return "Procesador"
+    if (comp.tipo === "CPU") return "Procesador (CPU)"
     if (comp.tipo === "PS") return "Fuente de Poder"
     return comp.tipo
   }
 
-  // Para mostrar el icono correcto
+  // Obtener icono para cada tipo de componente
   const getIcon = (tipo: string) => {
-    if (tipo === "CPU") return FiCpu
-    if (tipo === "RAM") return FiBox
-    if (tipo === "HDD" || tipo === "SSD") return FiHardDrive
-    if (tipo === "TM" || tipo === "PS") return FiBox
-    return FiBox
+    switch (tipo) {
+      case "CPU":
+        return FiCpu
+      case "HDD":
+      case "SSD":
+        return FiHardDrive
+      default:
+        return FiBox
+    }
   }
 
+  // Obtener color para cada tipo de componente
   const getColor = (tipo: string) => {
-    if (tipo === "CPU") return "green.500"
-    if (tipo === "RAM") return "orange.500"
-    if (tipo === "HDD" || tipo === "SSD") return "purple.500"
-    if (tipo === "TM") return "blue.500"
-    if (tipo === "PS") return "purple.500"
-    return "gray.500"
+    switch (tipo) {
+      case "TM":
+        return "blue.500"
+      case "CPU":
+        return "green.500"
+      case "RAM":
+        return "orange.500"
+      case "HDD":
+        return "purple.500"
+      case "SSD":
+        return "cyan.500"
+      case "PS":
+        return "red.500"
+      default:
+        return "gray.500"
+    }
   }
 
-  // Solo permite eliminar RAM, HDD o SSD agregados extra (no los fijos)
+  // Verificar si un componente es requerido individualmente
+  const isIndividuallyRequired = (tipo: string) => {
+    return ["TM", "CPU", "RAM", "PS"].includes(tipo)
+  }
+
+  // Verificar si al menos uno de los discos está completo
+  const hasAtLeastOneDisk = () => {
+    const hddComponents = components.filter((c) => c.tipo === "HDD")
+    const ssdComponents = components.filter((c) => c.tipo === "SSD")
+
+    const hasCompleteHDD = hddComponents.some((comp) => comp.nombre.trim() && comp.numero_serial.trim())
+    const hasCompleteSSD = ssdComponents.some((comp) => comp.nombre.trim() && comp.numero_serial.trim())
+
+    return hasCompleteHDD || hasCompleteSSD
+  }
+
+  // Verificar si un disco específico debe mostrar error
+  const shouldShowDiskError = (comp: ComponentData, idx: number) => {
+    if (!["HDD", "SSD"].includes(comp.tipo)) return false
+
+    // Si ya hay al menos un disco completo, no mostrar error
+    if (hasAtLeastOneDisk()) return false
+
+    // Si este disco no está completo y no hay otros discos completos, mostrar error
+    const isThisDiskComplete = comp.nombre.trim() && comp.numero_serial.trim()
+    return !isThisDiskComplete
+  }
+
+  // Solo permite eliminar RAM, HDD o SSD agregados extra
   const isRemovable = (comp: ComponentData, idx: number) => {
-    // Solo puedes eliminar si no es el primero de su tipo
     if (comp.tipo === "RAM") {
-      const ramIndexes = components
-        .map((c, i) => (c.tipo === "RAM" ? i : -1))
-        .filter(i => i !== -1)
+      const ramIndexes = components.map((c, i) => (c.tipo === "RAM" ? i : -1)).filter((i) => i !== -1)
       return ramIndexes.indexOf(idx) > 0
     }
     if (comp.tipo === "HDD") {
-      const hddIndexes = components
-        .map((c, i) => (c.tipo === "HDD" ? i : -1))
-        .filter(i => i !== -1)
+      const hddIndexes = components.map((c, i) => (c.tipo === "HDD" ? i : -1)).filter((i) => i !== -1)
       return hddIndexes.indexOf(idx) > 0
     }
     if (comp.tipo === "SSD") {
-      // Todos los SSD pueden eliminarse
-      return true
+      const ssdIndexes = components.map((c, i) => (c.tipo === "SSD" ? i : -1)).filter((i) => i !== -1)
+      return ssdIndexes.indexOf(idx) > 0
     }
     return false
   }
 
   // Orden visual: TM, CPU, todas las RAM, todos los HDD, todos los SSD, PS
   const orderedComponents = [
-    ...components.filter(c => c.tipo === "TM"),
-    ...components.filter(c => c.tipo === "CPU"),
-    ...components.filter(c => c.tipo === "RAM"),
-    ...components.filter(c => c.tipo === "HDD"),
-    ...components.filter(c => c.tipo === "SSD"),
-    ...components.filter(c => c.tipo === "PS"),
+    ...components.filter((c) => c.tipo === "TM"),
+    ...components.filter((c) => c.tipo === "CPU"),
+    ...components.filter((c) => c.tipo === "RAM"),
+    ...components.filter((c) => c.tipo === "HDD"),
+    ...components.filter((c) => c.tipo === "SSD"),
+    ...components.filter((c) => c.tipo === "PS"),
   ]
 
   return (
     <Box>
-      <VStack spacing={6} align="stretch">
+      <VStack spacing={4} align="stretch">
         <Box textAlign="center">
-          <Heading size="md" mb={2}>
-            <HStack justify="center" spacing={2}>
-              <Icon as={FiCpu} color="blue.500" />
-              <Text>Componentes de la Computadora</Text>
-            </HStack>
-          </Heading>
+          <Text fontSize="lg" fontWeight="bold" mb={1}>
+            Componentes de la Computadora
+          </Text>
           <Text fontSize="sm" color="gray.600">
-            Complete la información de cada componente. Todos los campos son obligatorios.
+            Complete la información de cada componente. Los campos marcados con * son obligatorios.
+          </Text>
+          <Text fontSize="xs" color="orange.600" mt={1}>
+            Debe completar al menos un disco de almacenamiento (HDD o SSD)
           </Text>
         </Box>
 
         <Divider />
 
-        <VStack spacing={6} align="stretch">
-          {orderedComponents.map((comp, idx) => (
-            <Box
-              key={idx}
-              borderWidth="1px"
-              borderRadius="md"
-              p={4}
-              bg="gray.50"
-              _dark={{ bg: "gray.800" }}
-              position="relative"
-            >
-              <HStack mb={4}>
-                <Icon as={getIcon(comp.tipo)} color={getColor(comp.tipo)} boxSize={5} />
-                <Text fontWeight="bold" fontSize="lg">{getLabel(comp, components.indexOf(comp))}</Text>
-                {isRemovable(comp, components.indexOf(comp)) && (
-                  <CloseButton
-                    size="sm"
-                    color="red.500"
-                    onClick={() => handleRemove(components.indexOf(comp))}
-                    ml={2}
-                  />
-                )}
-              </HStack>
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                <FormControl isRequired mb={2} isInvalid={!comp.nombre}>
-                  <FormLabel>Nombre</FormLabel>
-                  <Input
-                    placeholder={`Nombre del ${getLabel(comp, components.indexOf(comp))}`}
-                    value={comp.nombre}
-                    onChange={e => handleChange(components.indexOf(comp), "nombre", e.target.value)}
-                    size="md"
-                    isRequired
-                  />
-                  {!comp.nombre && (
-                    <FormErrorMessage>El nombre es obligatorio</FormErrorMessage>
+        <VStack spacing={3} align="stretch">
+          {orderedComponents.map((comp, idx) => {
+            const isRequired = isIndividuallyRequired(comp.tipo)
+            const isDisk = ["HDD", "SSD"].includes(comp.tipo)
+            const showDiskError = shouldShowDiskError(comp, idx)
+            const isFieldRequired = isRequired || (isDisk && !hasAtLeastOneDisk())
+
+            return (
+              <Box key={idx} p={4} bg={cardBg} border="1px" borderColor={borderColor} borderRadius="lg" shadow="sm">
+                <HStack mb={3} justify="space-between" align="center">
+                  <HStack spacing={2}>
+                    <Icon as={getIcon(comp.tipo)} color={getColor(comp.tipo)} boxSize={4} />
+                    <Text fontWeight="medium" fontSize="sm">
+                      {getLabel(comp, idx)}
+                      {isRequired && (
+                        <Text as="span" color="red.500" ml={1}>
+                          *
+                        </Text>
+                      )}
+                      {isDisk && !isRequired && (
+                        <Text as="span" color="orange.500" fontSize="xs" ml={1}>
+                          (Al menos uno requerido)
+                        </Text>
+                      )}
+                    </Text>
+                  </HStack>
+                  {isRemovable(comp, idx) && (
+                    <IconButton
+                      aria-label="Eliminar componente"
+                      icon={<FiTrash2 />}
+                      size="xs"
+                      colorScheme="red"
+                      variant="ghost"
+                      onClick={() => handleRemove(idx)}
+                    />
                   )}
-                </FormControl>
-                <FormControl isRequired isInvalid={!comp.numero_serial}>
-                  <FormLabel>Serial</FormLabel>
-                  <Input
-                    placeholder={`Serial del ${getLabel(comp, components.indexOf(comp))}`}
-                    value={comp.numero_serial}
-                    onChange={e => handleChange(components.indexOf(comp), "numero_serial", e.target.value)}
-                    size="md"
-                    isRequired
-                  />
-                  {!comp.numero_serial && (
-                    <FormErrorMessage>El serial es obligatorio</FormErrorMessage>
-                  )}
-                </FormControl>
-              </SimpleGrid>
-            </Box>
-          ))}
+                </HStack>
+
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+                  <FormControl isRequired={isFieldRequired} isInvalid={!comp.nombre && (isRequired || showDiskError)}>
+                    <FormLabel fontSize="xs" mb={1} color="gray.600">
+                      Descripción{" "}
+                      {(isRequired || (isDisk && !hasAtLeastOneDisk())) && (
+                        <Text as="span" color="red.500">
+                          *
+                        </Text>
+                      )}
+                    </FormLabel>
+                    <Input
+                      placeholder={`Descripción del ${getLabel(comp, idx).toLowerCase()}`}
+                      value={comp.nombre}
+                      onChange={(e) => handleChange(idx, "nombre", e.target.value)}
+                      size="sm"
+                    />
+                    {!comp.nombre && (isRequired || showDiskError) && (
+                      <FormErrorMessage fontSize="xs">
+                        {isRequired ? "Este campo es obligatorio" : "Complete al menos un disco de almacenamiento"}
+                      </FormErrorMessage>
+                    )}
+                  </FormControl>
+
+                  <FormControl
+                    isRequired={isFieldRequired}
+                    isInvalid={!comp.numero_serial && (isRequired || showDiskError)}
+                  >
+                    <FormLabel fontSize="xs" mb={1} color="gray.600">
+                      Número Serial{" "}
+                      {(isRequired || (isDisk && !hasAtLeastOneDisk())) && (
+                        <Text as="span" color="red.500">
+                          *
+                        </Text>
+                      )}
+                    </FormLabel>
+                    <Input
+                      placeholder="Número serial"
+                      value={comp.numero_serial}
+                      onChange={(e) => handleChange(idx, "numero_serial", e.target.value)}
+                      size="sm"
+                    />
+                    {!comp.numero_serial && (isRequired || showDiskError) && (
+                      <FormErrorMessage fontSize="xs">
+                        {isRequired ? "Este campo es obligatorio" : "Complete al menos un disco de almacenamiento"}
+                      </FormErrorMessage>
+                    )}
+                  </FormControl>
+                </SimpleGrid>
+              </Box>
+            )
+          })}
         </VStack>
 
-        <HStack w="100%" justify="flex-end" spacing={4}>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="orange"
-            variant="outline"
-            onClick={handleAddRam}
-          >
+        <HStack justify="center" spacing={2} pt={2} wrap="wrap">
+          <Button leftIcon={<FiPlus />} size="sm" variant="outline" colorScheme="orange" onClick={handleAddRam}>
             Agregar RAM
           </Button>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="purple"
-            variant="outline"
-            onClick={handleAddHDD}
-          >
+          <Button leftIcon={<FiPlus />} size="sm" variant="outline" colorScheme="purple" onClick={handleAddHDD}>
             Agregar HDD
           </Button>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="blue"
-            variant="outline"
-            onClick={handleAddSSD}
-          >
+          <Button leftIcon={<FiPlus />} size="sm" variant="outline" colorScheme="cyan" onClick={handleAddSSD}>
             Agregar SSD
           </Button>
         </HStack>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -15,11 +15,11 @@ import {
   Stack,
   Textarea,
   useToast,
-} from "@chakra-ui/react";
-import AssetsTableCustom from "views/admin/inventory/components/AssetsTableCustom";
-import type { Desincorp } from "api/IncorpApi";
-import type { Department, ConceptoMovimiento, SubGroup } from "api/SettingsApi";
-import type { MovableAsset } from "api/AssetsApi";
+} from '@chakra-ui/react';
+import AssetsTableCustom from 'views/admin/inventory/components/AssetsTableCustom';
+import type { Desincorp } from 'api/IncorpApi';
+import type { Department, ConceptoMovimiento, SubGroup } from 'api/SettingsApi';
+import type { MovableAsset } from 'api/AssetsApi';
 
 interface DisposalsFormProps {
   isOpen: boolean;
@@ -36,6 +36,7 @@ interface DisposalsFormProps {
   subgroups: SubGroup[];
   disposals: Desincorp[];
   onCreated?: (nuevos: Desincorp[]) => void;
+  userProfile?: any; // Perfil del usuario, si es necesario
 }
 
 export default function DisposalsForm({
@@ -53,18 +54,54 @@ export default function DisposalsForm({
   subgroups,
   disposals,
   onCreated,
+  userProfile,
 }: DisposalsFormProps) {
   const [showAssetSelector, setShowAssetSelector] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([]);
-  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(undefined);
+  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(
+    undefined,
+  );
+  const [selectedDeptDestinoId, setSelectedDeptDestinoId] = useState<
+    number | undefined
+  >(undefined);
+
   const toast = useToast();
+
+  const isAdminOrBienes =
+    userProfile?.tipo_usuario === 1 || userProfile?.dept_nombre === 'Bienes';
+
+  useEffect(() => {
+    if (!isAdminOrBienes && userProfile?.dept_id) {
+      setSelectedDeptId(userProfile.dept_id);
+      setNewDisposal({
+        ...newDisposal,
+        dept_id: userProfile.dept_id,
+      });
+    }
+    // eslint-disable-next-line
+  }, [userProfile, isAdminOrBienes]);
+
+  const conceptosFiltrados = isAdminOrBienes
+    ? concepts
+    : concepts.filter((c) => c.codigo === '51');
+
+  useEffect(() => {
+    // Si el concepto no es 51, limpia el destino
+    if (
+      newDisposal.concepto_id &&
+      concepts.find((c) => c.id === Number(newDisposal.concepto_id))?.codigo !==
+        '51'
+    ) {
+      setSelectedDeptDestinoId(undefined);
+    }
+  }, [newDisposal.concepto_id, concepts]);
 
   // Cuando seleccionas para editar, carga el bien seleccionado en el array para mostrarlo en el input
   useEffect(() => {
     if (selectedDisposal) {
       setSelectedDeptId(selectedDisposal.dept_id);
       setSelectedAssets(
-        assets.filter((a) => a.id === selectedDisposal.bien_id)
+        assets.filter((a) => a.id === selectedDisposal.bien_id),
       );
       setNewDisposal(selectedDisposal);
     } else {
@@ -87,7 +124,9 @@ export default function DisposalsForm({
   const bienesDisponibles = useMemo(() => {
     if (!selectedDeptId) return [];
     return assets.filter(
-      (a) => a.dept_id === selectedDeptId && !bienesDesincorporadosEnDept.includes(a.id)
+      (a) =>
+        a.dept_id === selectedDeptId &&
+        !bienesDesincorporadosEnDept.includes(a.id),
     );
   }, [assets, bienesDesincorporadosEnDept, selectedDeptId]);
 
@@ -121,9 +160,9 @@ export default function DisposalsForm({
   const handleAddMultiple = async () => {
     if (!selectedDeptId || selectedAssets.length === 0) {
       toast({
-        title: "Campos requeridos",
-        description: "Seleccione un departamento y al menos un bien.",
-        status: "warning",
+        title: 'Campos requeridos',
+        description: 'Seleccione un departamento y al menos un bien.',
+        status: 'warning',
         duration: 3000,
         isClosable: true,
       });
@@ -133,7 +172,7 @@ export default function DisposalsForm({
     for (const asset of selectedAssets) {
       const dataToSend: Partial<Desincorp> = {
         bien_id: asset.id,
-        fecha: newDisposal.fecha ?? "",
+        fecha: newDisposal.fecha ?? '',
         valor: asset.valor_total,
         cantidad: 1,
         concepto_id: Number(newDisposal.concepto_id),
@@ -165,11 +204,13 @@ export default function DisposalsForm({
         />
       )}
 
-      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : "lg"}>
+      <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? 'full' : 'lg'}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {selectedDisposal ? "Editar Desincorporación" : "Nueva Desincorporación"}
+            {selectedDisposal
+              ? 'Editar Desincorporación'
+              : 'Nueva Desincorporación'}
           </ModalHeader>
           <ModalCloseButton />
           <form
@@ -200,22 +241,32 @@ export default function DisposalsForm({
                   <FormLabel>Departamento</FormLabel>
                   <Select
                     name="dept_id"
-                    value={selectedDeptId ?? ""}
+                    value={selectedDeptId ?? ''}
                     onChange={handleDeptChange}
-                    disabled={!!selectedDisposal} // Deshabilita si estás editando
+                    disabled={!isAdminOrBienes || !!selectedDisposal}
                   >
                     <option value="">Seleccione</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.nombre}
-                      </option>
-                    ))}
+                    {isAdminOrBienes
+                      ? departments.map((dept) => (
+                          <option key={dept.id} value={dept.id}>
+                            {dept.nombre}
+                          </option>
+                        ))
+                      : departments
+                          .filter((dept) => dept.id === userProfile?.dept_id)
+                          .map((dept) => (
+                            <option key={dept.id} value={dept.id}>
+                              {dept.nombre}
+                            </option>
+                          ))}
                   </Select>
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel>Bien(es)</FormLabel>
                   <Input
-                    value={selectedAssets.map((a) => a.numero_identificacion).join(", ")}
+                    value={selectedAssets
+                      .map((a) => a.numero_identificacion)
+                      .join(', ')}
                     isReadOnly
                     placeholder="Seleccione bienes"
                     onClick={() =>
@@ -225,8 +276,8 @@ export default function DisposalsForm({
                     }
                     cursor={
                       selectedDeptId && !selectedDisposal
-                        ? "pointer"
-                        : "not-allowed"
+                        ? 'pointer'
+                        : 'not-allowed'
                     }
                   />
                   <Button
@@ -247,7 +298,7 @@ export default function DisposalsForm({
                   <Input
                     name="fecha"
                     type="date"
-                    value={newDisposal.fecha ?? ""}
+                    value={newDisposal.fecha ?? ''}
                     onChange={(e) =>
                       setNewDisposal({ ...newDisposal, fecha: e.target.value })
                     }
@@ -258,7 +309,7 @@ export default function DisposalsForm({
                   <FormLabel>Concepto</FormLabel>
                   <Select
                     name="concepto_id"
-                    value={newDisposal.concepto_id ?? ""}
+                    value={newDisposal.concepto_id ?? ''}
                     onChange={(e) =>
                       setNewDisposal({
                         ...newDisposal,
@@ -267,18 +318,41 @@ export default function DisposalsForm({
                     }
                   >
                     <option value="">Seleccione</option>
-                    {concepts.map((concept) => (
+                    {conceptosFiltrados.map((concept) => (
                       <option key={concept.id} value={concept.id}>
                         {concept.nombre}
                       </option>
                     ))}
                   </Select>
                 </FormControl>
+                {conceptosFiltrados.find(
+                  (c) => c.id === Number(newDisposal.concepto_id),
+                )?.codigo === '51' && (
+                  <FormControl isRequired>
+                    <FormLabel>Departamento destino</FormLabel>
+                    <Select
+                      name="dept_destino_id"
+                      value={selectedDeptDestinoId ?? ''}
+                      onChange={(e) =>
+                        setSelectedDeptDestinoId(Number(e.target.value))
+                      }
+                      placeholder="Seleccione departamento destino"
+                    >
+                      {departments
+                        .filter((dept) => dept.id !== selectedDeptId) // No mostrar el mismo dept
+                        .map((dept) => (
+                          <option key={dept.id} value={dept.id}>
+                            {dept.nombre}
+                          </option>
+                        ))}
+                    </Select>
+                  </FormControl>
+                )}
                 <FormControl>
                   <FormLabel>Observaciones</FormLabel>
                   <Textarea
                     name="observaciones"
-                    value={newDisposal.observaciones ?? ""}
+                    value={newDisposal.observaciones ?? ''}
                     onChange={(e) =>
                       setNewDisposal({
                         ...newDisposal,
@@ -303,7 +377,7 @@ export default function DisposalsForm({
                   !newDisposal.concepto_id
                 }
               >
-                {selectedDisposal ? "Guardar cambios" : "Agregar"}
+                {selectedDisposal ? 'Guardar cambios' : 'Agregar'}
               </Button>
             </ModalFooter>
           </form>

@@ -24,7 +24,7 @@ export interface Transfer {
   bien_traslado_id: number;
   id_mueble: number;
   responsable_id: number;
-  responsable: string;
+  responsable?: string;
   observaciones?: string;
   bienes?: bienes[]; // Agregar la propiedad bienes
 }

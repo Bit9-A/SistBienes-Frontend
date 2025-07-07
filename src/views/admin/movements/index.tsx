@@ -52,7 +52,10 @@ export default function AssetManagementPage() {
 
   return (
     <Box minH="100vh" bg={bg} pt={{ base: "130px", md: "80px", xl: "80px" }}>
-      <Container maxW="7xl" py={6}>
+      <Container   maxW="100vw"
+  px={{ base: 2, md: 4 }}
+  py={{ base: 2, md: 4 }}
+  w="full">
         {/* Main Header */}
         <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={tabBorderColor} mb={6}>
           <CardHeader>

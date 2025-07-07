@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Input,
@@ -18,64 +18,86 @@ import {
   Badge,
   useBreakpointValue,
   Button,
-} from "@chakra-ui/react";
-import { FiCalendar, FiX, FiFilter, FiUsers, FiChevronDown } from "react-icons/fi";
+} from '@chakra-ui/react';
+import {
+  FiCalendar,
+  FiX,
+  FiFilter,
+  FiUsers,
+  FiChevronDown,
+} from 'react-icons/fi';
 
 interface AssetFiltersProps {
   departments: { id: number; nombre: string }[];
   onFilter: (filters: {
     departmentId?: number;
-    date?: string;
-    order?: "recent" | "oldest";
+    startDate?: string;
+    endDate?: string;
+    order?: 'recent' | 'oldest';
+    search?: string;
   }) => void;
-  canFilterByDept?: boolean; // <-- NUEVO
+  canFilterByDept?: boolean;
 }
 
 export const AssetFilters: React.FC<AssetFiltersProps> = ({
   departments,
   onFilter,
-  canFilterByDept = false, // <-- NUEVO
+  canFilterByDept = false,
 }) => {
   const [departmentId, setDepartmentId] = useState<number | undefined>();
-  const [date, setDate] = useState<string>("");
-  const [order, setOrder] = useState<"recent" | "oldest">("recent");
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [order, setOrder] = useState<'recent' | 'oldest'>('recent');
+  const [search, setSearch] = useState<string>('');
 
-  const badgeBg = useColorModeValue("blue.50", "blue.900");
-  const badgeColor = useColorModeValue("blue.600", "blue.200");
+  const badgeBg = useColorModeValue('blue.50', 'blue.900');
+  const badgeColor = useColorModeValue('blue.600', 'blue.200');
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   // Contar filtros activos
   const activeFiltersCount = [
     canFilterByDept ? departmentId !== undefined : false,
-    !!date,
-    order !== "recent",
+    !!startDate,
+    !!endDate,
+    order !== 'recent',
+    !!search, // <-- nuevo
   ].filter(Boolean).length;
 
-  // Filtrar automáticamente al cambiar cualquier filtro
-  useEffect(() => {
-    onFilter({
-      departmentId: canFilterByDept ? departmentId : undefined,
-      date,
-      order,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departmentId, date, order, canFilterByDept]);
+useEffect(() => {
+  onFilter({
+    departmentId: canFilterByDept ? departmentId : undefined,
+    startDate,
+    endDate,
+    order,
+    search,
+  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [departmentId, startDate, endDate, order, canFilterByDept, search]);
 
-  const handleClear = () => {
-    setDepartmentId(undefined);
-    setDate("");
-    setOrder("recent");
-    onFilter({
-      departmentId: undefined,
-      date: "",
-      order: "recent",
-    });
-  };
-
+const handleClear = () => {
+  setDepartmentId(undefined);
+  setStartDate('');
+  setEndDate('');
+  setOrder('recent');
+  setSearch('');
+  onFilter({
+    departmentId: undefined,
+    startDate: '',
+    endDate: '',
+    order: 'recent',
+    search: '',
+  });
+};
   return (
     <Box>
       {/* Header with Filters Title and Clear Button */}
-      <Flex mb={4} justify="space-between" align="center" flexWrap="wrap" gap={4}>
+      <Flex
+        mb={4}
+        justify="space-between"
+        align="center"
+        flexWrap="wrap"
+        gap={4}
+      >
         <Flex align="center" gap={2}>
           <Icon as={FiFilter} color="blue.500" />
           <Text fontWeight="medium">Filtros</Text>
@@ -103,7 +125,28 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
       <Divider mb={4} />
 
       {/* Filter Controls */}
-      <Stack direction={{ base: "column", md: "row" }} spacing={4} align={{ base: "stretch", md: "flex-end" }}>
+      <Stack
+        direction={{ base: 'column', md: 'row' }}
+        spacing={4}
+        align={{ base: 'stretch', md: 'flex-end' }}
+      >
+        <FormControl>
+          <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
+            Buscar
+          </FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiFilter} color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar en todos los campos"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              borderRadius="md"
+              pl={10}
+            />
+          </InputGroup>
+        </FormControl>
         {canFilterByDept && (
           <FormControl>
             <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
@@ -115,7 +158,7 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
               </InputLeftElement>
               <Select
                 placeholder="Todos los departamentos"
-                value={departmentId !== undefined ? departmentId : ""}
+                value={departmentId !== undefined ? departmentId : ''}
                 onChange={(e) => {
                   const value = e.target.value;
                   setDepartmentId(value ? Number(value) : undefined);
@@ -133,9 +176,10 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
             </InputGroup>
           </FormControl>
         )}
+
         <FormControl>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
-            Fecha
+            Fecha desde
           </FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none">
@@ -143,8 +187,25 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
             </InputLeftElement>
             <Input
               type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              pl={10}
+              borderRadius="md"
+            />
+          </InputGroup>
+        </FormControl>
+        <FormControl>
+          <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
+            Fecha hasta
+          </FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiCalendar} color="gray.400" />
+            </InputLeftElement>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
               pl={10}
               borderRadius="md"
             />
@@ -157,7 +218,7 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
           <Select
             value={order}
             onChange={(e) =>
-              setOrder(e.target.value === "recent" ? "recent" : "oldest")
+              setOrder(e.target.value === 'recent' ? 'recent' : 'oldest')
             }
             borderRadius="md"
             icon={<FiChevronDown />}

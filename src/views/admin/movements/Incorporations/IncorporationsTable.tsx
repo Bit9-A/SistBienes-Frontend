@@ -31,6 +31,8 @@ import { type ConceptoMovimiento, getConceptosMovimientoIncorporacion } from "ap
 import { type MovableAsset, getAssets } from "api/AssetsApi"
 import { type SubGroup, getSubGroupsM } from "api/SettingsApi"
 import { handleCreateIncorp } from "./utils/IncorporationsLogic"
+import { getProfile } from "api/UserApi";
+import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
 
 export default function IncorporationsTable() {
   const today = new Date().toISOString().slice(0, 10)
@@ -47,6 +49,14 @@ export default function IncorporationsTable() {
   const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([])
   const [assets, setAssets] = useState<MovableAsset[]>([])
   const [subgroups, setSubgroups] = useState<SubGroup[]>([])
+ 
+
+  const [userProfile, setUserProfile] = useState<any>(null);
+const [filteredData, setFilteredData] = useState<any[]>([]);
+const [canFilterByDept, setCanFilterByDept] = useState(false);
+const [canNewButton, setCanNewButton] = useState(false);
+ 
+ 
   const toast = useToast()
 
   // UI theme values
@@ -60,7 +70,20 @@ export default function IncorporationsTable() {
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-  // Load data on mount
+useEffect(() => {
+  const fetchProfileAndFilter = async () => {
+    const profile = await getProfile();
+    setUserProfile(profile);
+    const { filtered, canFilterByDept} = filterByUserProfile(incorporations, profile);
+    setCanNewButton(canFilterByDept);
+    setFilteredData(filtered);
+    setCanFilterByDept(canFilterByDept);
+  };
+  fetchProfileAndFilter();
+}, [incorporations]);
+
+
+// Hacer la llamada a la API para obtener los catálogos
 useEffect(() => {
   const fetchCatalogs = async () => {
     try {
@@ -230,15 +253,15 @@ useEffect(() => {
   }
 
   // Filtro igual que transfers: useMemo y compara fechas con new Date()
-  const filteredIncorporations = useMemo(() => {
-    return filterIncorporations(
-      incorporations,
-      "",
-      filterDept,
-      startDate,
-      endDate
-    )
-  }, [incorporations, filterDept, startDate, endDate])
+ const filteredIncorporations = useMemo(() => {
+  return filterIncorporations(
+    filteredData, // <--- aquí el cambio
+    "",
+    filterDept,
+    startDate,
+    endDate
+  )
+}, [filteredData, filterDept, startDate, endDate])
 
   const openEditDialog = (inc: Incorp) => {
     setSelectedIncorporation(inc)
@@ -291,6 +314,8 @@ useEffect(() => {
           startDate={startDate}
           endDate={endDate}
           departments={departments}
+          canFilterByDept={canFilterByDept}
+          canNewButton={canNewButton}
         />
       </CardBody>
     </Card>

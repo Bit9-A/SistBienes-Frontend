@@ -28,6 +28,7 @@ interface DisposalsFiltersProps {
   startDate: string
   endDate: string
   departments: Department[]
+  canFilterByDept?: boolean
 }
 
 export default function DisposalsFilters({
@@ -37,6 +38,7 @@ export default function DisposalsFilters({
   startDate,
   endDate,
   departments,
+  canFilterByDept = false,
 }: DisposalsFiltersProps) {
   // Theme colors for better visual consistency
   const cardBg = useColorModeValue("white", "gray.800")
@@ -141,7 +143,7 @@ export default function DisposalsFilters({
             />
           </InputGroup>
         </FormControl>
-
+        {canFilterByDept && (
         <FormControl>
           <FormLabel htmlFor="departamento" fontSize="sm" fontWeight="medium" mb={1}>
             Departamento
@@ -168,6 +170,8 @@ export default function DisposalsFilters({
             </Select>
           </InputGroup>
         </FormControl>
+        )
+        }
       </Stack>
     </Box>
   )

@@ -28,6 +28,8 @@ interface IncorporationsFiltersProps {
   startDate: string
   endDate: string
   departments: Department[]
+  canFilterByDept?: boolean
+  canNewButton?: boolean
 }
 
 export default function IncorporationsFilters({
@@ -37,6 +39,8 @@ export default function IncorporationsFilters({
   startDate,
   endDate,
   departments,
+  canFilterByDept = false,
+  canNewButton = false,
 }: IncorporationsFiltersProps) {
   // Theme colors for better visual consistency
   const cardBg = useColorModeValue("white", "gray.800")
@@ -77,7 +81,7 @@ export default function IncorporationsFilters({
               Limpiar filtros
             </Button>
           )}
-
+          {canNewButton && (
           <Button
             colorScheme="purple"
             bgColor="type.primary"
@@ -95,6 +99,8 @@ export default function IncorporationsFilters({
           >
             {isMobile ? "Agregar" : "Nueva Incorporación"}
           </Button>
+          )
+          }
         </Flex>
       </Flex>
 
@@ -142,32 +148,34 @@ export default function IncorporationsFilters({
           </InputGroup>
         </FormControl>
 
-        <FormControl>
-          <FormLabel htmlFor="departamento" fontSize="sm" fontWeight="medium" mb={1}>
-            Departamento
-          </FormLabel>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none">
-              <Icon as={FiUsers} color="gray.400" />
-            </InputLeftElement>
-            <Select
-              id="departamento"
-              size="md"
-              value={undefined}
-              placeholder="Selecciona un departamento"
-              onChange={(e) => onFilterDepartment(e.target.value)}
-              pl={10}
-              borderRadius="md"
-            >
-              <option value="all">Todos los departamentos</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id.toString()}>
-                  {dept.nombre}
-                </option>
-              ))}
-            </Select>
-          </InputGroup>
-        </FormControl>
+         {canFilterByDept && (
+          <FormControl>
+            <FormLabel htmlFor="departamento" fontSize="sm" fontWeight="medium" mb={1}>
+              Departamento
+            </FormLabel>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={FiUsers} color="gray.400" />
+              </InputLeftElement>
+              <Select
+                id="departamento"
+                size="md"
+                value={undefined}
+                placeholder="Selecciona un departamento"
+                onChange={(e) => onFilterDepartment(e.target.value)}
+                pl={10}
+                borderRadius="md"
+              >
+                <option value="all">Todos los departamentos</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id.toString()}>
+                    {dept.nombre}
+                  </option>
+                ))}
+              </Select>
+            </InputGroup>
+          </FormControl>
+        )}
       </Stack>
     </Box>
   )
