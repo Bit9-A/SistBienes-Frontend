@@ -10,6 +10,14 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import routes, { getFilteredRoutes } from '../../routes';
 import { useLocation } from 'react-router-dom';
 import { getProfile, UserProfile } from '../../api/UserApi';
+import { jwtDecode } from 'jwt-decode';
+import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  CloseButton,
+} from '@chakra-ui/react';
 
 // Custom Chakra theme
 export default function Dashboard(props: { [x: string]: any }) {
@@ -26,6 +34,7 @@ export default function Dashboard(props: { [x: string]: any }) {
   const [brandText, setBrandText] = useState('Default Brand Text');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSessionWarning, setShowSessionWarning] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -51,6 +60,23 @@ export default function Dashboard(props: { [x: string]: any }) {
         setIsLoading(true);
         const profile = await getProfile();
         setUserProfile(profile);
+
+        // Verificar la expiración del token
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          if (userData && userData.token) {
+            const decodedToken: { exp: number } = jwtDecode(userData.token);
+            const currentTime = Math.floor(Date.now() / 1000);
+            const timeLeft = decodedToken.exp - currentTime;
+
+            if (timeLeft < 600 && timeLeft > 0) { // Menos de 10 minutos, pero no expirado
+              setShowSessionWarning(true);
+            } else {
+              setShowSessionWarning(false);
+            }
+          }
+        }
       } catch (error) {
         console.error('Error al obtener el perfil:', error);
         // Si hay error de autenticación, redirigir al login
@@ -187,6 +213,19 @@ export default function Dashboard(props: { [x: string]: any }) {
               />
             </Box>
           </Portal>
+
+          {showSessionWarning && (
+            <Alert status="warning" position="fixed" bottom="4" left="50%" transform="translateX(-50%)" width="auto" zIndex="9999" borderRadius="md" boxShadow="lg">
+              <AlertIcon />
+              <Box flex="1">
+                <AlertTitle>Sesión a punto de expirar</AlertTitle>
+                <AlertDescription display="block">
+                  Tu sesión se extenderá automáticamente con tu próxima acción.
+                </AlertDescription>
+              </Box>
+              <CloseButton position="absolute" right="8px" top="8px" onClick={() => setShowSessionWarning(false)} />
+            </Alert>
+          )}
 
           {getRoute() ? (
             <Box

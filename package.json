@@ -27,6 +27,7 @@
     "html-to-image": "^1.11.13",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
+    "jwt-decode": "^4.0.0",
     "npm-force-resolutions": "^0.0.10",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
