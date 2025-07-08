@@ -13,11 +13,13 @@ import {
 } from "@chakra-ui/react";
 import { FiUpload } from "react-icons/fi";
 import ColorPicker from "./ColorPicker";
-
+import { uploadConfigImage } from "../../../../api/SettingsApi"; // Asegúrate de que esta ruta sea correcta
 const GeneralSettings: React.FC = () => {
   const [primaryColor, setPrimaryColor] = useState("#310493"); // Color primario inicial
   const [secondaryColor, setSecondaryColor] = useState("#00dafc"); // Color secundario inicial
-
+  const [favicon, setFavicon] = useState<File | null>(null);
+  const [banner, setBanner] = useState<File | null>(null);
+  const [logo, setLogo] = useState<File | null>(null);;
   // Cargar colores desde localStorage al iniciar
   useEffect(() => {
     const savedPrimaryColor = localStorage.getItem("primaryColor");
@@ -46,6 +48,51 @@ const GeneralSettings: React.FC = () => {
     localStorage.setItem("secondaryColor", color); // Guardar en localStorage
   };
 
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBanner(e.target.files?.[0] || null);
+  };
+  const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFavicon(e.target.files?.[0] || null);
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setLogo(e.target.files[0]);
+    }
+  }
+  const handlerImagePost = async () => {
+    try {
+      const formData = new FormData();
+      if (logo) formData.append("logo", logo);
+      if (banner) formData.append("banner", banner);
+      if (favicon) formData.append("favicon", favicon);
+      // Agrega los campos de texto
+      formData.append("colorprimario", primaryColor);
+      formData.append("colorsecundario", secondaryColor);
+
+      // Obtén el valor del input de nombre de la institución
+      const nombreInput = document.getElementById("nombreInstitucionInput") as HTMLInputElement | null;
+      if (nombreInput && nombreInput.value) {
+        formData.append("nombre_institucion", nombreInput.value);
+      }
+
+      await uploadConfigImage(formData);
+      alert("Configuración cargada correctamente.");
+    } catch (error) {
+      console.error("Error al subir la configuración:", error);
+      alert("Error al subir la configuración. Por favor, inténtalo de nuevo.");
+    }
+    setFavicon(null);
+    setBanner(null);
+    setLogo(null);
+    const faviconInput = document.getElementById("faviconInput") as HTMLInputElement | null;
+    if (faviconInput) faviconInput.value = "";
+    const bannerInput = document.getElementById("bannerInput") as HTMLInputElement | null;
+    if (bannerInput) bannerInput.value = "";
+    const logoInput = document.getElementById("logoInput") as HTMLInputElement | null;
+    if (logoInput) logoInput.value = "";
+  }
+
   return (
     <Box p={5} shadow="md" borderWidth="1px" borderRadius="md">
       <Heading size="md" mb={4}>
@@ -54,7 +101,7 @@ const GeneralSettings: React.FC = () => {
       <VStack spacing={4} align="stretch">
         <FormControl>
           <FormLabel>Nombre de la Institución</FormLabel>
-          <Input placeholder="Nombre de la institución" focusBorderColor="type.bgbutton" />
+          <Input id="nombreInstitucionInput" placeholder="Nombre de la institución" focusBorderColor="type.bgbutton" />
         </FormControl>
 
         <FormControl>
@@ -72,7 +119,7 @@ const GeneralSettings: React.FC = () => {
             <Text mt={2} color="gray.500">
               Arrastra y suelta una imagen aquí o haz clic para seleccionar
             </Text>
-            <Input type="file" accept="image/*" opacity={0} position="absolute" top={0} left={0} w="100%" h="100%" cursor="pointer" />
+            <Input type="file" id="faviconInput" accept="image/*" opacity={0} position="absolute" top={0} left={0} w="100%" h="100%" cursor="pointer" onChange={handleFaviconChange} />
           </Box>
         </FormControl>
 
@@ -91,7 +138,7 @@ const GeneralSettings: React.FC = () => {
             <Text mt={2} color="gray.500">
               Arrastra y suelta una imagen aquí o haz clic para seleccionar
             </Text>
-            <Input type="file" accept="image/*" opacity={0} position="absolute" top={0} left={0} w="100%" h="100%" cursor="pointer" />
+            <Input type="file" id="bannerInput" accept="image/*" opacity={0} position="absolute" top={0} left={0} w="100%" h="100%" cursor="pointer" onChange={handleBannerChange} />
           </Box>
         </FormControl>
 
@@ -110,7 +157,7 @@ const GeneralSettings: React.FC = () => {
             <Text mt={2} color="gray.500">
               Arrastra y suelta una imagen aquí o haz clic para seleccionar
             </Text>
-            <Input type="file" accept="image/*" opacity={0} position="absolute" top={0} left={0} w="100%" h="100%" cursor="pointer" />
+            <Input type="file" id="logoInput" accept="image/*" opacity={0} position="absolute" top={0} left={0} w="100%" h="100%" cursor="pointer" onChange={handleLogoChange} />
           </Box>
         </FormControl>
 
@@ -131,6 +178,7 @@ const GeneralSettings: React.FC = () => {
           colorScheme="purple"
           bgColor={"type.primary"}
           alignSelf="flex-end"
+          onClick={handlerImagePost}
         >
           Guardar cambios
         </Button>

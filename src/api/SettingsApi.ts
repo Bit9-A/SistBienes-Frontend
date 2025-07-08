@@ -1,13 +1,30 @@
 import axiosInstance from "../utils/axiosInstance";
 
+// Configuración general
+// Mostrar los datos de la configuracion general 
+export const getGeneralConfig = async (): Promise<any> => {
+    const response = await axiosInstance.get("/config/");
+    return response.data;
+};
+
+// Subida de imagen para configuración general
+export const uploadConfigImage = async (formData: FormData): Promise<any> => {
+    const response = await axiosInstance.put("/config/", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+    return response.data;
+};
+
 
 //Departamentos
 
 // Definición de la interfaz para un departamento
 export interface Department {
-  id: number;
-  nombre: string;
-  codigo: string;
+    id: number;
+    nombre: string;
+    codigo: string;
 }
 // Obtener todos los departamentos
 export const getDepartments = async (): Promise<Department[]> => {
@@ -17,8 +34,8 @@ export const getDepartments = async (): Promise<Department[]> => {
     } catch (error) {
         console.error('Error fetching departments:', error);
         throw error;
-    }   
-    };
+    }
+};
 
 // Crear un nuevo departamento
 export const createDepartment = async (departmentData: any) => {
@@ -28,7 +45,7 @@ export const createDepartment = async (departmentData: any) => {
     } catch (error) {
         console.error('Error creating department:', error);
         throw error;
-    } 
+    }
 };
 
 // Actualizar un departamento existente
@@ -40,7 +57,7 @@ export const updateDepartment = async (id: number, departmentData: any) => {
     } catch (error) {
         console.error('Error updating department:', error);
         throw error;
-    } 
+    }
 };
 // Eliminar un departamento existente
 
@@ -51,16 +68,16 @@ export const deleteDepartment = async (id: number) => {
     } catch (error) {
         console.error('Error deleting department:', error);
         throw error;
-    } 
+    }
 };
 
 //SubGrupos Muebles
 // Definición de la interfaz para un subgrupo
 
 export interface SubGroup {
-  id: number;
-  nombre: string;
-  codigo: string;
+    id: number;
+    nombre: string;
+    codigo: string;
 }
 
 export const getSubGroupsM = async (): Promise<SubGroup[]> => {
@@ -70,8 +87,8 @@ export const getSubGroupsM = async (): Promise<SubGroup[]> => {
     } catch (error) {
         console.error('Error fetching subgroups:', error);
         throw error;
-    }   
-    };
+    }
+};
 
 // Crear un nuevo subgrupo
 export const createSubGroupM = async (subgroupData: any) => {
@@ -81,7 +98,7 @@ export const createSubGroupM = async (subgroupData: any) => {
     } catch (error) {
         console.error('Error creating subgroup:', error);
         throw error;
-    } 
+    }
 };
 // Actualizar un subgrupo existente
 export const updateSubGroupM = async (id: number, subgroupData: any) => {
@@ -91,7 +108,7 @@ export const updateSubGroupM = async (id: number, subgroupData: any) => {
     } catch (error) {
         console.error('Error updating subgroup:', error);
         throw error;
-    } 
+    }
 };
 
 // Eliminar un subgrupo existente
@@ -102,7 +119,7 @@ export const deleteSubGroupM = async (id: number) => {
     } catch (error) {
         console.error('Error deleting subgroup:', error);
         throw error;
-    } 
+    }
 };
 
 //Parroquias
@@ -120,8 +137,8 @@ export const getParroquias = async (): Promise<Parroquia[]> => {
     } catch (error) {
         console.error('Error fetching parroquias:', error);
         throw error;
-    }   
     }
+}
 // Crear una nueva parroquia
 export const createParroquia = async (parroquiaData: any) => {
     try {
@@ -130,29 +147,28 @@ export const createParroquia = async (parroquiaData: any) => {
     } catch (error) {
         console.error('Error creating parroquia:', error);
         throw error;
-    } 
+    }
 };
 // Actualizar una parroquia existente
-export const updateParroquia = async (id: number, parroquiaData: any)=> {
-        try {
-            const response = await axiosInstance.put(`/parish/${id}`, parroquiaData);
-            return response.data; // Devuelve la parroquia actualizada
-        } catch (error) {
-            console.error('Error updating parroquia:', error);
-            throw error;
-        } 
+export const updateParroquia = async (id: number, parroquiaData: any) => {
+    try {
+        const response = await axiosInstance.put(`/parish/${id}`, parroquiaData);
+        return response.data; // Devuelve la parroquia actualizada
+    } catch (error) {
+        console.error('Error updating parroquia:', error);
+        throw error;
     }
+}
 // Eliminar una parroquia existente
-export const deleteParroquia = async (id: number) =>
-    {
-        try {
-            const response = await axiosInstance.delete(`/parish/${id}`);
-            return response.data; // Devuelve la parroquia eliminada
-        } catch (error) {
-            console.error('Error deleting parroquia:', error);
-            throw error;
-        } 
-    };
+export const deleteParroquia = async (id: number) => {
+    try {
+        const response = await axiosInstance.delete(`/parish/${id}`);
+        return response.data; // Devuelve la parroquia eliminada
+    } catch (error) {
+        console.error('Error deleting parroquia:', error);
+        throw error;
+    }
+};
 
 
 //Conceptos de Movimiento
@@ -164,16 +180,15 @@ export interface ConceptoMovimiento {
     codigo: string;
 }
 // Obtener todos los conceptos de movimiento Incorporación
-export const getConceptosMovimientoIncorporacion = async () =>
-    {
-        try {
-            const response = await axiosInstance.get('/concept-incorp');
-            return response.data.conceptInc; // Asegúrate de que la respuesta tenga esta estructura
-        } catch (error) {
-            console.error('Error fetching conceptos de movimiento:', error);
-            throw error;
-        } 
+export const getConceptosMovimientoIncorporacion = async () => {
+    try {
+        const response = await axiosInstance.get('/concept-incorp');
+        return response.data.conceptInc; // Asegúrate de que la respuesta tenga esta estructura
+    } catch (error) {
+        console.error('Error fetching conceptos de movimiento:', error);
+        throw error;
     }
+}
 // Crear un nuevo concepto de movimiento Incorporación
 export const createConceptoMovimientoIncorporacion = async (conceptoData: any) => {
     try {
@@ -182,7 +197,7 @@ export const createConceptoMovimientoIncorporacion = async (conceptoData: any) =
     } catch (error) {
         console.error('Error creating concepto de movimiento:', error);
         throw error;
-    } 
+    }
 };
 // Actualizar un concepto de movimiento existente Incorporación
 export const updateConceptoMovimientoIncorporacion = async (id: number, conceptoData: any) => {
@@ -192,7 +207,7 @@ export const updateConceptoMovimientoIncorporacion = async (id: number, concepto
     } catch (error) {
         console.error('Error updating concepto de movimiento:', error);
         throw error;
-    } 
+    }
 };
 // Eliminar un concepto de movimiento existente Incorporación
 export const deleteConceptoMovimientoIncorporacion = async (id: number) => {
@@ -202,20 +217,19 @@ export const deleteConceptoMovimientoIncorporacion = async (id: number) => {
     } catch (error) {
         console.error('Error deleting concepto de movimiento:', error);
         throw error;
-    } 
+    }
 };
 
 // Obtener todos los conceptos de movimiento Desincorporación
-export const getConceptosMovimientoDesincorporacion = async () =>
-    {
-        try {
-            const response = await axiosInstance.get('/concept-desincorp');
-            return response.data.conceptDes; // Asegúrate de que la respuesta tenga esta estructura
-        } catch (error) {
-            console.error('Error fetching conceptos de movimiento:', error);
-            throw error;
-        } 
+export const getConceptosMovimientoDesincorporacion = async () => {
+    try {
+        const response = await axiosInstance.get('/concept-desincorp');
+        return response.data.conceptDes; // Asegúrate de que la respuesta tenga esta estructura
+    } catch (error) {
+        console.error('Error fetching conceptos de movimiento:', error);
+        throw error;
     }
+}
 // Crear un nuevo concepto de movimiento Desincorporación
 export const createConceptoMovimientoDesincorporacion = async (conceptoData: any) => {
     try {
@@ -224,7 +238,7 @@ export const createConceptoMovimientoDesincorporacion = async (conceptoData: any
     } catch (error) {
         console.error('Error creating concepto de movimiento:', error);
         throw error;
-    } 
+    }
 };
 // Actualizar un concepto de movimiento existente Desincorporación
 export const updateConceptoMovimientoDesincorporacion = async (id: number, conceptoData: any) => {
@@ -234,7 +248,7 @@ export const updateConceptoMovimientoDesincorporacion = async (id: number, conce
     } catch (error) {
         console.error('Error updating concepto de movimiento:', error);
         throw error;
-    } 
+    }
 };
 // Eliminar un concepto de movimiento existente Desincorporación
 export const deleteConceptoMovimientoDesincorporacion = async (id: number) => {
@@ -244,7 +258,7 @@ export const deleteConceptoMovimientoDesincorporacion = async (id: number) => {
     } catch (error) {
         console.error('Error deleting concepto de movimiento:', error);
         throw error;
-    } 
+    }
 }
 
 
