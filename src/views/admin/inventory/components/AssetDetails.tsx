@@ -37,9 +37,12 @@ import {
   FiEdit,
   FiPlus,
   FiServer,
+  FiMinusCircle, // Importar FiMinusCircle para el historial
 } from "react-icons/fi"
 import { getComponentsByBienId, createComponent, deleteComponent, type Component } from "../../../../api/ComponentsApi"
+import { getAssetHistory } from "../../../../api/AssetsApi" // Importar la función para obtener el historial
 import AssetComponents, { type ComponentData } from "components/AssetComponents/AssetComponents"
+import { AssetHistory } from "components/AssetHistory/AssetHistory" // Importar el nuevo componente AssetHistory
 
 interface AssetDetailsModalProps {
   asset: any
@@ -48,11 +51,13 @@ interface AssetDetailsModalProps {
 }
 
 export const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({ asset, isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<"details" | "components">("details")
+  const [activeTab, setActiveTab] = useState<"details" | "components" | "history">("details") // Añadir "history" al estado
   const [components, setComponents] = useState<Component[]>([])
   const [loadingComponents, setLoadingComponents] = useState(false)
   const [isEditingComponents, setIsEditingComponents] = useState(false)
   const [componentFormData, setComponentFormData] = useState<ComponentData[]>([])
+  const [assetHistory, setAssetHistory] = useState<any[]>([]) // Estado para el historial
+  const [loadingHistory, setLoadingHistory] = useState(false) // Estado para la carga del historial
 
   const cardBg = useColorModeValue("white", "gray.700")
   const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -70,6 +75,13 @@ useEffect(() => {
     loadComponents()
   }
 }, [isOpen, asset, isComputer])
+
+  // Cargar historial cuando se abre el modal y la pestaña de historial está activa
+  useEffect(() => {
+    if (isOpen && asset && activeTab === "history") {
+      loadAssetHistory()
+    }
+  }, [isOpen, asset, activeTab])
 
   // Resetear tab cuando se abre el modal
   useEffect(() => {
@@ -89,6 +101,19 @@ useEffect(() => {
       setComponents([])
     } finally {
       setLoadingComponents(false)
+    }
+  }
+
+  const loadAssetHistory = async () => {
+    setLoadingHistory(true)
+    try {
+      const history = await getAssetHistory(asset.id)
+      setAssetHistory(history)
+    } catch (error) {
+      console.error("Error loading asset history:", error)
+      setAssetHistory([])
+    } finally {
+      setLoadingHistory(false)
     }
   }
 
@@ -288,6 +313,19 @@ useEffect(() => {
                 Componentes
               </Button>
             )}
+            <Button
+              onClick={() => setActiveTab("history")}
+              bg={activeTab === "history" ? tabActiveBg : tabInactiveBg}
+              color={activeTab === "history" ? "white" : "gray.600"}
+              borderRadius={isComputer ? "0 0 md md" : "0 md md 0"} // Ajustar border-radius si es el último tab
+              _hover={{
+                bg: activeTab === "history" ? "type.primary" : "gray.200",
+              }}
+              size="md"
+              flex={1}
+            >
+              Historial
+            </Button>
           </HStack>
 
           {/* Contenido según el tab activo */}
@@ -463,7 +501,7 @@ useEffect(() => {
                 </CardBody>
               </Card>
             </VStack>
-          ) : (
+          ) : activeTab === "components" ? (
             /* Tab de Componentes - Solo se muestra si es computadora */
             <Box>
               {loadingComponents ? (
@@ -541,6 +579,14 @@ useEffect(() => {
                 </VStack>
               )}
             </Box>
+          ) : (
+            /* Tab de Historial */
+            <AssetHistory
+              assetHistory={assetHistory}
+              loadingHistory={loadingHistory}
+              formatDate={formatDate}
+              formatCurrency={formatCurrency}
+            />
           )}
         </ModalBody>
       </ModalContent>
