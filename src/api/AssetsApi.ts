@@ -88,7 +88,7 @@ export const createAsset = async (assetData: MovableAsset) => {
     } 
 }
 // Actualizar un activo existente
-export const updateAsset = async (assetId: number, assetData: MovableAsset) => {
+export const updateAsset = async (assetId: number, assetData: Partial<MovableAsset>) => {
     try {
         console.log('Updating asset with ID:', assetId, 'Data:', assetData); // Imprime el ID y los datos del activo
       const response = await axiosInstance.put(`/furniture/${assetId}`, assetData);
