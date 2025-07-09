@@ -95,14 +95,14 @@ export default function Inventory() {
   const fetchAllData = async () => {
     try {
       const [
-        assetsData,
-        departmentsData,
-        subgroupsData,
-        marcasData,
-        modelosData,
-        parishData,
-        assetStatesData,
-      ] = await Promise.all([
+        assetsResult,
+        departmentsResult,
+        subgroupsResult,
+        marcasResult,
+        modelosResult,
+        parishResult,
+        assetStatesResult,
+      ] = await Promise.allSettled([
         getAssets(),
         getDepartments(),
         getSubGroupsM(),
@@ -112,15 +112,50 @@ export default function Inventory() {
         getAssetStates(),
       ]);
 
-      setAssets(assetsData);
-      setDepartments(departmentsData);
-      setSubgroups(subgroupsData);
-      setMarcas(marcasData);
-      setModelos(modelosData);
-      setParroquias(parishData);
-      setAssetStates(assetStatesData);
+      if (assetsResult.status === 'fulfilled') {
+        setAssets(assetsResult.value);
+      } else {
+        console.error('Error fetching assets:', assetsResult.reason);
+        setAssets([]); // Asegurar que assets sea un array vacío en caso de error
+      }
+      if (departmentsResult.status === 'fulfilled') {
+        setDepartments(departmentsResult.value);
+      } else {
+        console.error('Error fetching departments:', departmentsResult.reason);
+        setDepartments([]); // Asegurar que departments sea un array vacío en caso de error
+      }
+      if (subgroupsResult.status === 'fulfilled') {
+        setSubgroups(subgroupsResult.value);
+      } else {
+        console.error('Error fetching subgroups:', subgroupsResult.reason);
+        setSubgroups([]);
+      }
+      if (marcasResult.status === 'fulfilled') {
+        setMarcas(marcasResult.value);
+      } else {
+        console.error('Error fetching marcas:', marcasResult.reason);
+        setMarcas([]);
+      }
+      if (modelosResult.status === 'fulfilled') {
+        setModelos(modelosResult.value);
+      } else {
+        console.error('Error fetching modelos:', modelosResult.reason);
+        setModelos([]);
+      }
+      if (parishResult.status === 'fulfilled') {
+        setParroquias(parishResult.value);
+      } else {
+        console.error('Error fetching parroquias:', parishResult.reason);
+        setParroquias([]);
+      }
+      if (assetStatesResult.status === 'fulfilled') {
+        setAssetStates(assetStatesResult.value);
+      } else {
+        console.error('Error fetching asset states:', assetStatesResult.reason);
+        setAssetStates([]);
+      }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Unhandled error in fetchAllData:', error);
     }
   };
 
