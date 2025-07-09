@@ -358,9 +358,6 @@ export const AssetTable: React.FC<AssetTableProps> = ({
               <Th>Identificación</Th>
               <Th>Descripción</Th>
               <Th>Departamento</Th>
-              <Th>Marca</Th>
-              <Th>Modelo</Th>
-              <Th>Estado</Th>
               <Th>Valor Total</Th>
               <Th>Fecha</Th>
               <Th>Acciones</Th>
@@ -389,9 +386,6 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                   </Tooltip>
                 </Td>
                 <Td>{asset.dept_nombre || "Sin Departamento"}</Td>
-                <Td>{asset.marca_nombre || "Sin Marca"}</Td>
-                <Td>{asset.modelo_nombre || "Sin Modelo"}</Td>
-                <Td>{asset.estado_nombre || "Sin estado"}</Td>
                 <Td>{formatCurrency(asset.valor_total)}</Td>
                 <Td>{formatDate(asset.fecha)}</Td>
                 <Td onClick={(e) => e.stopPropagation()}>

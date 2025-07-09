@@ -14,6 +14,7 @@ import {
   Container,
   Badge,
   Icon,
+  useToast, // Import useToast
 } from '@chakra-ui/react';
 import { BsBox2 } from 'react-icons/bs';
 import { FiPackage } from 'react-icons/fi';
@@ -40,6 +41,8 @@ import axiosInstance from '../../../utils/axiosInstance';
 import { getProfile } from 'api/UserApi';
 import { exportBM1WithMarkers } from 'views/admin/inventory/utils/inventoryExcel';
 import { ExportBM1Modal } from './components/ExportBM1Modal';
+import { exportQRLabels } from 'views/admin/inventory/utils/inventoryLabels';
+import { ExportQRLabelsModal } from './components/ExportQRLabelsModal';
 
 export default function Inventory() {
   const [assets, setAssets] = useState([]);
@@ -56,8 +59,10 @@ export default function Inventory() {
   const [canFilterByDept, setCanFilterByDept] = useState(false);
   const [userAssets, setUserAssets] = useState([]);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isQRLabelsModalOpen, setIsQRLabelsModalOpen] = useState(false); // New state for QR labels modal
+  const toast = useToast(); // Initialize useToast
 
-  //Obtener los estados de bienes /goods-status
+  // Obtener los estados de bienes /goods-status
   const getAssetStates = async () => {
     const response = await axiosInstance.get('/goods-status');
     return response.data.statusGoods;
@@ -86,44 +91,45 @@ export default function Inventory() {
     return dept ? dept.nombre : '';
   })();
 
-  // Fetch data
+  // Función para cargar los bienes y otros datos
+  const fetchAllData = async () => {
+    try {
+      const [
+        assetsData,
+        departmentsData,
+        subgroupsData,
+        marcasData,
+        modelosData,
+        parishData,
+        assetStatesData,
+      ] = await Promise.all([
+        getAssets(),
+        getDepartments(),
+        getSubGroupsM(),
+        getMarcas(),
+        getModelos(),
+        getParroquias(),
+        getAssetStates(),
+      ]);
+
+      setAssets(assetsData);
+      setDepartments(departmentsData);
+      setSubgroups(subgroupsData);
+      setMarcas(marcasData);
+      setModelos(modelosData);
+      setParroquias(parishData);
+      setAssetStates(assetStatesData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  // Fetch data on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [
-          assetsData,
-          departmentsData,
-          subgroupsData,
-          marcasData,
-          modelosData,
-          parishData,
-          assetStatesData,
-        ] = await Promise.all([
-          getAssets(),
-          getDepartments(),
-          getSubGroupsM(),
-          getMarcas(),
-          getModelos(),
-          getParroquias(),
-          getAssetStates(),
-        ]);
-
-        setAssets(assetsData);
-        setDepartments(departmentsData);
-        setSubgroups(subgroupsData);
-        setMarcas(marcasData);
-        setModelos(modelosData);
-        setParroquias(parishData);
-        setAssetStates(assetStatesData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
+    fetchAllData();
   }, []);
 
-  //Solo mostrar assets del departamento del usuario autenticado
+  // Solo mostrar assets del departamento del usuario autenticado
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -192,18 +198,21 @@ export default function Inventory() {
 
     setFilteredAssets(filtered);
   }, [userAssets, filters, canFilterByDept]);
+
   // Handlers
-  const handleFormSubmit = async (asset: MovableAsset) => {
+  const handleFormSubmit = async (asset: MovableAsset, logDetails?: string) => {
     try {
       if (isEditing) {
         await handleEditAsset(asset.id, asset, setAssets, () =>
           setIsFormOpen(false),
+          logDetails || `Se editó el bien con ID: ${asset.id}`,
         );
       } else {
         await handleAddAsset(asset, setAssets, () => setIsFormOpen(false));
       }
       setSelectedAsset(null);
       setIsEditing(false);
+      fetchAllData(); // Re-fetch data to update the table
     } catch (error) {
       console.error('Error saving asset:', error);
     }
@@ -212,6 +221,7 @@ export default function Inventory() {
   const handleDelete = async (assetId: any) => {
     try {
       await handleDeleteAsset(assetId, setAssets);
+      fetchAllData(); // Re-fetch data to update the table
     } catch (error) {
       console.error('Error deleting asset:', error);
     }
@@ -373,6 +383,19 @@ export default function Inventory() {
             >
               Exportar a Excel
             </Button>
+            <Button
+              colorScheme="purple"
+              ml={2}
+              onClick={() => {
+                if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === 'Bienes')) {
+                  setIsQRLabelsModalOpen(true);
+                } else {
+                  exportQRLabels(userProfile?.dept_id, userProfile?.dept_nombre);
+                }
+              }}
+            >
+              Exportar Etiquetas QR
+            </Button>
           </Flex>
           {/* Filtros y tabla de bienes */}
           <Card
@@ -437,6 +460,14 @@ export default function Inventory() {
                     setSelectedAsset(asset);
                     setIsEditing(true);
                     setIsFormOpen(true);
+                    toast({
+                      title: "Editando bien",
+                      description: `Abriendo formulario para editar el bien con ID: ${asset.id}`,
+                      status: "info",
+                      duration: 2000,
+                      isClosable: true,
+                      position: "top",
+                    });
                   }}
                   onDelete={(asset) => handleDelete(asset.id)}
                   userProfile={userProfile}
@@ -463,6 +494,13 @@ export default function Inventory() {
                 onClose={() => setIsExportModalOpen(false)}
                 departments={departments}
                 onExport={exportBM1WithMarkers}
+              />
+
+              <ExportQRLabelsModal
+                isOpen={isQRLabelsModalOpen}
+                onClose={() => setIsQRLabelsModalOpen(false)}
+                departments={departments}
+                onExport={exportQRLabels}
               />
             </CardBody>
           </Card>

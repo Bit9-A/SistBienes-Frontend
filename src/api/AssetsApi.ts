@@ -6,7 +6,7 @@ export interface MovableAsset {
   nombre_descripcion: string;
   numero_serial: string;
   grupo: number;
-  subgrupo_id: string;
+  subgrupo_id: number;
   subgrupo_nombre?: string;  
   subgrupo_codigo?:string;    // Nuevo: nombre del subgrupo
   cantidad: number;
@@ -20,9 +20,9 @@ export interface MovableAsset {
   fecha: string;
   dept_id: number;
   dept_nombre?: string;          // Nuevo: nombre del departamento
-  id_estado?: number;
+  estado_id?: number;
   estado_nombre?: string;        // Nuevo: nombre del estado
-  id_Parroquia: number;
+  parroquia_id: number;
   parroquia_nombre?: string;
   isActive?:number;     // Nuevo: nombre de la parroquia
   isComputer?:number
@@ -38,6 +38,20 @@ export interface modelo{
     nombre: string;
     idmarca: number;
 }
+
+
+//Historial de activos
+//ruta /history/:id
+export const getAssetHistory = async (assetId: number): Promise<any[]> => {
+    try {
+        const response = await axiosInstance.get(`/history/${assetId}`);
+        return response.data.history; // Asegúrate de que la respuesta tenga esta estructura
+    } catch (error) {
+        console.error(error);
+        return [];
+        }
+    }
+
 
 // Obtener todos los activos
 export const getAssets = async (): Promise<MovableAsset[]> => {
@@ -76,7 +90,7 @@ export const createAsset = async (assetData: MovableAsset) => {
 // Actualizar un activo existente
 export const updateAsset = async (assetId: number, assetData: MovableAsset) => {
     try {
-   
+        console.log('Updating asset with ID:', assetId, 'Data:', assetData); // Imprime el ID y los datos del activo
       const response = await axiosInstance.put(`/furniture/${assetId}`, assetData);
       return response.data;
     } catch (error: any) {
