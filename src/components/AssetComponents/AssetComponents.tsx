@@ -1,5 +1,4 @@
 "use client"
-
 import React from "react"
 import {
   Box,
@@ -9,7 +8,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  FormErrorMessage,
   Button,
   IconButton,
   SimpleGrid,
@@ -142,34 +140,6 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
     }
   }
 
-  // Verificar si un componente es requerido individualmente
-  const isIndividuallyRequired = (tipo: string) => {
-    return ["TM", "CPU", "RAM", "PS"].includes(tipo)
-  }
-
-  // Verificar si al menos uno de los discos está completo
-  const hasAtLeastOneDisk = () => {
-    const hddComponents = components.filter((c) => c.tipo === "HDD")
-    const ssdComponents = components.filter((c) => c.tipo === "SSD")
-
-    const hasCompleteHDD = hddComponents.some((comp) => comp.nombre.trim() && comp.numero_serial.trim())
-    const hasCompleteSSD = ssdComponents.some((comp) => comp.nombre.trim() && comp.numero_serial.trim())
-
-    return hasCompleteHDD || hasCompleteSSD
-  }
-
-  // Verificar si un disco específico debe mostrar error
-  const shouldShowDiskError = (comp: ComponentData, idx: number) => {
-    if (!["HDD", "SSD"].includes(comp.tipo)) return false
-
-    // Si ya hay al menos un disco completo, no mostrar error
-    if (hasAtLeastOneDisk()) return false
-
-    // Si este disco no está completo y no hay otros discos completos, mostrar error
-    const isThisDiskComplete = comp.nombre.trim() && comp.numero_serial.trim()
-    return !isThisDiskComplete
-  }
-
   // Solo permite eliminar RAM, HDD o SSD agregados extra
   const isRemovable = (comp: ComponentData, idx: number) => {
     if (comp.tipo === "RAM") {
@@ -205,22 +175,15 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
             Componentes de la Computadora
           </Text>
           <Text fontSize="sm" color="gray.600">
-            Complete la información de cada componente. Los campos marcados con * son obligatorios.
+            Complete la información de cada componente. Todos los campos son opcionales.
           </Text>
-          <Text fontSize="xs" color="orange.600" mt={1}>
-            Debe completar al menos un disco de almacenamiento (HDD o SSD)
+          <Text fontSize="xs" color="blue.600" mt={1}>
+            Si agrega una descripción sin número serial, se asignará automáticamente "N/A"
           </Text>
         </Box>
-
         <Divider />
-
         <VStack spacing={3} align="stretch">
           {orderedComponents.map((comp, idx) => {
-            const isRequired = isIndividuallyRequired(comp.tipo)
-            const isDisk = ["HDD", "SSD"].includes(comp.tipo)
-            const showDiskError = shouldShowDiskError(comp, idx)
-            const isFieldRequired = isRequired || (isDisk && !hasAtLeastOneDisk())
-
             return (
               <Box key={idx} p={4} bg={cardBg} border="1px" borderColor={borderColor} borderRadius="lg" shadow="sm">
                 <HStack mb={3} justify="space-between" align="center">
@@ -228,16 +191,6 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
                     <Icon as={getIcon(comp.tipo)} color={getColor(comp.tipo)} boxSize={4} />
                     <Text fontWeight="medium" fontSize="sm">
                       {getLabel(comp, idx)}
-                      {isRequired && (
-                        <Text as="span" color="red.500" ml={1}>
-                          *
-                        </Text>
-                      )}
-                      {isDisk && !isRequired && (
-                        <Text as="span" color="orange.500" fontSize="xs" ml={1}>
-                          (Al menos uno requerido)
-                        </Text>
-                      )}
                     </Text>
                   </HStack>
                   {isRemovable(comp, idx) && (
@@ -251,16 +204,10 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
                     />
                   )}
                 </HStack>
-
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-                  <FormControl isRequired={isFieldRequired} isInvalid={!comp.nombre && (isRequired || showDiskError)}>
+                  <FormControl>
                     <FormLabel fontSize="xs" mb={1} color="gray.600">
-                      Descripción{" "}
-                      {(isRequired || (isDisk && !hasAtLeastOneDisk())) && (
-                        <Text as="span" color="red.500">
-                          *
-                        </Text>
-                      )}
+                      Descripción
                     </FormLabel>
                     <Input
                       placeholder={`Descripción del ${getLabel(comp, idx).toLowerCase()}`}
@@ -268,43 +215,23 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
                       onChange={(e) => handleChange(idx, "nombre", e.target.value)}
                       size="sm"
                     />
-                    {!comp.nombre && (isRequired || showDiskError) && (
-                      <FormErrorMessage fontSize="xs">
-                        {isRequired ? "Este campo es obligatorio" : "Complete al menos un disco de almacenamiento"}
-                      </FormErrorMessage>
-                    )}
                   </FormControl>
-
-                  <FormControl
-                    isRequired={isFieldRequired}
-                    isInvalid={!comp.numero_serial && (isRequired || showDiskError)}
-                  >
+                  <FormControl>
                     <FormLabel fontSize="xs" mb={1} color="gray.600">
-                      Número Serial{" "}
-                      {(isRequired || (isDisk && !hasAtLeastOneDisk())) && (
-                        <Text as="span" color="red.500">
-                          *
-                        </Text>
-                      )}
+                      Número Serial
                     </FormLabel>
                     <Input
-                      placeholder="Número serial"
+                      placeholder="Número serial (opcional - se asignará N/A si está vacío)"
                       value={comp.numero_serial}
                       onChange={(e) => handleChange(idx, "numero_serial", e.target.value)}
                       size="sm"
                     />
-                    {!comp.numero_serial && (isRequired || showDiskError) && (
-                      <FormErrorMessage fontSize="xs">
-                        {isRequired ? "Este campo es obligatorio" : "Complete al menos un disco de almacenamiento"}
-                      </FormErrorMessage>
-                    )}
                   </FormControl>
                 </SimpleGrid>
               </Box>
             )
           })}
         </VStack>
-
         <HStack justify="center" spacing={2} pt={2} wrap="wrap">
           <Button leftIcon={<FiPlus />} size="sm" variant="outline" colorScheme="orange" onClick={handleAddRam}>
             Agregar RAM
