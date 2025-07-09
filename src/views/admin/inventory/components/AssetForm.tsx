@@ -567,7 +567,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
           }
         }
       }
-      logDetails = changes.length > 0 ? `Campos editados: ${changes.join(", ")}` : "No se realizaron cambios."
+      logDetails = changes.length > 0 ? `Campos editados del bien ${asset.numero_identificacion} : ${changes.join(", ")}` : "No se realizaron cambios."
     }
 
     try {

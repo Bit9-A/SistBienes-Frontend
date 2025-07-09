@@ -24,7 +24,8 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
   export const handleAddAsset = async (
     newAsset: Partial<MovableAsset>,
     setAssets: React.Dispatch<React.SetStateAction<MovableAsset[]>>,
-    onClose: () => void
+    onClose: () => void,
+    logDetails: string // Add logDetails parameter
   ) => {
     try {
       const createdAsset = await createAsset(newAsset as MovableAsset);
@@ -32,7 +33,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       onClose();
       await logCustomAction({
         accion: "Crear Bien",
-        detalles: `Se creó el bien con ID: ${createdAsset.id}`,
+        detalles: logDetails, // Use logDetails here
       });
     } catch (error) {
       console.error("Error al crear el bien:", error);

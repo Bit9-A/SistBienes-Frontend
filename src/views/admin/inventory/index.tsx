@@ -243,7 +243,10 @@ export default function Inventory() {
           logDetails || `Se editó el bien con ID: ${asset.id}`,
         );
       } else {
-        await handleAddAsset(asset, setAssets, () => setIsFormOpen(false));
+        await handleAddAsset(asset, setAssets, () => setIsFormOpen(false)
+      , logDetails || `Se creó el bien con N°: ${asset.numero_identificacion}`
+    );
+
       }
       setSelectedAsset(null);
       setIsEditing(false);
