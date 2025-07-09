@@ -143,6 +143,7 @@ export default function IncorporationsForm({
         cantidad: 1,
         concepto_id: Number(newIncorporation.concepto_id),
         dept_id: selectedDeptId,
+        observaciones: newIncorporation.observaciones ?? '',
       };
       await handleAdd(dataToSend);
       nuevos.push(dataToSend as Incorp);
@@ -184,6 +185,8 @@ export default function IncorporationsForm({
               e.preventDefault();
               if (selectedAssets.length > 1) {
                 handleAddMultiple();
+              } else if (selectedIncorporation) {
+                handleEdit();
               } else if (selectedAssets.length === 1) {
                 handleAdd({
                   ...newIncorporation,
@@ -196,8 +199,6 @@ export default function IncorporationsForm({
                 setShowAssetSelector(false);
                 setNewIncorporation({});
                 onClose();
-              } else {
-                handleEdit();
               }
             }}
           >

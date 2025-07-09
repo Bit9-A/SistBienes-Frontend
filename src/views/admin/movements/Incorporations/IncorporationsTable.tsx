@@ -184,8 +184,7 @@ useEffect(() => {
   const handleEdit = async () => {
     if (selectedIncorporation && newIncorporation) {
       try {
-        const { fecha, bien_id, ...updates } = newIncorporation
-        const updated = await updateIncorp(selectedIncorporation.id, updates)
+        const updated = await updateIncorp(selectedIncorporation.id, newIncorporation)
 
         if (!updated || typeof updated.id === "undefined") {
           toast({

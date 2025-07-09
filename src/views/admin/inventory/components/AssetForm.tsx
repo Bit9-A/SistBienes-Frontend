@@ -1008,7 +1008,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                 </CardHeader>
                 <CardBody pt={0}>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                    <FormControl isInvalid={!!errors.numero_serial} isRequired>
+                    <FormControl isInvalid={!!errors.numero_serial}>
                       <Flex align="center" justify="space-between" mb={2}>
                         <FormLabel fontWeight="semibold" mb="0" display="flex" alignItems="center" gap={1}>
                           Número Serial
@@ -1023,7 +1023,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                       </Flex>
                       <Input
                         name="numero_serial"
-                        value={formData.numero_serial || ""}
+                        value={formData.numero_serial || ","}
                         onChange={handleChange}
                         placeholder="Ingrese el número serial del fabricante"
                         size="lg"

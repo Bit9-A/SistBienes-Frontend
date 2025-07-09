@@ -33,9 +33,12 @@ import DisposalsForm from "./components/DisposalsForm"
 import DesktopTable from "./components/DesktopTable"
 import MobileCards from "./components/MobileCard"
 import { type Department, getDepartments } from "api/SettingsApi"
-import { type ConceptoMovimiento, getConceptosMovimientoDesincorporacion } from "api/SettingsApi"
-import { type MovableAsset, getAssets } from "api/AssetsApi"
+import { type ConceptoMovimiento, getConceptosMovimientoDesincorporacion, getConceptosMovimientoIncorporacion } from "api/SettingsApi"
+import { type MovableAsset, getAssets, updateAsset } from "api/AssetsApi"
 import { type SubGroup, getSubGroupsM } from "api/SettingsApi"
+import { createTransferRecord } from "views/admin/transfers/utils/createTransfers";
+import { type Transfer } from "api/TransferApi";
+import { createIncorp, type Incorp } from "api/IncorpApi";
 
 import { getProfile } from "api/UserApi";
 import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
@@ -55,6 +58,7 @@ export default function DisposalsTable() {
   const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([])
   const [assets, setAssets] = useState<MovableAsset[]>([])
   const [subgroups, setSubgroups] = useState<SubGroup[]>([])
+  const [incorpConceptoTraspasoId, setIncorpConceptoTraspasoId] = useState<number | undefined>(undefined);
 
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileDisposals, setProfileDisposals] = useState<Desincorp[]>([]);
@@ -92,16 +96,27 @@ useEffect(() => {
  useEffect(() => {
   const fetchCatalogs = async () => {
     try {
-      const [deptData, conceptData, assetData, subGroupData] = await Promise.all([
+      const [deptData, conceptDesincorpData, assetData, subGroupData, conceptIncorpData] = await Promise.all([
         getDepartments(),
         getConceptosMovimientoDesincorporacion(),
         getAssets(),
         getSubGroupsM(),
+        getConceptosMovimientoIncorporacion(), // Obtener conceptos de incorporación
       ]);
       setDepartments(deptData);
-      setConcepts(conceptData);
+      setConcepts(conceptDesincorpData); // Estos son los conceptos de desincorporación
       setAssets(assetData);
       setSubgroups(subGroupData);
+
+      const conceptoTraspasoIncorp = conceptIncorpData.find(
+        (concepto: any) => concepto.codigo === "02"
+      );
+      if (conceptoTraspasoIncorp) {
+        setIncorpConceptoTraspasoId(conceptoTraspasoIncorp.id);
+      } else {
+        console.warn("Concepto de incorporación con código '02' no encontrado.");
+      }
+
     } catch (error) {
       setError("Error al cargar catálogos.");
       console.error("Error fetching catalogs:", error);
@@ -134,14 +149,99 @@ useEffect(() => {
   fetchDisposals();
 }, []);
 
-  const handleAdd = async (disposalData?: Partial<Desincorp>) => {
-    const data = disposalData || newDisposal
-    const bien_id = Number(data.bien_id)
-    const fecha = data.fecha ? data.fecha : ""
-    const valor = Number(data.valor)
-    const cantidad = Number(data.cantidad)
-    const concepto_id = Number(data.concepto_id)
-    const dept_id = Number(data.dept_id)
+  const processTransferAndAssetUpdate = async (
+    fecha: string,
+    origen_id: number,
+    destino_id: number,
+    bienesToTransfer: number[],
+    observaciones: string,
+  ) => {
+    console.log("Executing processTransferAndAssetUpdate");
+    if (!userProfile?.id) {
+      toast({
+        title: "Error",
+        description: "No se pudo obtener el perfil del usuario para crear el traslado.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const transferPayload: Omit<Transfer, "id"> = {
+        fecha: fecha,
+        cantidad: bienesToTransfer.length,
+        origen_id: origen_id,
+        destino_id: destino_id,
+        bienes: bienesToTransfer,
+        responsable_id: userProfile.id,
+        observaciones: observaciones,
+      };
+      console.log("Transfer Payload:", transferPayload);
+      await createTransferRecord(transferPayload);
+      toast({
+        title: "Traslado creado",
+        description: "Se ha creado un traslado con los bienes desincorporados.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Actualizar el departamento de los bienes
+      for (const bienId of bienesToTransfer) {
+        try {
+          const assetToUpdate = assets.find(asset => asset.id === bienId);
+          if (assetToUpdate) {
+            const updatedAsset = { ...assetToUpdate, dept_id: destino_id };
+            console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
+            await updateAsset(bienId, updatedAsset);
+            toast({
+              title: "Bien actualizado",
+              description: `El departamento del bien ${bienId} ha sido actualizado.`,
+              status: "success",
+              duration: 1500,
+              isClosable: true,
+            });
+          } else {
+            console.warn(`Asset with ID ${bienId} not found in local state.`);
+          }
+        } catch (assetUpdateError) {
+          toast({
+            title: "Error",
+            description: `Error al actualizar el departamento del bien ${bienId}.`,
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al crear el traslado asociado.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      console.error("Error al crear traslado:", error);
+    }
+  };
+
+  const handleAdd = async (
+    disposalData?: Partial<Desincorp>,
+    deptDestinoId?: number,
+    allConcepts?: ConceptoMovimiento[],
+  ) => {
+    console.log("Executing handleAdd (single disposal)");
+    const data = disposalData || newDisposal;
+    const bien_id = Number(data.bien_id);
+    const fecha = data.fecha ? data.fecha : "";
+    const valor = Number(data.valor);
+    const cantidad = Number(data.cantidad);
+    const concepto_id = Number(data.concepto_id);
+    const dept_id = Number(data.dept_id);
 
     if (!bien_id || !fecha || !valor || !cantidad || !concepto_id || !dept_id) {
       toast({
@@ -150,8 +250,8 @@ useEffect(() => {
         status: "warning",
         duration: 3000,
         isClosable: true,
-      })
-      return
+      });
+      return;
     }
 
     const dataToSend = {
@@ -161,18 +261,52 @@ useEffect(() => {
       cantidad,
       concepto_id,
       dept_id,
-    }
+      observaciones: data.observaciones,
+    };
 
     try {
-      const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">)
-      setDisposals((prev) => [...prev, created])
+      const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">);
+      setDisposals((prev) => [...prev, created]);
+
+      const selectedConcept = allConcepts?.find((c) => c.id === concepto_id);
+      console.log(`Single Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
+      if (selectedConcept?.codigo === '51' && deptDestinoId && incorpConceptoTraspasoId) {
+        // Crear la incorporación por traspaso
+        const incorpDataForTransfer: Omit<Incorp, "id"> = {
+          bien_id: bien_id,
+          fecha: fecha,
+          valor: valor,
+          cantidad: cantidad,
+          concepto_id: incorpConceptoTraspasoId, // Concepto de incorporación por traspaso (código 02)
+          dept_id: deptDestinoId, // Departamento de destino de la desincorporación
+          observaciones: `Incorporación automática por traspaso desde el departamento ${departments.find(d => d.id === dept_id)?.nombre || ''}. ${data.observaciones || ''}`,
+        };
+        await createIncorp(incorpDataForTransfer);
+        toast({
+          title: "Incorporación por traspaso creada",
+          description: "Se ha creado una incorporación automática por traspaso.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+
+        // Actualizar el departamento del bien y crear el registro de traslado
+        await processTransferAndAssetUpdate(
+          fecha,
+          dept_id,
+          deptDestinoId,
+          [bien_id],
+          data.observaciones || "",
+        );
+      }
+
       toast({
         title: "Desincorporación creada",
         description: "La desincorporación se ha creado exitosamente",
         status: "success",
         duration: 3000,
         isClosable: true,
-      })
+      });
     } catch (error) {
       toast({
         title: "Error",
@@ -180,16 +314,225 @@ useEffect(() => {
         status: "error",
         duration: 3000,
         isClosable: true,
-      })
-      console.error("Error al crear desincorporación:", error)
+      });
+      console.error("Error al crear desincorporación:", error);
     }
-  }
+  };
+
+  const handleMultipleAdd = async (
+    disposalDataArray: Partial<Desincorp>[],
+    deptDestinoId: number,
+    allConcepts: ConceptoMovimiento[],
+    selectedAssetIds: number[],
+  ) => {
+    console.log("Executing handleMultipleAdd (multiple disposals)");
+    console.log("User Profile at start of handleMultipleAdd:", userProfile);
+    if (!userProfile?.id) {
+      toast({
+        title: "Error",
+        description: "No se pudo obtener el perfil del usuario para crear el traslado.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const nuevos: Desincorp[] = [];
+    const bienesToTransfer: number[] = [];
+    let isTransferConcept = false;
+    let transferFecha = "";
+    let transferOrigenId = 0;
+    let transferObservaciones = "";
+
+    for (const data of disposalDataArray) {
+      const bien_id = Number(data.bien_id);
+      const fecha = data.fecha ? data.fecha : "";
+      const valor = Number(data.valor);
+      const cantidad = Number(data.cantidad);
+      const concepto_id = Number(data.concepto_id);
+      const dept_id = Number(data.dept_id);
+
+      if (!bien_id || !fecha || !valor || !cantidad || !concepto_id || !dept_id) {
+        toast({
+          title: "Campos requeridos",
+          description: "Todos los campos son obligatorios para cada bien.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      const dataToSend = {
+        bien_id,
+        fecha,
+        valor,
+        cantidad,
+        concepto_id,
+        dept_id,
+        observaciones: data.observaciones,
+      };
+
+      try {
+        const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">);
+        nuevos.push(created);
+
+        const selectedConcept = allConcepts.find((c) => c.id === concepto_id);
+        console.log(`Multiple Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
+        if (selectedConcept?.codigo === '51') {
+          isTransferConcept = true;
+          bienesToTransfer.push(bien_id);
+          transferFecha = fecha;
+          transferOrigenId = dept_id;
+          transferObservaciones = data.observaciones || "";
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: `Error al crear desincorporación para el bien ${bien_id}`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        console.error(`Error al crear desincorporación para el bien ${bien_id}:`, error);
+        return; // Stop if one fails
+      }
+    }
+
+    setDisposals((prev) => [...prev, ...nuevos]);
+
+    console.log("Transfer conditions check: isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id);
+
+    if (isTransferConcept && deptDestinoId && bienesToTransfer.length > 0 && incorpConceptoTraspasoId) {
+      // Crear la incorporación por traspaso para cada bien
+      for (const bienId of bienesToTransfer) {
+        const asset = assets.find(a => a.id === bienId);
+        if (asset) {
+          const incorpDataForTransfer: Omit<Incorp, "id"> = {
+            bien_id: bienId,
+            fecha: transferFecha,
+            valor: asset.valor_total, // Usar el valor del bien
+            cantidad: 1, // Asumimos cantidad 1 por bien
+            concepto_id: incorpConceptoTraspasoId, // Concepto de incorporación por traspaso (código 02)
+            dept_id: deptDestinoId, // Departamento de destino
+            observaciones: `Incorporación automática por traspaso desde el departamento ${departments.find(d => d.id === transferOrigenId)?.nombre || ''}. ${transferObservaciones || ''}`,
+          };
+          await createIncorp(incorpDataForTransfer);
+        }
+      }
+      toast({
+        title: "Incorporaciones por traspaso creadas",
+        description: "Se han creado incorporaciones automáticas por traspaso.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Actualizar el departamento de los bienes y crear el registro de traslado
+      await processTransferAndAssetUpdate(
+        transferFecha,
+        transferOrigenId,
+        deptDestinoId,
+        bienesToTransfer,
+        transferObservaciones,
+      );
+    } else {
+      console.log("Transfer conditions not met. isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id, "incorpConceptoTraspasoId:", incorpConceptoTraspasoId);
+    }
+
+    toast({
+      title: "Desincorporaciones creadas",
+      description: "Las desincorporaciones se han creado exitosamente",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  const handleTransferAndAssetUpdate = async (
+    fecha: string,
+    origen_id: number,
+    destino_id: number,
+    bienesToTransfer: number[],
+    observaciones: string,
+  ) => {
+    if (!userProfile?.id) {
+      toast({
+        title: "Error",
+        description: "No se pudo obtener el perfil del usuario para crear el traslado.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const transferPayload: Omit<Transfer, "id"> = {
+        fecha: fecha,
+        cantidad: bienesToTransfer.length,
+        origen_id: origen_id,
+        destino_id: destino_id,
+        bienes: bienesToTransfer,
+        responsable_id: userProfile.id,
+        observaciones: observaciones,
+      };
+      console.log("Transfer Payload:", transferPayload);
+      await createTransferRecord(transferPayload);
+      toast({
+        title: "Traslado creado",
+        description: "Se ha creado un traslado con los bienes desincorporados.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Actualizar el departamento de los bienes
+      for (const bienId of bienesToTransfer) {
+        try {
+          const assetToUpdate = assets.find(asset => asset.id === bienId);
+          if (assetToUpdate) {
+            const updatedAsset = { ...assetToUpdate, dept_id: destino_id };
+            console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
+            await updateAsset(bienId, updatedAsset);
+            toast({
+              title: "Bien actualizado",
+              description: `El departamento del bien ${bienId} ha sido actualizado.`,
+              status: "success",
+              duration: 1500,
+              isClosable: true,
+            });
+          } else {
+            console.warn(`Asset with ID ${bienId} not found in local state.`);
+          }
+        } catch (assetUpdateError) {
+          toast({
+            title: "Error",
+            description: `Error al actualizar el departamento del bien ${bienId}.`,
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al crear el traslado asociado.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      console.error("Error al crear traslado:", error);
+    }
+  };
 
   const handleEdit = async () => {
     if (selectedDisposal && newDisposal) {
       try {
-        const { fecha, bien_id, ...updates } = newDisposal
-        const updated = await updateDesincorp(selectedDisposal.id, updates)
+        const updated = await updateDesincorp(selectedDisposal.id, newDisposal)
         if (!updated || typeof updated.id === "undefined") {
           toast({
             title: "Error",
@@ -393,6 +736,7 @@ useEffect(() => {
         subgroups={subgroups}
         disposals={disposals}
         userProfile={userProfile} // Pasar el perfil del usuario si es necesario
+        handleMultipleAdd={handleMultipleAdd}
       />
     </Stack>
   )

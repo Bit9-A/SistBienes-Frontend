@@ -21,12 +21,10 @@ export interface Transfer {
   cantidad: number;
   origen_id: number;
   destino_id: number;
-  bien_traslado_id: number;
-  id_mueble: number;
   responsable_id: number;
   responsable?: string;
   observaciones?: string;
-  bienes?: bienes[]; // Agregar la propiedad bienes
+  bienes: number[]; // Array de IDs de bienes
 }
 
 // Obtener todas las transferencias
@@ -52,9 +50,13 @@ export const getByTransfersId = async (id: string | number): Promise<TransferRes
 };
 
 // Crear una nueva transferencia
-export const createTransfer = async (transferData: Transfer) => {
+export const createTransfer = async (transferData: Omit<Transfer, "id">) => {
   try {
-    const response = await axiosInstance.post('/transfers', transferData);
+    const formattedData = {
+      ...transferData,
+      fecha: transferData.fecha ? new Date(transferData.fecha).toISOString().slice(0, 10) : '',
+    };
+    const response = await axiosInstance.post('/transfers', formattedData);
     return response.data;
   } catch (error: any) {
     console.error('Error creating transfer:', error.response?.data || error.message);
@@ -83,4 +85,3 @@ export const deleteTransfer = async (id: number) => {
     throw error;
   }
 }
-
