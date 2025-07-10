@@ -11,6 +11,7 @@ export interface MissingGoods {
   observaciones: string
   fecha: string
   bien_id: number
+  responsable_id: number // Añadir responsable_id
 
   // Campos opcionales/calculados para mostrar en frontend
   funcionario_nombre?: string

@@ -53,8 +53,10 @@ import {
 } from 'api/ReportApi';
 import { type Department, getDepartments } from 'api/SettingsApi';
 import ReportForm from './components/ReportForm';
+import DesktopTable from './components/DesktopTable'; // Importar DesktopTable
 import MobileCard from './components/MobileCard';
 import { getAssets, type MovableAsset } from 'api/AssetsApi';
+import { exportBM3ByMissingGoodsId } from './utils/ReportExcel'; // Importar la función de exportación BM3
 
 const ITEMS_PER_PAGE = 10;
 
@@ -191,6 +193,44 @@ export default function MissingGoodsTable() {
     setSelectedMissingGood(null);
     setNewMissingGood({});
     onOpen();
+  };
+
+  const handleExportBM3 = async (missingGood: MissingGoods) => {
+    try {
+      if (!missingGood.id || !missingGood.funcionario_id || !missingGood.departamento || !missingGood.funcionario_nombre) {
+        toast({
+          title: "Error de exportación",
+          description: "Faltan datos para generar el reporte BM3.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      await exportBM3ByMissingGoodsId(
+        missingGood.id,
+        missingGood.funcionario_id, // Usar funcionario_id
+        missingGood.departamento,
+        missingGood.funcionario_nombre
+      );
+      toast({
+        title: "Exportación BM3 iniciada",
+        description: `Se está generando el archivo BM3 para el bien ${missingGood.numero_identificacion}.`,
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error de exportación",
+        description: `No se pudo generar el archivo BM3 para el bien ${missingGood.numero_identificacion}.`,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error("Error exporting BM3:", error);
+    }
   };
 
   // Crear bien faltante
@@ -391,7 +431,7 @@ export default function MissingGoodsTable() {
                     <FiAlertTriangle size={24} color="orange" />
                   </Box>
                   <Heading size="lg" fontWeight="bold" color={textColor}>
-                    Gestión de Bienes Faltantes
+                    Gestiรณn de Bienes Faltantes
                   </Heading>
                 </Flex>
                 <Box color="gray.600" fontSize="sm">
@@ -440,7 +480,7 @@ export default function MissingGoodsTable() {
             >
               <Flex align="center" gap={2}>
                 <Icon as={FiFilter} color="blue.500" />
-                <Text fontWeight="medium">Filtros de Búsqueda</Text>
+                <Text fontWeight="medium">Filtros de Bรบsqueda</Text>
                 {activeFiltersCount > 0 && (
                   <Badge
                     borderRadius="full"
@@ -476,7 +516,7 @@ export default function MissingGoodsTable() {
                     <Icon as={FiSearch} color="gray.400" />
                   </InputLeftElement>
                   <Input
-                    placeholder="Buscar por funcionario, jefe, departamento, bien, identificación u observaciones..."
+                    placeholder="Buscar por funcionario, jefe, departamento, bien, identificaciรณn u observaciones..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     borderRadius="md"
@@ -589,193 +629,16 @@ export default function MissingGoodsTable() {
             ) : (
               <>
                 {!isMobile ? (
-                  <Box>
-                    <Box
-                      border="1px"
-                      borderColor={borderColor}
-                      borderRadius="lg"
-                      boxShadow="sm"
-                      overflow="auto"
-                      mb={4}
-                    >
-                      <Box as="table" w="100%">
-                        <Box as="thead" bg={headerBg}>
-                          <Box as="tr">
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              N°
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Bien
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Departamento
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Existencias
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Diferencia Cantidad
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Diferencia Valor
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Funcionario
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="left"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Fecha
-                            </Box>
-                            <Box
-                              as="th"
-                              p={3}
-                              textAlign="center"
-                              fontWeight="medium"
-                              fontSize="sm"
-                            >
-                              Acciones
-                            </Box>
-                          </Box>
-                        </Box>
-                        <Box as="tbody">
-                          {paginatedGoods
-                            .filter(
-                              (item) => item && typeof item.id !== 'undefined',
-                            )
-                            .map((good, index) => (
-                              <Box
-                                key={uuidv4()}
-                                as="tr"
-                                _hover={{ bg: hoverBg }}
-                                transition="background 0.2s"
-                              >
-                                <Box as="td" p={3}>
-                                  <Text fontSize="sm" color={textColor}>
-                                    {(currentPage - 1) * ITEMS_PER_PAGE +
-                                      index +
-                                      1}
-                                  </Text>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Text fontSize="sm" color={textColor}>
-                                    {good.numero_identificacion}
-                                  </Text>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Badge variant="outline" colorScheme="blue">
-                                    {good.departamento}
-                                  </Badge>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Text fontSize="sm" color={textColor}>
-                                    {good.existencias}
-                                  </Text>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Badge
-                                    colorScheme={
-                                      good.diferencia_cantidad > 0
-                                        ? 'red'
-                                        : 'green'
-                                    }
-                                    variant="subtle"
-                                  >
-                                    {good.diferencia_cantidad}
-                                  </Badge>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Text fontSize="sm" color={textColor}>
-                                    {Number(good.diferencia_valor).toFixed(2)}
-                                  </Text>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Flex align="center" gap={2}>
-                                    <Icon as={FiUsers} color="gray.500" />
-                                    <Text fontSize="sm" color={textColor}>
-                                      {good.funcionario_nombre}
-                                    </Text>
-                                  </Flex>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Text fontSize="sm" color={textColor}>
-                                    {new Date(good.fecha).toLocaleDateString(
-                                      'es-ES',
-                                    )}
-                                  </Text>
-                                </Box>
-                                <Box as="td" p={3}>
-                                  <Flex justify="center" gap={2}>
-                                    <IconButton
-                                      aria-label="Editar Reporte"
-                                      size="sm"
-                                      icon={<FiEdit />}
-                                      colorScheme="blue"
-                                      variant="ghost"
-                                      onClick={() => openEditDialog(good)}
-                                    />
-                                    <IconButton
-                                      aria-label="Eliminar Reporte"
-                                      size="sm"
-                                      icon={<FiTrash2 />}
-                                      colorScheme="red"
-                                      variant="ghost"
-                                      onClick={() => handleDelete(good.id)}
-                                    />
-                                  </Flex>
-                                </Box>
-                              </Box>
-                            ))}
-                        </Box>
-                      </Box>
-                    </Box>
-                  </Box>
+                  <DesktopTable
+                    missingGoods={paginatedGoods}
+                    borderColor={borderColor}
+                    headerBg={headerBg}
+                    hoverBg={hoverBg}
+                    tableSize={tableSize}
+                    onEdit={openEditDialog}
+                    onDelete={handleDelete}
+                    onExportBM3={handleExportBM3} // Pasar la funciรณn de exportaciรณn
+                  />
                 ) : (
                   <MobileCard
                     missingGoods={paginatedGoods}
@@ -783,6 +646,7 @@ export default function MissingGoodsTable() {
                     departments={departments}
                     onEdit={openEditDialog}
                     onDelete={handleDelete}
+                    onExportBM3={handleExportBM3} // Pasar la funciรณn de exportaciรณn
                   />
                 )}
 

@@ -85,7 +85,7 @@ const routes = [
     adminOnly: true,
   },
   {
-    name: 'Reportes',
+    name: 'Bienes Faltantes',
     layout: '/admin',
     path: '/reports',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,

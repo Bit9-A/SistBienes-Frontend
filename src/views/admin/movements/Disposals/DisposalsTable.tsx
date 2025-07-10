@@ -18,6 +18,7 @@ import {
   AlertTitle,
   AlertDescription,
   useToast,
+  Button, // Añadir Button aquí
 } from "@chakra-ui/react"
 import { FiTrash2 } from "react-icons/fi"
 import {
@@ -32,6 +33,7 @@ import DisposalsFilters from "./components/DisposalsFilters"
 import DisposalsForm from "./components/DisposalsForm"
 import DesktopTable from "./components/DesktopTable"
 import MobileCards from "./components/MobileCard"
+import { ExportBM2Modal } from "./components/ExportBM2Modal" // Importar el nuevo modal
 import { type Department, getDepartments } from "api/SettingsApi"
 import { type ConceptoMovimiento, getConceptosMovimientoDesincorporacion, getConceptosMovimientoIncorporacion } from "api/SettingsApi"
 import { type MovableAsset, getAssets, updateAsset } from "api/AssetsApi"
@@ -39,6 +41,7 @@ import { type SubGroup, getSubGroupsM } from "api/SettingsApi"
 import { createTransferRecord } from "views/admin/transfers/utils/createTransfers";
 import { type Transfer } from "api/TransferApi";
 import { createIncorp, type Incorp } from "api/IncorpApi";
+import { exportBM2ByDepartment } from "views/admin/inventory/utils/inventoryExcel"; // Importar la función de exportación BM2
 
 import { getProfile } from "api/UserApi";
 import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
@@ -54,6 +57,7 @@ export default function DisposalsTable() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen: isBM2ModalOpen, onOpen: onBM2ModalOpen, onClose: onBM2ModalClose } = useDisclosure(); // Para el modal BM2
   const [departments, setDepartments] = useState<Department[]>([])
   const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([])
   const [assets, setAssets] = useState<MovableAsset[]>([])
@@ -620,6 +624,28 @@ useEffect(() => {
     onOpen()
   }
 
+  const handleExportBM2 = async (deptId: number, deptName: string, mes: number, año: number, tipo: 'incorporacion' | 'desincorporacion') => {
+    try {
+      await exportBM2ByDepartment(deptId, deptName, mes, año, tipo);
+      toast({
+        title: "Exportación BM2 iniciada",
+        description: `Se está generando el archivo BM2 de ${tipo} para ${deptName}.`,
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error de exportación",
+        description: `No se pudo generar el archivo BM2 de ${tipo}.`,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error("Error exporting BM2:", error);
+    }
+  };
+
   if (loading) {
     return (
       <Center py={20}>
@@ -659,6 +685,13 @@ useEffect(() => {
             departments={departments}
             canFilterByDept={canFilterByDept}
           />
+          <Button
+            colorScheme="purple"
+            onClick={onBM2ModalOpen}
+            mt={4} // Añadir margen superior para separar del filtro
+          >
+            Exportar BM-2
+          </Button>
         </CardBody>
       </Card>
 
@@ -737,6 +770,15 @@ useEffect(() => {
         disposals={disposals}
         userProfile={userProfile} // Pasar el perfil del usuario si es necesario
         handleMultipleAdd={handleMultipleAdd}
+      />
+
+      {/* Modal para exportar BM2 */}
+      <ExportBM2Modal
+        isOpen={isBM2ModalOpen}
+        onClose={onBM2ModalClose}
+        departments={departments}
+        onExport={handleExportBM2}
+        tipoMovimiento="desincorporacion" // Especificar el tipo de movimiento
       />
     </Stack>
   )
