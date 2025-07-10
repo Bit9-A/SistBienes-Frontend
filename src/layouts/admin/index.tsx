@@ -54,7 +54,7 @@ export default function Dashboard(props: { [x: string]: any }) {
 
   // Obtener el perfil del usuario
   useEffect(() => {
-  
+
     const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
@@ -163,10 +163,6 @@ export default function Dashboard(props: { [x: string]: any }) {
     );
   }
 
-  // Si no hay perfil de usuario, no renderizar nada
-  if (!userProfile) {
-    return null;
-  }
 
   return (
     <Box>

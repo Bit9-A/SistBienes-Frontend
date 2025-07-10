@@ -1,4 +1,4 @@
-import { Icon } from '@chakra-ui/react';
+import { Hide, Icon } from '@chakra-ui/react';
 import {
   MdBarChart,
   MdPerson,
@@ -32,8 +32,6 @@ import AuditModule from 'views/admin/audit';
 import MissingGoodsTable from 'views/admin/reports';
 
 
-
-
 // Define las rutas con sus permisos
 const routes = [
   {
@@ -43,6 +41,7 @@ const routes = [
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <MainDashboard />,
     adminOnly: true,
+    hidden: false,
   },
   {
     name: 'Gestión de Usuarios',
@@ -51,6 +50,7 @@ const routes = [
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
     component: <UserManage />,
     adminOnly: true,
+    hidden: false,
   },
   {
     name: 'Gestión de Bienes',
@@ -59,6 +59,7 @@ const routes = [
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
     component: <Inventory />,
     adminOnly: false,
+    hidden: false,
   },
   {
     name: 'Incorporaciones e Desincorporaciones',
@@ -67,6 +68,7 @@ const routes = [
     icon: <Icon as={MdOutlineShoppingCart} width="20px" height="20px" color="inherit" />,
     component: <AssetManagementPage />,
     adminOnly: false,
+    hidden: false,
   },
   {
     name: 'Traslados',
@@ -75,6 +77,7 @@ const routes = [
     icon: <Icon as={MdHistory} width="20px" height="20px" color="inherit" />,
     component: <Transfer />,
     adminOnly: false,
+    hidden: false,
   },
   {
     name: 'Auditoría',
@@ -83,6 +86,7 @@ const routes = [
     icon: <Icon as={MdAssignment} width="20px" height="20px" color="inherit" />,
     component: <AuditModule />,
     adminOnly: true,
+    hidden: false,
   },
   {
     name: 'Bienes Faltantes',
@@ -91,6 +95,7 @@ const routes = [
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
     component: <MissingGoodsTable />,
     adminOnly: false,
+    hidden: false,
   },
   {
     name: 'Configuración',
@@ -99,24 +104,37 @@ const routes = [
     icon: <Icon as={MdSettings} width="20px" height="20px" color="inherit" />,
     component: <Settings />,
     adminOnly: true,
+    hidden: false,
   },
   {
     name: 'Notificaciones',
     layout: '/admin',
     path: '/notifications',
     icon: <Icon as={MdNotifications} width="20px" height="20px" color="inherit" />,
-    component: <NotificationsHistory/>,
+    component: <NotificationsHistory />,
     adminOnly: false,
+    hidden: false,
+  },
+  {
+    name: 'Perfil',
+    layout: '/admin',
+    path: '/profile',
+    icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
+    component: <Profile />,
+    adminOnly: false,
+    hidden: true,
   },
   {
     name: 'Cerrar sesión',
     layout: '/auth',
     path: '/sign-in',
     icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-    component: <SignInCentered /> ,
+    component: <SignInCentered />,
     adminOnly: false,
+    hidden: false,
   },
 ];
+
 
 // Función para filtrar rutas según el rol del usuario
 export const getFilteredRoutes = (isAdmin: boolean) => {
@@ -124,3 +142,4 @@ export const getFilteredRoutes = (isAdmin: boolean) => {
 };
 
 export default routes;
+
