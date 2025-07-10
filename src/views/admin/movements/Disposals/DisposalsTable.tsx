@@ -81,52 +81,7 @@ export default function DisposalsTable() {
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-
-useEffect(() => {
-  const fetchProfileAndFilter = async () => {
-    const profile = await getProfile();
-    setUserProfile(profile);
-    const { filtered, canFilterByDept } = filterByUserProfile(disposals, profile);
-    setProfileDisposals(filtered);
-    setCanFilterByDept(canFilterByDept);
-  };
-  fetchProfileAndFilter();
-}, [disposals]);
-
-
-
-
-  // Load data on mount
- useEffect(() => {
-  const fetchCatalogs = async () => {
-    try {
-      const [deptData, conceptDesincorpData, assetData, subGroupData, conceptIncorpData] = await Promise.all([
-        getDepartments(),
-        getConceptosMovimientoDesincorporacion(),
-        getAssets(),
-        getSubGroupsM(),
-        getConceptosMovimientoIncorporacion(), // Obtener conceptos de incorporación
-      ]);
-      setDepartments(deptData);
-      setConcepts(conceptDesincorpData); // Estos son los conceptos de desincorporación
-      setAssets(assetData);
-      setSubgroups(subGroupData);
-
-      const conceptoTraspasoIncorp = conceptIncorpData.find(
-        (concepto: any) => concepto.codigo === "02"
-      );
-      if (conceptoTraspasoIncorp) {
-        setIncorpConceptoTraspasoId(conceptoTraspasoIncorp.id);
-      } else {
-        console.warn("Concepto de incorporación con código '02' no encontrado.");
-      }
-
-    } catch (error) {
-      setError("Error al cargar catálogos.");
-      console.error("Error fetching catalogs:", error);
-    }
-  };
-
+  // Función para cargar desincorporaciones
   const fetchDisposals = async () => {
     try {
       setLoading(true);
@@ -149,9 +104,51 @@ useEffect(() => {
     }
   };
 
-  fetchCatalogs();
-  fetchDisposals();
-}, []);
+  useEffect(() => {
+    const fetchProfileAndFilter = async () => {
+      const profile = await getProfile();
+      setUserProfile(profile);
+      const { filtered, canFilterByDept } = filterByUserProfile(disposals, profile);
+      setProfileDisposals(filtered);
+      setCanFilterByDept(canFilterByDept);
+    };
+    fetchProfileAndFilter();
+  }, [disposals]);
+
+  // Load data on mount
+  useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const [deptData, conceptDesincorpData, assetData, subGroupData, conceptIncorpData] = await Promise.all([
+          getDepartments(),
+          getConceptosMovimientoDesincorporacion(),
+          getAssets(),
+          getSubGroupsM(),
+          getConceptosMovimientoIncorporacion(), // Obtener conceptos de incorporación
+        ]);
+        setDepartments(deptData);
+        setConcepts(conceptDesincorpData); // Estos son los conceptos de desincorporación
+        setAssets(assetData);
+        setSubgroups(subGroupData);
+
+        const conceptoTraspasoIncorp = conceptIncorpData.find(
+          (concepto: any) => concepto.codigo === "02"
+        );
+        if (conceptoTraspasoIncorp) {
+          setIncorpConceptoTraspasoId(conceptoTraspasoIncorp.id);
+        } else {
+          console.warn("Concepto de incorporación con código '02' no encontrado.");
+        }
+
+      } catch (error) {
+        setError("Error al cargar catálogos.");
+        console.error("Error fetching catalogs:", error);
+      }
+    };
+
+    fetchCatalogs();
+    fetchDisposals(); // Llamar a la función de carga de desincorporaciones
+  }, []);
 
   const processTransferAndAssetUpdate = async (
     fecha: string,

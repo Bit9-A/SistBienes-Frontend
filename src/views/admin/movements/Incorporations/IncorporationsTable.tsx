@@ -74,6 +74,29 @@ const [canNewButton, setCanNewButton] = useState(false);
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
+  // Función para cargar incorporaciones
+  const fetchIncorporations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getIncorps();
+      setIncorporations(data);
+    } catch (error: any) {
+      if (
+        error?.response?.status === 404 &&
+        error?.response?.data?.message === "No se encontraron incorporaciones"
+      ) {
+        setIncorporations([]); // No hay registros, pero no es un error
+        setError(null);
+      } else {
+        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
+        console.error("Error fetching data:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
 useEffect(() => {
   const fetchProfileAndFilter = async () => {
     const profile = await getProfile();
@@ -107,30 +130,8 @@ useEffect(() => {
     }
   };
 
-  const fetchIncorporations = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getIncorps();
-      setIncorporations(data);
-    } catch (error: any) {
-      if (
-        error?.response?.status === 404 &&
-        error?.response?.data?.message === "No se encontraron incorporaciones"
-      ) {
-        setIncorporations([]); // No hay registros, pero no es un error
-        setError(null);
-      } else {
-        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
-        console.error("Error fetching data:", error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   fetchCatalogs();
-  fetchIncorporations();
+  fetchIncorporations(); // Llamar a la función de carga de incorporaciones
 }, []);
 
 

@@ -97,10 +97,31 @@ export default function MissingGoodsTable() {
   const tableSize = useBreakpointValue({ base: 'sm', md: 'md' });
   const buttonSize = useBreakpointValue({ base: 'md', md: 'lg' });
 
+  // Función para cargar los datos de bienes faltantes
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [data, deptData, assetsData] = await Promise.all([
+        getMissingGoods(),
+        getDepartments(),
+        getAssets(),
+      ]);
+      setDepartments(deptData);
+      setMissingGoods(data);
+      setAssets(assetsData);
+    } catch (error) {
+      setError('Error al cargar los datos. Por favor, intenta nuevamente.');
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Get unique departments for filter
-  const departmentOptions = [
-    ...new Set(missingGoods.map((good) => good.departamento).filter(Boolean)),
-  ].sort();
+  const departmentOptions = useMemo(() => {
+    return [...new Set(missingGoods.map((good) => good.departamento).filter(Boolean))].sort();
+  }, [missingGoods]);
 
   // Apply filters
   useEffect(() => {
@@ -161,25 +182,6 @@ export default function MissingGoodsTable() {
 
   // Load data on mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [data, deptData, assetsData] = await Promise.all([
-          getMissingGoods(),
-          getDepartments(),
-          getAssets(),
-        ]);
-        setDepartments(deptData);
-        setMissingGoods(data);
-        setAssets(assetsData);
-      } catch (error) {
-        setError('Error al cargar los datos. Por favor, intenta nuevamente.');
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
