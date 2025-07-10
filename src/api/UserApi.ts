@@ -18,15 +18,18 @@ export interface User {
 export interface UserProfile {
   id: number
   tipo_usuario: number
-  nombre_tipo_usuario: string
-  email: string
-  nombre_completo: string
+  nombre?: string
+  apellido?: string
+  email?: string
   telefono?: string
-  dept_id: number
-  dept_nombre: string
-  cedula: string
-  username: string
+  dept_id?: number
+  dept_nombre?: string
+  cedula?: string
+  username?: string
+  password?: string
+  nombre_completo?: string // Agregamos este campo
 }
+
 
 // Obtener todos los usuarios
 export const getUsers = async (): Promise<User[]> => {
@@ -67,7 +70,7 @@ export const logout = async () => {
   if (user) {
     try {
       token = JSON.parse(user).token;
-    } catch {}
+    } catch { }
   }
   const headers = token
     ? { Authorization: `Bearer ${token}` }
@@ -79,6 +82,6 @@ export const logout = async () => {
 // Obtener el profile del usuario
 export const getProfile = async (): Promise<UserProfile> => {
   const response = await axiosInstance.get("/auth/profile")
-  return response.data.user // Devuelve el perfil del usuario
+  return response.data.user
 }
 

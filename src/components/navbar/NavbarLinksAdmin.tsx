@@ -27,7 +27,7 @@ import { FiUser, FiLogOut, FiSettings, FiChevronDown } from "react-icons/fi"
 import routes from "routes"
 // API
 import { logout as logoutApi, type UserProfile } from "../../api/UserApi"
-import  {handleLogout as Logout} from "../../views/auth/signIn/utils/authUtils"
+import { handleLogout as Logout } from "../../views/auth/signIn/utils/authUtils"
 import { useNavigate } from "react-router-dom"
 
 
@@ -37,7 +37,6 @@ interface HeaderLinksProps {
   onLogout?: () => void
   user: UserProfile
 }
-
 export default function HeaderLinks({ secondary, onProfileClick, onLogout, user }: HeaderLinksProps) {
   const toast = useToast()
   const navigate = useNavigate()
@@ -82,7 +81,6 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
     if (onProfileClick) {
       onProfileClick()
     } else {
-      // Lógica por defecto para abrir perfil
       navigate("/admin/profile")
     }
   }

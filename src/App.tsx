@@ -4,6 +4,7 @@ import AuthLayout from './layouts/auth';
 import AdminLayout from './layouts/admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
+import Profile from 'views/admin/profile'
 
 import { ChakraProvider } from '@chakra-ui/react';
 import initialTheme from './theme/theme';
