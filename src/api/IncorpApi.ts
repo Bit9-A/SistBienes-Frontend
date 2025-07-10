@@ -30,16 +30,21 @@ export const getIncorpById = async (id: number): Promise<Incorp> => {
 
 // Crear una incorporación
 export const createIncorp = async (incorpData: Omit<Incorp, "id">): Promise<Incorp> => {
-
-  const response = await axiosInstance.post("/incorp", incorpData);
-  
-
+  const formattedData = {
+    ...incorpData,
+    fecha: incorpData.fecha ? new Date(incorpData.fecha).toISOString().slice(0, 10) : '',
+  };
+  const response = await axiosInstance.post("/incorp", formattedData);
   return response.data.incorp as Incorp;
 };
 
 // Actualizar una incorporación
 export const updateIncorp = async (id: number, updates: Partial<Omit<Incorp, "id">>): Promise<Incorp> => {
-  const response = await axiosInstance.put(`/incorp/${id}`, updates);
+  const formattedUpdates = {
+    ...updates,
+    fecha: updates.fecha ? new Date(updates.fecha).toISOString().slice(0, 10) : updates.fecha,
+  };
+  const response = await axiosInstance.put(`/incorp/${id}`, formattedUpdates);
   return response.data.incorp as Incorp;
 };
 
@@ -76,12 +81,20 @@ export const getDesincorpById = async (id: number): Promise<Desincorp> => {
 }
 // Crear una desincorporación
 export const createDesincorp = async (desincorpData: Omit<Desincorp, "id">): Promise<Desincorp> => {
-  const response = await axiosInstance.post("/desincorp", desincorpData);
+  const formattedData = {
+    ...desincorpData,
+    fecha: desincorpData.fecha ? new Date(desincorpData.fecha).toISOString().slice(0, 10) : '',
+  };
+  const response = await axiosInstance.post("/desincorp", formattedData);
   return response.data.desincorp as Desincorp;
 }
 // Actualizar una desincorporación
 export const updateDesincorp = async (id: number, updates: Partial<Omit<Desincorp, "id">>): Promise<Desincorp> => {
-  const response = await axiosInstance.put(`/desincorp/${id}`, updates);
+  const formattedUpdates = {
+    ...updates,
+    fecha: updates.fecha ? new Date(updates.fecha).toISOString().slice(0, 10) : updates.fecha,
+  };
+  const response = await axiosInstance.put(`/desincorp/${id}`, formattedUpdates);
   return response.data.desincorp as Desincorp;
 };
 // Eliminar una desincorporación

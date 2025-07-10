@@ -11,20 +11,19 @@ export async function createTransferRecord(transferData: Partial<Transfer>) {
     !transferData.fecha ||
     !transferData.origen_id ||
     !transferData.destino_id ||
-    !transferData.bien_traslado_id ||
-    !transferData.id_mueble ||
+    !transferData.bienes ||
+    transferData.bienes.length === 0 ||
     !transferData.responsable_id 
   ) {
     throw new Error("Faltan datos requeridos para crear el transfer");
   }
 
   // Puedes ajustar los defaults aquí si lo necesitas
-  const payload: Transfer = {
-    id: 0, // El backend debe ignorar o autogenerar este campo
-    cantidad: 1,
+  const payload: Omit<Transfer, "id"> = {
+    cantidad: transferData.bienes.length, // La cantidad es el número de bienes
     observaciones: "",
     ...transferData,
-  } as Transfer;
+  } as Omit<Transfer, "id">;
 
   return await createTransfer(payload);
 }

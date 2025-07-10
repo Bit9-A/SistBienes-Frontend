@@ -8,7 +8,7 @@ import {
   Flex,
   useColorModeValue,
 } from "@chakra-ui/react"
-import { FiEdit2, FiTrash2 } from "react-icons/fi"
+import { FiEdit2, FiTrash2, FiDownload } from "react-icons/fi" // Importar FiDownload
 import { type MissingGoods } from "api/ReportApi"
 import { type Department } from "api/SettingsApi"
 
@@ -18,6 +18,7 @@ interface MobileCardProps {
   departments: Department[]
   onEdit: (mg: MissingGoods) => void
   onDelete: (id: number) => void
+  onExportBM3: (missingGood: MissingGoods) => void // Nueva prop para exportar BM3
 }
 
 export default function MobileCard({
@@ -26,6 +27,7 @@ export default function MobileCard({
   departments,
   onEdit,
   onDelete,
+  onExportBM3, // Recibir la nueva prop
 }: MobileCardProps) {
   const cardBg = useColorModeValue("white", "gray.800")
 
@@ -61,6 +63,14 @@ export default function MobileCard({
                 variant="ghost"
                 colorScheme="red"
                 onClick={() => onDelete(mg.id)}
+              />
+              <IconButton
+                aria-label="Exportar BM-3"
+                icon={<FiDownload />}
+                size="sm"
+                variant="ghost"
+                colorScheme="green"
+                onClick={() => onExportBM3(mg)} // Llamar a la función de exportación
               />
             </HStack>
           </Flex>

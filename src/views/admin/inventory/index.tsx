@@ -39,8 +39,9 @@ import {
 } from '../../../api/SettingsApi';
 import axiosInstance from '../../../utils/axiosInstance';
 import { getProfile } from 'api/UserApi';
-import { exportBM1WithMarkers } from 'views/admin/inventory/utils/inventoryExcel';
+import { exportBM1WithMarkers, generateBM4Pdf } from 'views/admin/inventory/utils/inventoryExcel'; // Importar generateBM4Pdf
 import { ExportBM1Modal } from './components/ExportBM1Modal';
+import { ExportBM4Modal } from './components/ExportBM4Modal'; // Importar ExportBM4Modal
 import { exportQRLabels } from 'views/admin/inventory/utils/inventoryLabels';
 import { ExportQRLabelsModal } from './components/ExportQRLabelsModal';
 
@@ -59,7 +60,8 @@ export default function Inventory() {
   const [canFilterByDept, setCanFilterByDept] = useState(false);
   const [userAssets, setUserAssets] = useState([]);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isQRLabelsModalOpen, setIsQRLabelsModalOpen] = useState(false); // New state for QR labels modal
+  const [isQRLabelsModalOpen, setIsQRLabelsModalOpen] = useState(false);
+  const [isBM4ModalOpen, setIsBM4ModalOpen] = useState(false); // Nuevo estado para el modal BM4
   const toast = useToast(); // Initialize useToast
 
   // Obtener los estados de bienes /goods-status
@@ -243,7 +245,10 @@ export default function Inventory() {
           logDetails || `Se editó el bien con ID: ${asset.id}`,
         );
       } else {
-        await handleAddAsset(asset, setAssets, () => setIsFormOpen(false));
+        await handleAddAsset(asset, setAssets, () => setIsFormOpen(false)
+      , logDetails || `Se creó el bien con N°: ${asset.numero_identificacion}`
+    );
+
       }
       setSelectedAsset(null);
       setIsEditing(false);
@@ -431,6 +436,13 @@ export default function Inventory() {
             >
               Exportar Etiquetas QR
             </Button>
+            <Button
+              colorScheme="orange"
+              ml={2}
+              onClick={() => setIsBM4ModalOpen(true)} // Botón para abrir el modal BM4
+            >
+              Exportar BM-4
+            </Button>
           </Flex>
           {/* Filtros y tabla de bienes */}
           <Card
@@ -536,6 +548,34 @@ export default function Inventory() {
                 onClose={() => setIsQRLabelsModalOpen(false)}
                 departments={departments}
                 onExport={exportQRLabels}
+              />
+
+              <ExportBM4Modal
+                isOpen={isBM4ModalOpen}
+                onClose={() => setIsBM4ModalOpen(false)}
+                departments={departments}
+                userProfile={userProfile}
+                onExport={async (deptId, mes, año, responsableId, departamentoNombre) => {
+                  try {
+                    await generateBM4Pdf(deptId, mes, año, responsableId, departamentoNombre);
+                    toast({
+                      title: "Exportación BM4 iniciada",
+                      description: `Se está generando el reporte BM4 para ${departamentoNombre} (${mes}/${año}).`,
+                      status: "info",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Error de exportación",
+                      description: `No se pudo generar el reporte BM4.`,
+                      status: "error",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    console.error("Error exporting BM4:", error);
+                  }
+                }}
               />
             </CardBody>
           </Card>

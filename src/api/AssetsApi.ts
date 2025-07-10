@@ -90,14 +90,18 @@ export const createAsset = async (assetData: MovableAsset) => {
 // Actualizar un activo existente
 export const updateAsset = async (assetId: number, assetData: Partial<MovableAsset>) => {
     try {
-        console.log('Updating asset with ID:', assetId, 'Data:', assetData); // Imprime el ID y los datos del activo
-      const response = await axiosInstance.put(`/furniture/${assetId}`, assetData);
-      return response.data;
+        const formattedAssetData = {
+            ...assetData,
+            fecha: assetData.fecha ? new Date(assetData.fecha).toISOString().slice(0, 10) : assetData.fecha,
+        };
+        console.log('Updating asset with ID:', assetId, 'Data:', formattedAssetData); // Imprime el ID y los datos del activo
+        const response = await axiosInstance.put(`/furniture/${assetId}`, formattedAssetData);
+        return response.data;
     } catch (error: any) {
-      console.error("Error al actualizar el bien:", error.response?.data || error.message); // Imprime el mensaje del servidor
-      throw error;
+        console.error("Error al actualizar el bien:", error.response?.data || error.message); // Imprime el mensaje del servidor
+        throw error;
     }
-  };
+};
 // Eliminar un activo existente
 export const deleteAsset = async (id: number) => {
     try {

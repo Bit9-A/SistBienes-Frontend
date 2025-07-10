@@ -198,9 +198,10 @@ export const AssetForm: React.FC<AssetFormProps> = ({
       if (!formData.valor_unitario || Number(formData.valor_unitario) <= 0) {
         newErrors.valor_unitario = "El valor debe ser mayor a 0"
       }
-      if (!formData.numero_serial?.trim()) {
-        newErrors.numero_serial = "El número serial es obligatorio"
-      }
+      // Remover esta validación:
+      // if (!formData.numero_serial?.trim()) {
+      //   newErrors.numero_serial = "El número serial es obligatorio"
+      // }
       if (!formData.parroquia_id) {
         newErrors.parroquia_id = "La parroquia es obligatoria"
       }
@@ -363,6 +364,8 @@ export const AssetForm: React.FC<AssetFormProps> = ({
       isComputer: isComputer ? 1 : 0,
       valor_total: Number(data.valor_unitario) * 1,
       fecha: data.fecha ? new Date(data.fecha).toISOString().split("T")[0] : undefined,
+      // Asegurar que numero_serial tenga un valor por defecto
+      numero_serial: data.numero_serial?.trim() || "SN:N/A",
       // Asegurar que los IDs sean números o undefined
       dept_id: data.dept_id ? Number(data.dept_id) : undefined,
       subgrupo_id: data.subgrupo_id ? Number(data.subgrupo_id) : undefined,
@@ -374,7 +377,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
       valor_unitario: data.valor_unitario ? Number(data.valor_unitario) : undefined,
     }
 
-    // Remover campos undefined para evitar enviar null
+    // Remover campos undefined para evitar enviar null (excepto numero_serial que siempre tendrá valor)
     Object.keys(assetData).forEach((key) => {
       if (assetData[key as keyof typeof assetData] === undefined) {
         delete assetData[key as keyof typeof assetData]
@@ -564,7 +567,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
           }
         }
       }
-      logDetails = changes.length > 0 ? `Campos editados: ${changes.join(", ")}` : "No se realizaron cambios."
+      logDetails = changes.length > 0 ? `Campos editados del bien ${asset.numero_identificacion} : ${changes.join(", ")}` : "No se realizaron cambios."
     }
 
     try {
@@ -1008,7 +1011,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                 </CardHeader>
                 <CardBody pt={0}>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                    <FormControl isInvalid={!!errors.numero_serial} isRequired>
+                    <FormControl isInvalid={!!errors.numero_serial}>
                       <Flex align="center" justify="space-between" mb={2}>
                         <FormLabel fontWeight="semibold" mb="0" display="flex" alignItems="center" gap={1}>
                           Número Serial
@@ -1019,13 +1022,13 @@ export const AssetForm: React.FC<AssetFormProps> = ({
                             <Icon as={FiUnlock} color={unlockIconColor} boxSize={3} />
                           )}
                         </FormLabel>
-                        <EditToggleButton fieldName="numero_serial" isRequired />
+                        <EditToggleButton fieldName="numero_serial" />
                       </Flex>
                       <Input
                         name="numero_serial"
                         value={formData.numero_serial || ""}
                         onChange={handleChange}
-                        placeholder="Ingrese el número serial del fabricante"
+                        placeholder="Ingrese el número serial (opcional - se asignará SN:N/A si está vacío)"
                         size="lg"
                         isReadOnly={asset?.id ? !editableFields.numero_serial : false}
                         bg={asset?.id ? (editableFields.numero_serial ? editableBg : readOnlyBg) : editableBg}

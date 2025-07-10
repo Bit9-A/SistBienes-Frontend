@@ -27,8 +27,18 @@ interface DisposalsFormProps {
   selectedDisposal: Desincorp | null;
   newDisposal: Partial<Desincorp>;
   setNewDisposal: (disposal: Partial<Desincorp>) => void;
-  handleAdd: (disposalData?: Partial<Desincorp>) => void;
+  handleAdd: (
+    disposalData?: Partial<Desincorp>,
+    deptDestinoId?: number,
+    allConcepts?: ConceptoMovimiento[],
+  ) => void;
   handleEdit: () => void;
+  handleMultipleAdd: (
+    disposalDataArray: Partial<Desincorp>[],
+    deptDestinoId: number,
+    allConcepts: ConceptoMovimiento[],
+    selectedAssetIds: number[],
+  ) => void;
   isMobile: boolean;
   departments: Department[];
   concepts: ConceptoMovimiento[];
@@ -47,6 +57,7 @@ export default function DisposalsForm({
   setNewDisposal,
   handleAdd,
   handleEdit,
+  handleMultipleAdd, // Add this prop
   isMobile,
   departments,
   concepts,
@@ -168,24 +179,34 @@ export default function DisposalsForm({
       });
       return;
     }
-    const nuevos: Desincorp[] = [];
-    for (const asset of selectedAssets) {
-      const dataToSend: Partial<Desincorp> = {
-        bien_id: asset.id,
-        fecha: newDisposal.fecha ?? '',
-        valor: asset.valor_total,
-        cantidad: 1,
-        concepto_id: Number(newDisposal.concepto_id),
-        dept_id: selectedDeptId,
-      };
-      await handleAdd(dataToSend);
-      nuevos.push(dataToSend as Desincorp);
-    }
+
+    const disposalDataArray: Partial<Desincorp>[] = selectedAssets.map((asset) => ({
+      bien_id: asset.id,
+      fecha: newDisposal.fecha ?? '',
+      valor: asset.valor_total,
+      cantidad: 1,
+      concepto_id: Number(newDisposal.concepto_id),
+      dept_id: selectedDeptId,
+      observaciones: newDisposal.observaciones ?? '',
+    }));
+
+    console.log("Calling handleMultipleAdd from DisposalsForm.tsx");
+    console.log("disposalDataArray:", disposalDataArray);
+    console.log("selectedDeptDestinoId:", selectedDeptDestinoId);
+    console.log("concepts:", concepts);
+    console.log("selectedAssets.map((a) => a.id):", selectedAssets.map((a) => a.id));
+
+    handleMultipleAdd(
+      disposalDataArray,
+      selectedDeptDestinoId!, // Assumed to be present if concept is 51
+      concepts,
+      selectedAssets.map((a) => a.id),
+    );
+
     setSelectedAssets([]);
     setShowAssetSelector(false);
     setNewDisposal({});
     onClose();
-    if (onCreated) onCreated(nuevos);
   };
 
   return (
@@ -216,22 +237,34 @@ export default function DisposalsForm({
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              console.log("Form submitted. selectedAssets.length:", selectedAssets.length);
+              console.log("selectedDisposal:", selectedDisposal);
+
               if (selectedAssets.length > 1) {
+                console.log("Executing handleAddMultiple branch.");
                 handleAddMultiple();
+              } else if (selectedDisposal) {
+                console.log("Executing handleEdit branch.");
+                handleEdit();
               } else if (selectedAssets.length === 1) {
-                handleAdd({
-                  ...newDisposal,
-                  bien_id: selectedAssets[0].id,
-                  valor: selectedAssets[0].valor_total,
-                  dept_id: selectedDeptId,
-                  cantidad: 1,
-                });
+                console.log("Executing handleAdd (single asset) branch.");
+                handleAdd(
+                  {
+                    ...newDisposal,
+                    bien_id: selectedAssets[0].id,
+                    valor: selectedAssets[0].valor_total,
+                    dept_id: selectedDeptId,
+                    cantidad: 1,
+                  },
+                  selectedDeptDestinoId,
+                  concepts,
+                );
                 setSelectedAssets([]);
                 setShowAssetSelector(false);
                 setNewDisposal({});
                 onClose();
               } else {
-                handleEdit();
+                console.log("No specific action taken (e.g., no assets selected for add, not editing).");
               }
             }}
           >
@@ -374,7 +407,11 @@ export default function DisposalsForm({
                   !selectedDeptId ||
                   selectedAssets.length === 0 ||
                   !newDisposal.fecha ||
-                  !newDisposal.concepto_id
+                  !newDisposal.concepto_id ||
+                  (conceptosFiltrados.find(
+                    (c) => c.id === Number(newDisposal.concepto_id),
+                  )?.codigo === '51' &&
+                    !selectedDeptDestinoId)
                 }
               >
                 {selectedDisposal ? 'Guardar cambios' : 'Agregar'}
