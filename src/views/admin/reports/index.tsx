@@ -433,7 +433,7 @@ export default function MissingGoodsTable() {
                     <FiAlertTriangle size={24} color="orange" />
                   </Box>
                   <Heading size="lg" fontWeight="bold" color={textColor}>
-                    Gestiรณn de Bienes Faltantes
+                    Gestión de Bienes Faltantes
                   </Heading>
                 </Flex>
                 <Box color="gray.600" fontSize="sm">

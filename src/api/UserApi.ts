@@ -85,3 +85,13 @@ export const getProfile = async (): Promise<UserProfile> => {
   return response.data.user
 }
 
+//Obtener jefe de departamento
+export const getDepartmentJefe = async (deptId: number): Promise<UserProfile | null> => {
+  try {
+    const response = await axiosInstance.get(`/user/jefe/${deptId}`)
+    return response.data.jefe || null
+  } catch (error) {
+    console.error("Error al obtener el jefe de departamento:", error)
+    return null
+  }
+}

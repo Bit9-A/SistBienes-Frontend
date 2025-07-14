@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 import {
   Modal,
   ModalOverlay,
@@ -20,7 +20,7 @@ import { type MissingGoods } from "api/ReportApi"
 import { type Department } from "api/SettingsApi"
 import { MovableAsset } from "api/AssetsApi"
 import AssetsTableCustom from "views/admin/inventory/components/AssetsTableCustom"
-import { getProfile } from "api/UserApi"
+import { getProfile, getDepartmentJefe, UserProfile } from "api/UserApi"
 
 interface ReportFormProps {
   isOpen: boolean
@@ -53,18 +53,43 @@ export default function ReportForm({
   const [showAssetSelector, setShowAssetSelector] = useState(false)
   const [selectedAssets, setSelectedAssets] = useState<MovableAsset[]>([])
   const [usuarioId, setUsuarioId] = useState<number | null>(null)
+  const [departmentHeadName, setDepartmentHeadName] = useState<string | null>(null)
 
   // Cargar usuario logueado
   useEffect(() => {
     getProfile().then(profile => setUsuarioId(profile.id))
   }, [])
 
+  // Cargar jefe de departamento cuando cambia el departamento seleccionado
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      if (selectedDeptId) {
+        const head = await getDepartmentJefe(selectedDeptId)
+        if (head) {
+          setDepartmentHeadName(head.nombre_completo || head.nombre || "")
+          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: head.id, jefe_nombre: head.nombre_completo || head.nombre }))
+        } else {
+          setDepartmentHeadName(null)
+          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: undefined, jefe_nombre: undefined }))
+        }
+      } else {
+        setDepartmentHeadName(null)
+        setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: undefined, jefe_nombre: undefined }))
+      }
+    }, 300) // Debounce de 300ms
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [selectedDeptId, setNewMissingGood]) // Eliminar newMissingGood de las dependencias y usar la forma de función de actualización
+
   // Resetear al abrir/cerrar modal
   useEffect(() => {
     if (!isOpen) {
       setSelectedDeptId(undefined)
       setSelectedAssets([])
-      setNewMissingGood({})
+      setNewMissingGood({} as Partial<MissingGoods>) // Asegurar el tipo
+      setDepartmentHeadName(null) // Resetear también el nombre del jefe
     }
   }, [isOpen, setNewMissingGood])
 
@@ -72,10 +97,10 @@ export default function ReportForm({
   const handleSelectAssets = (assetsSeleccionados: MovableAsset[]) => {
     setSelectedAssets(assetsSeleccionados)
     setShowAssetSelector(false)
-    setNewMissingGood({
-      ...newMissingGood,
+    setNewMissingGood((prev: Partial<MissingGoods>) => ({
+      ...prev,
       bien_id: assetsSeleccionados.length === 1 ? assetsSeleccionados[0].id : undefined,
-    })
+    }))
   }
 
   // Guardar varios bienes faltantes
@@ -174,12 +199,18 @@ export default function ReportForm({
                   />
                 </FormControl>
                 <FormControl isRequired>
-                  <FormLabel>Jefe ID</FormLabel>
+                  <FormLabel>Jefe de Departamento</FormLabel>
+                  <Input
+                    name="jefe_nombre"
+                    value={departmentHeadName ?? ""}
+                    isReadOnly
+                    placeholder="Seleccione un departamento para cargar el jefe"
+                  />
                   <Input
                     name="jefe_id"
-                    type="number"
+                    type="hidden"
                     value={newMissingGood.jefe_id ?? ""}
-                    onChange={e => setNewMissingGood({ ...newMissingGood, jefe_id: Number(e.target.value) })}
+                    readOnly
                   />
                 </FormControl>
                 <FormControl>
