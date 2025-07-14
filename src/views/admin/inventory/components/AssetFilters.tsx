@@ -35,6 +35,7 @@ interface AssetFiltersProps {
     endDate?: string;
     order?: 'recent' | 'oldest';
     search?: string;
+    isActive?: number;
   }) => void;
   canFilterByDept?: boolean;
 }
@@ -49,6 +50,7 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
   const [endDate, setEndDate] = useState<string>('');
   const [order, setOrder] = useState<'recent' | 'oldest'>('recent');
   const [search, setSearch] = useState<string>('');
+  const [isActive, setIsActive] = useState<number>(1); // Por defecto mostrar solo activos
 
   const badgeBg = useColorModeValue('blue.50', 'blue.900');
   const badgeColor = useColorModeValue('blue.600', 'blue.200');
@@ -60,7 +62,8 @@ export const AssetFilters: React.FC<AssetFiltersProps> = ({
     !!startDate,
     !!endDate,
     order !== 'recent',
-    !!search, // <-- nuevo
+    !!search,
+    isActive !== 1, // Contar como filtro activo si no es el valor por defecto (activos)
   ].filter(Boolean).length;
 
 useEffect(() => {
@@ -70,9 +73,10 @@ useEffect(() => {
     endDate,
     order,
     search,
+    isActive,
   });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [departmentId, startDate, endDate, order, canFilterByDept, search]);
+}, [departmentId, startDate, endDate, order, canFilterByDept, search, isActive]);
 
 const handleClear = () => {
   setDepartmentId(undefined);
@@ -80,12 +84,14 @@ const handleClear = () => {
   setEndDate('');
   setOrder('recent');
   setSearch('');
+  setIsActive(1); // Resetear a activos por defecto
   onFilter({
     departmentId: undefined,
     startDate: '',
     endDate: '',
     order: 'recent',
     search: '',
+    isActive: 1,
   });
 };
   return (
@@ -210,6 +216,21 @@ const handleClear = () => {
               borderRadius="md"
             />
           </InputGroup>
+        </FormControl>
+        <FormControl>
+          <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
+            Estado
+          </FormLabel>
+          <Select
+            value={isActive}
+            onChange={(e) => setIsActive(Number(e.target.value))}
+            borderRadius="md"
+            icon={<FiChevronDown />}
+          >
+            <option value={1}>Activos</option>
+            <option value={0}>Inactivos</option>
+            <option value={-1}>Todos</option>
+          </Select>
         </FormControl>
         <FormControl>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>

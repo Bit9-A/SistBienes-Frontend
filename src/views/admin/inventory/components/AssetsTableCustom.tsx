@@ -32,6 +32,7 @@ interface AssetsTableCustomProps {
   onSelect: (selectedAssets: MovableAsset[]) => void; // Cambiado para selección múltiple
   departmentId?: number;
   excludedAssetIds?: number[];
+  showActiveOnly?: boolean; // Nueva prop para filtrar por activos
 
 }
 
@@ -45,6 +46,7 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
   onSelect,
   departmentId,
   excludedAssetIds = [],
+  showActiveOnly = true, // Por defecto, mostrar solo activos
 }) => {
   const [searchId, setSearchId] = useState('');
   const [searchDept, setSearchDept] = useState('all');
@@ -74,9 +76,12 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
         searchSubgroup === 'all' ||
         String(asset.subgrupo_id) === String(searchSubgroup);
 
-      return matchesId && matchesDept && matchesSubgroup;
+      // Filtro por estado activo
+      const matchesActive = showActiveOnly ? asset.isActive === 1 : true;
+
+      return matchesId && matchesDept && matchesSubgroup && matchesActive;
     });
-  }, [assets, mode, departmentId, searchId, searchDept, searchSubgroup, excludedAssetIds]);
+  }, [assets, mode, departmentId, searchId, searchDept, searchSubgroup, excludedAssetIds, showActiveOnly]);
 
   const handleCheck = (id: number) => {
     setSelectedIds((prev) =>

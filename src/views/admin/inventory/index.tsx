@@ -78,6 +78,7 @@ export default function Inventory() {
     endDate: '',
     order: 'recent',
     search: '',
+    isActive: 1, // Añadir filtro isActive por defecto a 1 (activos)
   });
 
   // Colores y estilos
@@ -223,6 +224,11 @@ export default function Inventory() {
       );
     }
 
+    // Filtrar por estado activo/inactivo/todos
+    if (filters.isActive !== -1) { // -1 significa "Todos"
+      filtered = filtered.filter((a) => a.isActive === filters.isActive);
+    }
+
     if (filters.order === 'recent') {
       filtered = filtered.sort(
         (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
@@ -274,6 +280,7 @@ export default function Inventory() {
       endDate: newFilters.endDate,
       order: newFilters.order,
       search: newFilters.search,
+      isActive: newFilters.isActive, // Asegurarse de que isActive se actualice
     });
   };
 

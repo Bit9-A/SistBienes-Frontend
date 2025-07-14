@@ -8,7 +8,7 @@ import {
   Flex,
   useColorModeValue,
 } from "@chakra-ui/react"
-import { FiEdit2, FiTrash2, FiDownload } from "react-icons/fi" // Importar FiDownload
+import { FiDownload, FiEye } from "react-icons/fi" // Importar FiDownload y FiEye
 import { type MissingGoods } from "api/ReportApi"
 import { type Department } from "api/SettingsApi"
 
@@ -16,18 +16,16 @@ interface MobileCardProps {
   missingGoods: MissingGoods[]
   borderColor: string
   departments: Department[]
-  onEdit: (mg: MissingGoods) => void
-  onDelete: (id: number) => void
-  onExportBM3: (missingGood: MissingGoods) => void // Nueva prop para exportar BM3
+  onViewDetails: (mg: MissingGoods) => void // Nueva prop para ver detalles
+  onExportBM3: (missingGood: MissingGoods) => void
 }
 
 export default function MobileCard({
   missingGoods,
   borderColor,
   departments,
-  onEdit,
-  onDelete,
-  onExportBM3, // Recibir la nueva prop
+  onViewDetails, // Recibir la nueva prop
+  onExportBM3,
 }: MobileCardProps) {
   const cardBg = useColorModeValue("white", "gray.800")
 
@@ -49,20 +47,12 @@ export default function MobileCard({
             </Text>
             <HStack spacing={1}>
               <IconButton
-                aria-label="Editar"
-                icon={<FiEdit2 />}
+                aria-label="Ver Detalles"
+                icon={<FiEye />}
                 size="sm"
                 variant="ghost"
-                colorScheme="purple"
-                onClick={() => onEdit(mg)}
-              />
-              <IconButton
-                aria-label="Eliminar"
-                icon={<FiTrash2 />}
-                size="sm"
-                variant="ghost"
-                colorScheme="red"
-                onClick={() => onDelete(mg.id)}
+                colorScheme="blue"
+                onClick={() => onViewDetails(mg)} // Llamar a la función de ver detalles
               />
               <IconButton
                 aria-label="Exportar BM-3"
@@ -70,7 +60,7 @@ export default function MobileCard({
                 size="sm"
                 variant="ghost"
                 colorScheme="green"
-                onClick={() => onExportBM3(mg)} // Llamar a la función de exportación
+                onClick={() => onExportBM3(mg)}
               />
             </HStack>
           </Flex>

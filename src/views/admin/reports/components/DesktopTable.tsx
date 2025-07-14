@@ -12,7 +12,7 @@ import {
   Button,
   Text,
 } from "@chakra-ui/react"
-import { FiEdit2, FiTrash2, FiDownload } from "react-icons/fi" // Importar FiDownload
+import { FiDownload, FiEye } from "react-icons/fi" // Importar FiDownload y FiEye
 import { useState, useMemo } from "react"
 import { type MissingGoods } from "api/ReportApi"
 
@@ -22,9 +22,8 @@ interface DesktopTableProps {
   headerBg: string
   hoverBg: string
   tableSize: string | undefined
-  onEdit: (mg: MissingGoods) => void
-  onDelete: (id: number) => void
-  onExportBM3: (missingGood: MissingGoods) => void // Nueva prop para exportar BM3
+  onViewDetails: (mg: MissingGoods) => void // Nueva prop para ver detalles
+  onExportBM3: (missingGood: MissingGoods) => void
 }
 
 const ITEMS_PER_PAGE = 10
@@ -35,9 +34,8 @@ export default function DesktopTable({
   headerBg,
   hoverBg,
   tableSize,
-  onEdit,
-  onDelete,
-  onExportBM3, // Recibir la nueva prop
+  onViewDetails, // Recibir la nueva prop
+  onExportBM3,
 }: DesktopTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -83,7 +81,7 @@ export default function DesktopTable({
           </Thead>
           <Tbody>
             {paginatedGoods.map((mg, index) => (
-              <Tr key={mg.id} _hover={{ bg: hoverBg }}>
+              <Tr key={mg.id} _hover={{ bg: hoverBg }} onClick={() => onViewDetails(mg)} cursor="pointer">
                 <Td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</Td>
                 <Td>{mg.numero_identificacion || ""}</Td>
                 <Td>{mg.fecha ? new Date(mg.fecha).toLocaleDateString() : ""}</Td>
@@ -96,20 +94,12 @@ export default function DesktopTable({
                 <Td>
                   <HStack spacing={1}>
                     <IconButton
-                      aria-label="Editar"
-                      icon={<FiEdit2 />}
+                      aria-label="Ver Detalles"
+                      icon={<FiEye />}
                       size="sm"
                       variant="ghost"
-                      colorScheme="purple"
-                      onClick={() => onEdit(mg)}
-                    />
-                    <IconButton
-                      aria-label="Eliminar"
-                      icon={<FiTrash2 />}
-                      size="sm"
-                      variant="ghost"
-                      colorScheme="red"
-                      onClick={() => onDelete(mg.id)}
+                      colorScheme="blue"
+                      onClick={(e) => { e.stopPropagation(); onViewDetails(mg); }} // Evitar que el click de la fila se propague
                     />
                     <IconButton
                       aria-label="Exportar BM-3"
@@ -117,7 +107,7 @@ export default function DesktopTable({
                       size="sm"
                       variant="ghost"
                       colorScheme="green"
-                      onClick={() => onExportBM3(mg)} // Llamar a la función de exportación
+                      onClick={(e) => { e.stopPropagation(); onExportBM3(mg); }} // Evitar que el click de la fila se propague
                     />
                   </HStack>
                 </Td>

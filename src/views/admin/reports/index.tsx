@@ -55,8 +55,11 @@ import { type Department, getDepartments } from 'api/SettingsApi';
 import ReportForm from './components/ReportForm';
 import DesktopTable from './components/DesktopTable'; // Importar DesktopTable
 import MobileCard from './components/MobileCard';
-import { getAssets, type MovableAsset } from 'api/AssetsApi';
+import ReportDetailsModal from './components/ReportDetailsModal'; // Importar el nuevo componente de detalles
+import { getAssets, type MovableAsset, updateAsset } from 'api/AssetsApi'; // Importar updateAsset
 import { exportBM3ByMissingGoodsId } from './utils/ReportExcel'; // Importar la función de exportación BM3
+import { createDisposalForMissingGood } from './utils/ReportUtils'; // Importar la función para crear desincorporación
+import { logCustomAction } from 'views/admin/audit/utils/AuditUtils'; // Importar la función de auditoría
 
 const ITEMS_PER_PAGE = 10;
 
@@ -66,7 +69,9 @@ export default function MissingGoodsTable() {
     MissingGoods[]
   >([]);
   const [selectedMissingGood, setSelectedMissingGood] =
-    useState<MissingGoods | null>(null);
+    useState<MissingGoods | null>(null); // Para el formulario de edición/adición
+  const [selectedMissingGoodForDetails, setSelectedMissingGoodForDetails] =
+    useState<MissingGoods | null>(null); // Para el modal de detalles
   const [newMissingGood, setNewMissingGood] = useState<Partial<MissingGoods>>(
     {},
   );
@@ -77,7 +82,8 @@ export default function MissingGoodsTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure(); // Para el formulario de edición/adición
+  const { isOpen: isDetailsModalOpen, onOpen: onDetailsModalOpen, onClose: onDetailsModalClose } = useDisclosure(); // Para el modal de detalles
   const [departments, setDepartments] = useState<Department[]>([]);
   const [assets, setAssets] = useState<MovableAsset[]>([]);
   const toast = useToast();
@@ -188,13 +194,72 @@ export default function MissingGoodsTable() {
   const openEditDialog = (mg: MissingGoods) => {
     setSelectedMissingGood(mg);
     setNewMissingGood(mg);
-    onOpen();
+    onOpen(); // Abre el modal del formulario
   };
 
   const openAddDialog = () => {
     setSelectedMissingGood(null);
     setNewMissingGood({});
-    onOpen();
+    onOpen(); // Abre el modal del formulario
+  };
+
+  const openDetailsDialog = (mg: MissingGoods) => {
+    setSelectedMissingGoodForDetails(mg);
+    onDetailsModalOpen(); // Abre el modal de detalles
+  };
+
+  const handleRecoverMissingGood = async (missingGood: MissingGoods) => {
+    try {
+      if (!missingGood.id || !missingGood.bien_id) {
+        toast({
+          title: "Error al recuperar",
+          description: "Datos incompletos para recuperar el bien.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // 1. Eliminar el registro de bien faltante
+      await deleteMissingGood(missingGood.id);
+
+      // 2. Actualizar el estado del bien a "Activo" y el isActive a 1
+      // Solo actualizar el isActive a 1
+      const updateData = {
+        isActive: 1
+      } as MovableAsset;
+      await updateAsset(missingGood.bien_id, updateData);
+
+      // 3. Actualizar el estado local de missingGoods
+      setMissingGoods((prev) => prev.filter((item) => item.id !== missingGood.id));
+
+      toast({
+        title: 'Bien recuperado',
+        description: `El bien ${missingGood.numero_identificacion} ha sido marcado como recuperado y el reporte eliminado.`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      onDetailsModalClose(); // Cierra el modal de detalles
+      await logCustomAction({
+        accion: "Recuperar Bien Faltante",
+        detalles: `Se recuperó el bien faltante con ID: ${missingGood.id} (${missingGood.numero_identificacion}).`,
+      });
+    } catch (error: any) {
+      console.error("Error al recuperar el bien faltante:", error);
+      toast({
+        title: 'Error',
+        description: `No se pudo recuperar el bien faltante. Error: ${error.message}`,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      await logCustomAction({
+        accion: "Error Recuperar Bien Faltante",
+        detalles: `Fallo al recuperar el bien faltante con ID: ${missingGood.id}. Error: ${error.message}`,
+      });
+    }
   };
 
   const handleExportBM3 = async (missingGood: MissingGoods) => {
@@ -223,7 +288,11 @@ export default function MissingGoodsTable() {
         duration: 5000,
         isClosable: true,
       });
-    } catch (error) {
+      await logCustomAction({
+        accion: "Exportar Reporte BM3",
+        detalles: `Se exportó el reporte BM3 para el bien faltante con ID: ${missingGood.id} (${missingGood.numero_identificacion}).`,
+      });
+    } catch (error: any) { // Tipar error como any
       toast({
         title: "Error de exportación",
         description: `No se pudo generar el archivo BM3 para el bien ${missingGood.numero_identificacion}.`,
@@ -232,6 +301,10 @@ export default function MissingGoodsTable() {
         isClosable: true,
       });
       console.error("Error exporting BM3:", error);
+      await logCustomAction({
+        accion: "Error Exportar Reporte BM3",
+        detalles: `Fallo al exportar el reporte BM3 para el bien faltante con ID: ${missingGood.id} (${missingGood.numero_identificacion}). Error: ${error.message}`,
+      });
     }
   };
 
@@ -252,6 +325,51 @@ export default function MissingGoodsTable() {
       };
       const created = await createMissingGood(payload as any);
       setMissingGoods((prev) => [created, ...prev]);
+
+      // Actualizar el isActive del bien a 0 (inactivo)
+      try {
+        await updateAsset(Number(mgData.bien_id), { isActive: 0 } as MovableAsset);
+        console.log(`Bien con ID ${mgData.bien_id} marcado como inactivo (isActive: 0)`);
+      } catch (assetUpdateError: any) {
+        console.error("Error al actualizar isActive del bien:", assetUpdateError);
+        toast({
+          title: 'Advertencia',
+          description: 'El bien faltante se agregó, pero hubo un error al actualizar el estado del bien.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+
+      // Crear desincorporación automáticamente
+      try {
+        await createDisposalForMissingGood(created);
+        toast({
+          title: 'Desincorporación creada',
+          description: 'Se ha creado una desincorporación para el bien faltante.',
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        });
+        await logCustomAction({
+          accion: "Crear Bien Faltante y Desincorporación",
+          detalles: `Se creó el bien faltante con ID: ${created.id} (${created.numero_identificacion}) y su desincorporación asociada.`,
+        });
+      } catch (disposalError: any) {
+        console.error("Error al crear la desincorporación:", disposalError);
+        toast({
+          title: 'Advertencia',
+          description: 'El bien faltante se agregó, pero hubo un error al crear la desincorporación.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+        await logCustomAction({
+          accion: "Error Crear Desincorporación por Bien Faltante",
+          detalles: `El bien faltante con ID: ${created.id} (${created.numero_identificacion}) se agregó, pero falló la creación de la desincorporación. Error: ${disposalError.message}`,
+        });
+      }
+
       toast({
         title: 'Bien faltante agregado',
         status: 'success',
@@ -259,13 +377,17 @@ export default function MissingGoodsTable() {
         isClosable: true,
       });
       onClose();
-    } catch (error) {
+    } catch (error: any) { // Tipar error como any
       toast({
         title: 'Error',
         description: 'No se pudo agregar el bien faltante',
         status: 'error',
         duration: 3000,
         isClosable: true,
+      });
+      await logCustomAction({
+        accion: "Error Crear Bien Faltante",
+        detalles: `Fallo al agregar el bien faltante. Error: ${error.message}`,
       });
     }
   };
@@ -298,13 +420,21 @@ export default function MissingGoodsTable() {
         isClosable: true,
       });
       onClose();
-    } catch (error) {
+      await logCustomAction({
+        accion: "Editar Bien Faltante",
+        detalles: `Se editó el bien faltante con ID: ${updated.id} (${updated.numero_identificacion}).`,
+      });
+    } catch (error: any) { // Tipar error como any
       toast({
         title: 'Error',
         description: 'No se pudo actualizar el bien faltante',
         status: 'error',
         duration: 3000,
         isClosable: true,
+      });
+      await logCustomAction({
+        accion: "Error Editar Bien Faltante",
+        detalles: `Fallo al editar el bien faltante con ID: ${selectedMissingGood?.id}. Error: ${error.message}`,
       });
     }
   };
@@ -321,13 +451,21 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
-    } catch (error) {
+      await logCustomAction({
+        accion: "Eliminar Bien Faltante",
+        detalles: `Se eliminó el bien faltante con ID: ${id}.`,
+      });
+    } catch (error: any) { // Tipar error como any
       toast({
         title: 'Error',
         description: 'Error al eliminar registro',
         status: 'error',
         duration: 3000,
         isClosable: true,
+      });
+      await logCustomAction({
+        accion: "Error Eliminar Bien Faltante",
+        detalles: `Fallo al eliminar el bien faltante con ID: ${id}. Error: ${error.message}`,
       });
     }
   };
@@ -637,18 +775,16 @@ export default function MissingGoodsTable() {
                     headerBg={headerBg}
                     hoverBg={hoverBg}
                     tableSize={tableSize}
-                    onEdit={openEditDialog}
-                    onDelete={handleDelete}
-                    onExportBM3={handleExportBM3} // Pasar la funciรณn de exportaciรณn
+                    onViewDetails={openDetailsDialog} // Usar la nueva función para ver detalles
+                    onExportBM3={handleExportBM3}
                   />
                 ) : (
                   <MobileCard
                     missingGoods={paginatedGoods}
                     borderColor={borderColor}
                     departments={departments}
-                    onEdit={openEditDialog}
-                    onDelete={handleDelete}
-                    onExportBM3={handleExportBM3} // Pasar la funciรณn de exportaciรณn
+                    onViewDetails={openDetailsDialog} // Usar la nueva función para ver detalles
+                    onExportBM3={handleExportBM3}
                   />
                 )}
 
@@ -705,7 +841,7 @@ export default function MissingGoodsTable() {
           </CardBody>
         </Card>
 
-        {/* Form Modal */}
+        {/* Form Modal (Add/Edit) */}
         <ReportForm
           assets={assets}
           isOpen={isOpen}
@@ -718,6 +854,14 @@ export default function MissingGoodsTable() {
           isMobile={isMobile || false}
           departments={departments}
           missingGoods={missingGoods}
+        />
+
+        {/* Details Modal */}
+        <ReportDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={onDetailsModalClose}
+          missingGood={selectedMissingGoodForDetails}
+          onRecover={handleRecoverMissingGood} // Pasar la función de recuperar
         />
       </Container>
     </Box>
