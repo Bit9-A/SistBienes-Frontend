@@ -18,6 +18,7 @@ import {
 import { FiPlus, FiTrash2, FiCpu, FiHardDrive, FiBox } from "react-icons/fi"
 
 export interface ComponentData {
+  id?: number // Añadir id opcional
   tipo: string // Ej: "TM", "CPU", "RAM", "HDD", "SSD", "PS"
   nombre: string
   numero_serial: string
@@ -72,13 +73,13 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
   }
 
   // Eliminar componente extra
-  const handleRemove = (idx: number) => {
-    setComponents((prev) => prev.filter((_, i) => i !== idx))
+  const handleRemove = (targetComp: ComponentData) => {
+    setComponents((prev) => prev.filter((c) => c !== targetComp))
   }
 
   // Cambiar descripción o serial de un componente
-  const handleChange = (idx: number, field: "nombre" | "numero_serial", value: string) => {
-    setComponents((prev) => prev.map((c, i) => (i === idx ? { ...c, [field]: value } : c)))
+  const handleChange = (targetComp: ComponentData, field: "nombre" | "numero_serial", value: string) => {
+    setComponents((prev) => prev.map((c) => (c === targetComp ? { ...c, [field]: value } : c)))
   }
 
   // Para mostrar el label correcto y numerar RAM y discos
@@ -200,7 +201,7 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
                       size="xs"
                       colorScheme="red"
                       variant="ghost"
-                      onClick={() => handleRemove(idx)}
+                      onClick={() => handleRemove(comp)}
                     />
                   )}
                 </HStack>
@@ -212,7 +213,7 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
                     <Input
                       placeholder={`Descripción del ${getLabel(comp, idx).toLowerCase()}`}
                       value={comp.nombre}
-                      onChange={(e) => handleChange(idx, "nombre", e.target.value)}
+                      onChange={(e) => handleChange(comp, "nombre", e.target.value)}
                       size="sm"
                     />
                   </FormControl>
@@ -223,7 +224,7 @@ const AssetComponents: React.FC<AssetComponentsProps> = ({ components, setCompon
                     <Input
                       placeholder="Número serial (opcional - se asignará N/A si está vacío)"
                       value={comp.numero_serial}
-                      onChange={(e) => handleChange(idx, "numero_serial", e.target.value)}
+                      onChange={(e) => handleChange(comp, "numero_serial", e.target.value)}
                       size="sm"
                     />
                   </FormControl>

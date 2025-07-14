@@ -119,24 +119,29 @@ useEffect(() => {
 
   const handleEditComponents = () => {
     // Convertir componentes existentes al formato del formulario
-    const formData: ComponentData[] = components.map((comp) => ({
-      tipo:
-        comp.nombre.includes("TM") || comp.nombre.includes("Tarjeta")
-          ? "TM"
-          : comp.nombre.includes("CPU") || comp.nombre.includes("Procesador")
-            ? "CPU"
-            : comp.nombre.includes("RAM")
-              ? "RAM"
-              : comp.nombre.includes("HDD") || comp.nombre.includes("Disco Duro HDD")
-                ? "HDD"
-                : comp.nombre.includes("SSD") || comp.nombre.includes("Disco Duro SSD")
-                  ? "SSD"
-                  : comp.nombre.includes("PS") || comp.nombre.includes("Fuente")
-                    ? "PS"
-                    : "OTHER",
-      nombre: comp.nombre,
-      numero_serial: comp.numero_serial || "",
-    }))
+    const formData: ComponentData[] = components.map((comp) => {
+      let tipoDeterminado: string = "OTHER"
+      if (comp.nombre.includes("TM") || comp.nombre.includes("Tarjeta Madre")) {
+        tipoDeterminado = "TM"
+      } else if (comp.nombre.includes("CPU") || comp.nombre.includes("Procesador")) {
+        tipoDeterminado = "CPU"
+      } else if (comp.nombre.includes("RAM") || comp.nombre.includes("Memoria RAM")) {
+        tipoDeterminado = "RAM"
+      } else if (comp.nombre.includes("HDD") || comp.nombre.includes("Disco Duro HDD")) {
+        tipoDeterminado = "HDD"
+      } else if (comp.nombre.includes("SSD") || comp.nombre.includes("Disco Duro SSD")) {
+        tipoDeterminado = "SSD"
+      } else if (comp.nombre.includes("PS") || comp.nombre.includes("Fuente de Poder")) {
+        tipoDeterminado = "PS"
+      }
+
+      return {
+        id: comp.id,
+        tipo: tipoDeterminado,
+        nombre: comp.nombre,
+        numero_serial: comp.numero_serial || "",
+      }
+    })
 
     setComponentFormData(formData)
     setIsEditingComponents(true)
@@ -144,18 +149,18 @@ useEffect(() => {
 
   const handleSaveComponents = async () => {
     try {
-      // Eliminar todos los componentes existentes
+      // Eliminar todos los componentes existentes asociados a este bien
       await Promise.all(components.map((comp) => deleteComponent(comp.id)))
 
-      // Crear los nuevos componentes
-      const validComponents = componentFormData.filter((comp) => comp.nombre.trim() && comp.numero_serial.trim())
+      // Crear los nuevos componentes basados en el formulario
+      const validComponents = componentFormData.filter((comp) => comp.nombre.trim())
 
       await Promise.all(
         validComponents.map((comp) =>
           createComponent({
             bien_id: asset.id,
             nombre: comp.nombre,
-            numero_serial: comp.numero_serial,
+            numero_serial: comp.numero_serial || "N/A", // Asegurar que el serial no sea vacío
           }),
         ),
       )
