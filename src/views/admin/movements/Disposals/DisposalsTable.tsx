@@ -81,63 +81,13 @@ export default function DisposalsTable() {
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-
-useEffect(() => {
-  const fetchProfileAndFilter = async () => {
-    const profile = await getProfile();
-    setUserProfile(profile);
-    const { filtered, canFilterByDept } = filterByUserProfile(disposals, profile);
-    setProfileDisposals(filtered);
-    setCanFilterByDept(canFilterByDept);
-  };
-  fetchProfileAndFilter();
-}, [disposals]);
-
-
-
-
-  // Load data on mount
- useEffect(() => {
-  const fetchCatalogs = async () => {
-    try {
-      const [deptData, conceptDesincorpData, assetData, subGroupData, conceptIncorpData] = await Promise.all([
-        getDepartments(),
-        getConceptosMovimientoDesincorporacion(),
-        getAssets(),
-        getSubGroupsM(),
-        getConceptosMovimientoIncorporacion(), // Obtener conceptos de incorporación
-      ]);
-      setDepartments(deptData);
-      setConcepts(conceptDesincorpData); // Estos son los conceptos de desincorporación
-      setAssets(assetData);
-      setSubgroups(subGroupData);
-
-      const conceptoTraspasoIncorp = conceptIncorpData.find(
-        (concepto: any) => concepto.codigo === "02"
-      );
-      if (conceptoTraspasoIncorp) {
-        setIncorpConceptoTraspasoId(conceptoTraspasoIncorp.id);
-      } else {
-        console.warn("Concepto de incorporación con código '02' no encontrado.");
-      }
-
-    } catch (error) {
-      toast({
-        title: "Error al cargar catálogos",
-        description: "Algunos datos de selección (departamentos, conceptos, etc.) podrían no estar disponibles.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-      console.error("Error fetching catalogs:", error);
-    }
-  };
-
+  // Función para cargar las desincorporaciones
   const fetchDisposals = async () => {
     try {
       setLoading(true);
       const data = await getDesincorps();
       setDisposals(data);
+      setError(null); // Limpiar errores si la carga es exitosa
     } catch (error: any) {
       if (
         error?.response?.status === 404 &&
@@ -146,7 +96,7 @@ useEffect(() => {
         setDisposals([]); // No hay registros, pero no es un error
         setError(null); // Importante: limpiar cualquier error previo si es un 404
       } else {
-        setError("Error al cargar los datos de desincorporaciones. Por favor, intenta nuevamente."); // Solo para errores de desincorporaciones
+        setError("Error al cargar los datos de desincorporaciones. Por favor, intenta nuevamente.");
         console.error("Error fetching data:", error);
       }
     } finally {
@@ -154,9 +104,58 @@ useEffect(() => {
     }
   };
 
-  fetchCatalogs();
-  fetchDisposals();
-}, []);
+  useEffect(() => {
+    const fetchProfileAndFilter = async () => {
+      const profile = await getProfile();
+      setUserProfile(profile);
+      const { filtered, canFilterByDept } = filterByUserProfile(disposals, profile);
+      setProfileDisposals(filtered);
+      setCanFilterByDept(canFilterByDept);
+    };
+    fetchProfileAndFilter();
+  }, [disposals]);
+
+
+  // Load data on mount
+  useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const [deptData, conceptDesincorpData, assetData, subGroupData, conceptIncorpData] = await Promise.all([
+          getDepartments(),
+          getConceptosMovimientoDesincorporacion(),
+          getAssets(),
+          getSubGroupsM(),
+          getConceptosMovimientoIncorporacion(), // Obtener conceptos de incorporación
+        ]);
+        setDepartments(deptData);
+        setConcepts(conceptDesincorpData); // Estos son los conceptos de desincorporación
+        setAssets(assetData);
+        setSubgroups(subGroupData);
+
+        const conceptoTraspasoIncorp = conceptIncorpData.find(
+          (concepto: any) => concepto.codigo === "02"
+        );
+        if (conceptoTraspasoIncorp) {
+          setIncorpConceptoTraspasoId(conceptoTraspasoIncorp.id);
+        } else {
+          console.warn("Concepto de incorporación con código '02' no encontrado.");
+        }
+
+      } catch (error) {
+        toast({
+          title: "Error al cargar catálogos",
+          description: "Algunos datos de selección (departamentos, conceptos, etc.) podrían no estar disponibles.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        console.error("Error fetching catalogs:", error);
+      }
+    };
+
+    fetchCatalogs();
+    fetchDisposals(); // Llamar a la función de carga de desincorporaciones
+  }, []);
 
   const processTransferAndAssetUpdate = async (
     fecha: string,
@@ -274,9 +273,8 @@ useEffect(() => {
     };
 
     try {
-      const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">);
-      setDisposals((prev) => [...prev, created]);
-
+      await createDesincorp(dataToSend as Omit<Desincorp, "id">); // No necesitamos el 'created' aquí si recargamos
+      
       const selectedConcept = allConcepts?.find((c) => c.id === concepto_id);
       console.log(`Single Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
       if (selectedConcept?.codigo === '51' && deptDestinoId && incorpConceptoTraspasoId) {
@@ -316,6 +314,8 @@ useEffect(() => {
         duration: 3000,
         isClosable: true,
       });
+      fetchDisposals(); // Recargar datos después de añadir
+      onClose(); // Cerrar el modal después de añadir
     } catch (error) {
       toast({
         title: "Error",
@@ -384,8 +384,8 @@ useEffect(() => {
       };
 
       try {
-        const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">);
-        nuevos.push(created);
+        await createDesincorp(dataToSend as Omit<Desincorp, "id">); // No necesitamos el 'created' aquí si recargamos
+        // nuevos.push(created); // No es necesario si recargamos todos los datos al final
 
         const selectedConcept = allConcepts.find((c) => c.id === concepto_id);
         console.log(`Multiple Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
@@ -409,7 +409,7 @@ useEffect(() => {
       }
     }
 
-    setDisposals((prev) => [...prev, ...nuevos]);
+    // setDisposals((prev) => [...prev, ...nuevos]); // No es necesario si recargamos todos los datos al final
 
     console.log("Transfer conditions check: isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id);
 
@@ -457,6 +457,8 @@ useEffect(() => {
       duration: 3000,
       isClosable: true,
     });
+    fetchDisposals(); // Recargar datos después de añadir múltiples
+    onClose(); // Cerrar el modal después de añadir múltiples
   };
 
   const handleTransferAndAssetUpdate = async (
@@ -541,21 +543,8 @@ useEffect(() => {
   const handleEdit = async () => {
     if (selectedDisposal && newDisposal) {
       try {
-        const updated = await updateDesincorp(selectedDisposal.id, newDisposal)
-        if (!updated || typeof updated.id === "undefined") {
-          toast({
-            title: "Error",
-            description: "No se pudo actualizar la desincorporación",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          })
-          return
-        }
-        setDisposals((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)))
-        setSelectedDisposal(null)
-        setNewDisposal({})
-        onClose()
+        await updateDesincorp(selectedDisposal.id, newDisposal) // No necesitamos el 'updated' aquí si recargamos
+        
         toast({
           title: "Desincorporación actualizada",
           description: "La desincorporación se ha actualizado exitosamente",
@@ -563,6 +552,10 @@ useEffect(() => {
           duration: 3000,
           isClosable: true,
         })
+        fetchDisposals(); // Recargar datos después de editar
+        setSelectedDisposal(null)
+        setNewDisposal({})
+        onClose()
       } catch (error) {
         toast({
           title: "Error",

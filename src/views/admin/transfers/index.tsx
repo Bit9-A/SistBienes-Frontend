@@ -22,11 +22,16 @@ import { TransferDetailsModal } from "./components/TransferDetailsModal";
 import { NoTransfersFound } from "./components/NoTransfersFound";
 import { Transfer, getAllTransfers } from "../../../api/TransferApi";
 import { Department, getDepartments } from "../../../api/SettingsApi";
+import { TransferComponent, getTransferComponents } from "../../../api/ComponentsApi";
+import { MovableAsset, getAssets } from "../../../api/AssetsApi"; // Corregido: getAssets en lugar de getMovableAssets
 import { useDisclosure } from "@chakra-ui/react";
+import ComponentTransferHistory from "./components/ComponentTransferHistory";
 
 export default function TransferPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [componentTransfers, setComponentTransfers] = useState<TransferComponent[]>([]); // Nuevo estado
+  const [assets, setAssets] = useState<MovableAsset[]>([]); // Nuevo estado
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -51,6 +56,13 @@ export default function TransferPage() {
       color: "purple",
       description: "Historial de traslados de bienes",
     },
+    {
+      id: "componentTransfers", // Nuevo ID
+      label: "Traslados de Componentes", // Nuevo label
+      icon: FiPackage, // Puedes cambiar el icono si hay uno más específico
+      color: "blue", // Nuevo color
+      description: "Historial de traslados de componentes entre bienes", // Nueva descripción
+    },
   ];
   const [activeTab, setActiveTab] = useState("transfers");
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
@@ -58,12 +70,16 @@ export default function TransferPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [transferData, departmentsData] = await Promise.all([
+        const [transferData, departmentsData, componentTransfersData, assetsData] = await Promise.all([
           getAllTransfers(),
           getDepartments(),
+          getTransferComponents(),
+          getAssets(), // Corregido: getAssets en lugar de getMovableAssets
         ]);
         setTransfers(transferData);
         setDepartments(departmentsData);
+        setComponentTransfers(componentTransfersData);
+        setAssets(assetsData);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -222,14 +238,30 @@ export default function TransferPage() {
                   onDateFilter={handleDateFilter}
                 />
               </Flex>
-              <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="sm">
-                <TransferTable
-                  transfers={filteredTransfers}
-                  departments={departments}
-                  onViewDetails={handleViewDetails}
-                />
-              </Box>
-              {filteredTransfers.length === 0 && <NoTransfersFound />}
+              {activeTab === "transfers" && (
+                <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="sm">
+                  <TransferTable
+                    transfers={filteredTransfers}
+                    departments={departments}
+                    onViewDetails={handleViewDetails}
+                  />
+                </Box>
+              )}
+              {activeTab === "componentTransfers" && ( // Nueva condición
+                <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="sm">
+                  <ComponentTransferHistory
+                    componentTransfers={componentTransfers}
+                    assets={assets}
+                    departments={departments}
+                  />
+                </Box>
+              )}
+              {filteredTransfers.length === 0 && activeTab === "transfers" && <NoTransfersFound />}
+              {componentTransfers.length === 0 && activeTab === "componentTransfers" && (
+                <Flex justify="center" align= "center" minH="200px">
+             
+                </Flex>
+              )}
               <TransferDetailsModal
                 isOpen={isOpen}
                 onClose={onClose}
