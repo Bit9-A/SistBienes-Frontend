@@ -102,7 +102,13 @@ useEffect(() => {
       setAssets(assetData);
       setSubgroups(subGroupData);
     } catch (error) {
-      setError("Error al cargar catálogos.");
+      toast({
+        title: "Error al cargar catálogos",
+        description: "Algunos datos de selección (departamentos, conceptos, etc.) podrían no estar disponibles.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
       console.error("Error fetching catalogs:", error);
     }
   };
@@ -110,7 +116,6 @@ useEffect(() => {
   const fetchIncorporations = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await getIncorps();
       setIncorporations(data);
     } catch (error: any) {
@@ -119,9 +124,9 @@ useEffect(() => {
         error?.response?.data?.message === "No se encontraron incorporaciones"
       ) {
         setIncorporations([]); // No hay registros, pero no es un error
-        setError(null);
+        setError(null); // Importante: limpiar cualquier error previo si es un 404
       } else {
-        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
+        setError("Error al cargar los datos de incorporaciones. Por favor, intenta nuevamente."); // Solo para errores de incorporaciones
         console.error("Error fetching data:", error);
       }
     } finally {

@@ -122,7 +122,13 @@ useEffect(() => {
       }
 
     } catch (error) {
-      setError("Error al cargar catálogos.");
+      toast({
+        title: "Error al cargar catálogos",
+        description: "Algunos datos de selección (departamentos, conceptos, etc.) podrían no estar disponibles.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
       console.error("Error fetching catalogs:", error);
     }
   };
@@ -130,7 +136,6 @@ useEffect(() => {
   const fetchDisposals = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await getDesincorps();
       setDisposals(data);
     } catch (error: any) {
@@ -139,9 +144,9 @@ useEffect(() => {
         error?.response?.data?.message === "No se encontraron desincorporaciones"
       ) {
         setDisposals([]); // No hay registros, pero no es un error
-        setError(null);
+        setError(null); // Importante: limpiar cualquier error previo si es un 404
       } else {
-        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
+        setError("Error al cargar los datos de desincorporaciones. Por favor, intenta nuevamente."); // Solo para errores de desincorporaciones
         console.error("Error fetching data:", error);
       }
     } finally {
@@ -646,33 +651,33 @@ useEffect(() => {
     }
   };
 
-  if (loading) {
-    return (
-      <Center py={20}>
-        <Stack align="center" spacing={4}>
-          <Spinner size="xl" color="red.500" thickness="4px" />
-          <Heading size="md" color={textColor}>
-            Cargando desincorporaciones...
-          </Heading>
-        </Stack>
-      </Center>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert status="error" borderRadius="lg">
-        <AlertIcon />
-        <Box>
-          <AlertTitle>Error al cargar datos</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Box>
-      </Alert>
-    )
-  }
-
   return (
     <Stack spacing={4}>
+      {/* Loading/Error overlays */}
+      {(loading || error) && (
+        <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
+          <CardBody p={6}>
+            {loading ? (
+              <Center py={20}>
+                <Stack align="center" spacing={4}>
+                  <Spinner size="xl" color="red.500" thickness="4px" />
+                  <Heading size="md" color={textColor}>
+                    Cargando desincorporaciones...
+                  </Heading>
+                </Stack>
+              </Center>
+            ) : (
+              <Alert status="error" borderRadius="lg">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>Error al cargar datos</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Box>
+              </Alert>
+            )}
+          </CardBody>
+        </Card>
+      )}
       {/* Filters and Add Button Section */}
       <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
         <CardBody p={6}>

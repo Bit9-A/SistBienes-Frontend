@@ -92,9 +92,8 @@ export default function DisposalsForm({
     // eslint-disable-next-line
   }, [userProfile, isAdminOrBienes]);
 
-  const conceptosFiltrados = isAdminOrBienes
-    ? concepts
-    : concepts.filter((c) => c.codigo === '51');
+  // Se eliminó el filtro de conceptos para que siempre se muestren todos.
+  const conceptosFiltrados = concepts;
 
   useEffect(() => {
     // Si el concepto no es 51, limpia el destino
@@ -279,19 +278,12 @@ export default function DisposalsForm({
                     disabled={!isAdminOrBienes || !!selectedDisposal}
                   >
                     <option value="">Seleccione</option>
-                    {isAdminOrBienes
-                      ? departments.map((dept) => (
-                          <option key={dept.id} value={dept.id}>
-                            {dept.nombre}
-                          </option>
-                        ))
-                      : departments
-                          .filter((dept) => dept.id === userProfile?.dept_id)
-                          .map((dept) => (
-                            <option key={dept.id} value={dept.id}>
-                              {dept.nombre}
-                            </option>
-                          ))}
+                    {/* Se eliminó el filtro de departamentos para que siempre se muestren todos. */}
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.nombre}
+                      </option>
+                    ))}
                   </Select>
                 </FormControl>
                 <FormControl isRequired>
