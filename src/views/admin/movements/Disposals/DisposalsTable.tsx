@@ -81,22 +81,22 @@ export default function DisposalsTable() {
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-  // Función para cargar desincorporaciones
+  // Función para cargar las desincorporaciones
   const fetchDisposals = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await getDesincorps();
       setDisposals(data);
+      setError(null); // Limpiar errores si la carga es exitosa
     } catch (error: any) {
       if (
         error?.response?.status === 404 &&
         error?.response?.data?.message === "No se encontraron desincorporaciones"
       ) {
         setDisposals([]); // No hay registros, pero no es un error
-        setError(null);
+        setError(null); // Importante: limpiar cualquier error previo si es un 404
       } else {
-        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
+        setError("Error al cargar los datos de desincorporaciones. Por favor, intenta nuevamente.");
         console.error("Error fetching data:", error);
       }
     } finally {
@@ -114,6 +114,7 @@ export default function DisposalsTable() {
     };
     fetchProfileAndFilter();
   }, [disposals]);
+
 
   // Load data on mount
   useEffect(() => {
@@ -141,7 +142,13 @@ export default function DisposalsTable() {
         }
 
       } catch (error) {
-        setError("Error al cargar catálogos.");
+        toast({
+          title: "Error al cargar catálogos",
+          description: "Algunos datos de selección (departamentos, conceptos, etc.) podrían no estar disponibles.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
         console.error("Error fetching catalogs:", error);
       }
     };
@@ -266,9 +273,8 @@ export default function DisposalsTable() {
     };
 
     try {
-      const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">);
-      setDisposals((prev) => [...prev, created]);
-
+      await createDesincorp(dataToSend as Omit<Desincorp, "id">); // No necesitamos el 'created' aquí si recargamos
+      
       const selectedConcept = allConcepts?.find((c) => c.id === concepto_id);
       console.log(`Single Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
       if (selectedConcept?.codigo === '51' && deptDestinoId && incorpConceptoTraspasoId) {
@@ -308,6 +314,8 @@ export default function DisposalsTable() {
         duration: 3000,
         isClosable: true,
       });
+      fetchDisposals(); // Recargar datos después de añadir
+      onClose(); // Cerrar el modal después de añadir
     } catch (error) {
       toast({
         title: "Error",
@@ -376,8 +384,8 @@ export default function DisposalsTable() {
       };
 
       try {
-        const created = await createDesincorp(dataToSend as Omit<Desincorp, "id">);
-        nuevos.push(created);
+        await createDesincorp(dataToSend as Omit<Desincorp, "id">); // No necesitamos el 'created' aquí si recargamos
+        // nuevos.push(created); // No es necesario si recargamos todos los datos al final
 
         const selectedConcept = allConcepts.find((c) => c.id === concepto_id);
         console.log(`Multiple Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
@@ -401,7 +409,7 @@ export default function DisposalsTable() {
       }
     }
 
-    setDisposals((prev) => [...prev, ...nuevos]);
+    // setDisposals((prev) => [...prev, ...nuevos]); // No es necesario si recargamos todos los datos al final
 
     console.log("Transfer conditions check: isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id);
 
@@ -449,6 +457,8 @@ export default function DisposalsTable() {
       duration: 3000,
       isClosable: true,
     });
+    fetchDisposals(); // Recargar datos después de añadir múltiples
+    onClose(); // Cerrar el modal después de añadir múltiples
   };
 
   const handleTransferAndAssetUpdate = async (
@@ -533,21 +543,8 @@ export default function DisposalsTable() {
   const handleEdit = async () => {
     if (selectedDisposal && newDisposal) {
       try {
-        const updated = await updateDesincorp(selectedDisposal.id, newDisposal)
-        if (!updated || typeof updated.id === "undefined") {
-          toast({
-            title: "Error",
-            description: "No se pudo actualizar la desincorporación",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          })
-          return
-        }
-        setDisposals((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)))
-        setSelectedDisposal(null)
-        setNewDisposal({})
-        onClose()
+        await updateDesincorp(selectedDisposal.id, newDisposal) // No necesitamos el 'updated' aquí si recargamos
+        
         toast({
           title: "Desincorporación actualizada",
           description: "La desincorporación se ha actualizado exitosamente",
@@ -555,6 +552,10 @@ export default function DisposalsTable() {
           duration: 3000,
           isClosable: true,
         })
+        fetchDisposals(); // Recargar datos después de editar
+        setSelectedDisposal(null)
+        setNewDisposal({})
+        onClose()
       } catch (error) {
         toast({
           title: "Error",
@@ -643,33 +644,33 @@ export default function DisposalsTable() {
     }
   };
 
-  if (loading) {
-    return (
-      <Center py={20}>
-        <Stack align="center" spacing={4}>
-          <Spinner size="xl" color="red.500" thickness="4px" />
-          <Heading size="md" color={textColor}>
-            Cargando desincorporaciones...
-          </Heading>
-        </Stack>
-      </Center>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert status="error" borderRadius="lg">
-        <AlertIcon />
-        <Box>
-          <AlertTitle>Error al cargar datos</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Box>
-      </Alert>
-    )
-  }
-
   return (
     <Stack spacing={4}>
+      {/* Loading/Error overlays */}
+      {(loading || error) && (
+        <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
+          <CardBody p={6}>
+            {loading ? (
+              <Center py={20}>
+                <Stack align="center" spacing={4}>
+                  <Spinner size="xl" color="red.500" thickness="4px" />
+                  <Heading size="md" color={textColor}>
+                    Cargando desincorporaciones...
+                  </Heading>
+                </Stack>
+              </Center>
+            ) : (
+              <Alert status="error" borderRadius="lg">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>Error al cargar datos</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Box>
+              </Alert>
+            )}
+          </CardBody>
+        </Card>
+      )}
       {/* Filters and Add Button Section */}
       <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
         <CardBody p={6}>

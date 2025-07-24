@@ -54,12 +54,10 @@ export default function IncorporationsTable() {
   const [assets, setAssets] = useState<MovableAsset[]>([])
   const [subgroups, setSubgroups] = useState<SubGroup[]>([])
  
-
   const [userProfile, setUserProfile] = useState<any>(null);
-const [filteredData, setFilteredData] = useState<any[]>([]);
-const [canFilterByDept, setCanFilterByDept] = useState(false);
-const [canNewButton, setCanNewButton] = useState(false);
- 
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [canFilterByDept, setCanFilterByDept] = useState(false);
+  const [canNewButton, setCanNewButton] = useState(false);
  
   const toast = useToast()
 
@@ -74,22 +72,22 @@ const [canNewButton, setCanNewButton] = useState(false);
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-  // Función para cargar incorporaciones
+  // Función para cargar las incorporaciones
   const fetchIncorporations = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await getIncorps();
       setIncorporations(data);
+      setError(null); // Limpiar errores si la carga es exitosa
     } catch (error: any) {
       if (
         error?.response?.status === 404 &&
         error?.response?.data?.message === "No se encontraron incorporaciones"
       ) {
         setIncorporations([]); // No hay registros, pero no es un error
-        setError(null);
+        setError(null); // Importante: limpiar cualquier error previo si es un 404
       } else {
-        setError("Error al cargar los datos. Por favor, intenta nuevamente.");
+        setError("Error al cargar los datos de incorporaciones. Por favor, intenta nuevamente.");
         console.error("Error fetching data:", error);
       }
     } finally {
@@ -97,42 +95,48 @@ const [canNewButton, setCanNewButton] = useState(false);
     }
   };
 
-useEffect(() => {
-  const fetchProfileAndFilter = async () => {
-    const profile = await getProfile();
-    setUserProfile(profile);
-    const { filtered, canFilterByDept} = filterByUserProfile(incorporations, profile);
-    setCanNewButton(canFilterByDept);
-    setFilteredData(filtered);
-    setCanFilterByDept(canFilterByDept);
-  };
-  fetchProfileAndFilter();
-}, [incorporations]);
+  useEffect(() => {
+    const fetchProfileAndFilter = async () => {
+      const profile = await getProfile();
+      setUserProfile(profile);
+      const { filtered, canFilterByDept} = filterByUserProfile(incorporations, profile);
+      setCanNewButton(canFilterByDept);
+      setFilteredData(filtered);
+      setCanFilterByDept(canFilterByDept);
+    };
+    fetchProfileAndFilter();
+  }, [incorporations]);
 
 
-// Hacer la llamada a la API para obtener los catálogos
-useEffect(() => {
-  const fetchCatalogs = async () => {
-    try {
-      const [deptData, conceptData, assetData, subGroupData] = await Promise.all([
-        getDepartments(),
-        getConceptosMovimientoIncorporacion(),
-        getAssets(),
-        getSubGroupsM(),
-      ]);
-      setDepartments(deptData);
-      setConcepts(conceptData);
-      setAssets(assetData);
-      setSubgroups(subGroupData);
-    } catch (error) {
-      setError("Error al cargar catálogos.");
-      console.error("Error fetching catalogs:", error);
-    }
-  };
+  // Hacer la llamada a la API para obtener los catálogos
+  useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const [deptData, conceptData, assetData, subGroupData] = await Promise.all([
+          getDepartments(),
+          getConceptosMovimientoIncorporacion(),
+          getAssets(),
+          getSubGroupsM(),
+        ]);
+        setDepartments(deptData);
+        setConcepts(conceptData);
+        setAssets(assetData);
+        setSubgroups(subGroupData);
+      } catch (error) {
+        toast({
+          title: "Error al cargar catálogos",
+          description: "Algunos datos de selección (departamentos, conceptos, etc.) podrían no estar disponibles.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        console.error("Error fetching catalogs:", error);
+      }
+    };
 
-  fetchCatalogs();
-  fetchIncorporations(); // Llamar a la función de carga de incorporaciones
-}, []);
+    fetchCatalogs();
+    fetchIncorporations(); // Llamar a la función de carga de incorporaciones
+  }, []);
 
 
   const handleAdd = async (incorpData?: Partial<Incorp>) => {
@@ -165,8 +169,7 @@ useEffect(() => {
     }
 
     try {
-      const created = await handleCreateIncorp(dataToSend, setIncorporations)
-      setIncorporations((prev) => [...prev, created])
+      await handleCreateIncorp(dataToSend, setIncorporations) // No necesitamos el 'created' aquí si recargamos
       toast({
         title: "Incorporación creada",
         description: "La incorporación se ha creado exitosamente",
@@ -174,6 +177,8 @@ useEffect(() => {
         duration: 3000,
         isClosable: true,
       })
+      fetchIncorporations(); // Recargar datos después de añadir
+      onClose(); // Cerrar el modal después de añadir
     } catch (error) {
       toast({
         title: "Error",
@@ -189,23 +194,8 @@ useEffect(() => {
   const handleEdit = async () => {
     if (selectedIncorporation && newIncorporation) {
       try {
-        const updated = await updateIncorp(selectedIncorporation.id, newIncorporation)
+        await updateIncorp(selectedIncorporation.id, newIncorporation) // No necesitamos el 'updated' aquí si recargamos
 
-        if (!updated || typeof updated.id === "undefined") {
-          toast({
-            title: "Error",
-            description: "No se pudo actualizar la incorporación",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          })
-          return
-        }
-
-        setIncorporations((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)))
-        setSelectedIncorporation(null)
-        setNewIncorporation({})
-        onClose()
         toast({
           title: "Incorporación actualizada",
           description: "La incorporación se ha actualizado exitosamente",
@@ -213,6 +203,10 @@ useEffect(() => {
           duration: 3000,
           isClosable: true,
         })
+        fetchIncorporations(); // Recargar datos después de editar
+        setSelectedIncorporation(null)
+        setNewIncorporation({})
+        onClose()
       } catch (error) {
         toast({
           title: "Error",
