@@ -480,7 +480,7 @@ export default function MissingGoodsTable() {
             >
               <Flex align="center" gap={2}>
                 <Icon as={FiFilter} color="blue.500" />
-                <Text fontWeight="medium">Filtros de Bรบsqueda</Text>
+                <Text fontWeight="medium">Filtros de Busqueda</Text>
                 {activeFiltersCount > 0 && (
                   <Badge
                     borderRadius="full"
