@@ -39,7 +39,7 @@ import { type ConceptoMovimiento, getConceptosMovimientoDesincorporacion, getCon
 import { type MovableAsset, getAssets, updateAsset } from "api/AssetsApi"
 import { type SubGroup, getSubGroupsM } from "api/SettingsApi"
 import { createTransferRecord } from "views/admin/transfers/utils/createTransfers";
-import { type Transfer } from "api/TransferApi";
+import { type Transfer, type CreateTransferPayload } from "api/TransferApi";
 import { createIncorp, type Incorp } from "api/IncorpApi";
 import { exportBM2ByDepartment } from "views/admin/inventory/utils/inventoryExcel"; // Importar la función de exportación BM2
 
@@ -47,13 +47,12 @@ import { getProfile } from "api/UserApi";
 import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
 
 export default function DisposalsTable() {
-  const today = new Date().toISOString().slice(0, 10)
   const [disposals, setDisposals] = useState<Desincorp[]>([])
   const [selectedDisposal, setSelectedDisposal] = useState<Desincorp | null>(null)
   const [newDisposal, setNewDisposal] = useState<Partial<Desincorp>>({})
   const [filterDept, setFilterDept] = useState<string>("all")
-  const [startDate, setStartDate] = useState<string>("")
-  const [endDate, setEndDate] = useState<string>("")
+  const [selectedMonth, setSelectedMonth] = useState<string>("") // Nuevo estado para el mes
+  const [selectedYear, setSelectedYear] = useState<string>("") // Nuevo estado para el año
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -177,7 +176,7 @@ export default function DisposalsTable() {
     }
 
     try {
-      const transferPayload: Omit<Transfer, "id"> = {
+      const transferPayload: CreateTransferPayload = {
         fecha: fecha,
         cantidad: bienesToTransfer.length,
         origen_id: origen_id,
@@ -480,7 +479,7 @@ export default function DisposalsTable() {
     }
 
     try {
-      const transferPayload: Omit<Transfer, "id"> = {
+      const transferPayload: CreateTransferPayload = {
         fecha: fecha,
         cantidad: bienesToTransfer.length,
         origen_id: origen_id,
@@ -594,21 +593,41 @@ export default function DisposalsTable() {
     setFilterDept(deptId)
   }
 
-  const handleFilterDate = (start: string, end: string) => {
-    setStartDate(start)
-    setEndDate(end || today)
+  const handleFilterDate = (month: string, year: string) => {
+    setSelectedMonth(month)
+    setSelectedYear(year)
   }
 
-  // Filtro igual que incorporations: useMemo y compara fechas con new Date()
- const filteredDisposals = useMemo(() => {
-  return filterDisposals(
-    profileDisposals,
-    "",
-    filterDept,
-    startDate,
-    endDate
-  );
-}, [profileDisposals, filterDept, startDate, endDate]);
+  // Filtro por mes y año
+  const filteredDisposals = useMemo(() => {
+    let filtered = profileDisposals;
+
+    if (filterDept !== "all") {
+      filtered = filtered.filter((desincorp) => String(desincorp.dept_id) === filterDept);
+    }
+
+    if (selectedMonth && selectedYear) {
+      filtered = filtered.filter((desincorp) => {
+        const desincorpDate = new Date(desincorp.fecha);
+        return (
+          desincorpDate.getMonth() + 1 === Number(selectedMonth) &&
+          desincorpDate.getFullYear() === Number(selectedYear)
+        );
+      });
+    } else if (selectedMonth) {
+      filtered = filtered.filter((desincorp) => {
+        const desincorpDate = new Date(desincorp.fecha);
+        return desincorpDate.getMonth() + 1 === Number(selectedMonth);
+      });
+    } else if (selectedYear) {
+      filtered = filtered.filter((desincorp) => {
+        const desincorpDate = new Date(desincorp.fecha);
+        return desincorpDate.getFullYear() === Number(selectedYear);
+      });
+    }
+
+    return filtered;
+  }, [profileDisposals, filterDept, selectedMonth, selectedYear]);
 
   const openEditDialog = (disposal: Desincorp) => {
     setSelectedDisposal(disposal)
@@ -678,8 +697,8 @@ export default function DisposalsTable() {
             onFilterDepartment={handleFilterDepartment}
             onFilterDate={handleFilterDate}
             onAddClick={openAddDialog}
-            startDate={startDate}
-            endDate={endDate}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
             departments={departments}
             canFilterByDept={canFilterByDept}
           />

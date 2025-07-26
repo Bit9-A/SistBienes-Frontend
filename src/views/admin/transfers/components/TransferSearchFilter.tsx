@@ -16,32 +16,52 @@ import {
   Badge,
   Button,
   useColorModeValue,
+  Select,
 } from "@chakra-ui/react"
 import { FiCalendar, FiX, FiFilter, FiSearch } from "react-icons/fi"
 
 interface TransferSearchFilterProps {
   searchQuery: string
-  startDate: string
-  endDate: string
+  selectedMonth: string
+  selectedYear: string
   onSearch: (query: string) => void
-  onDateFilter: (start: string, end: string) => void
+  onDateFilter: (month: string, year: string) => void
 }
 
 export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
   searchQuery,
-  startDate,
-  endDate,
+  selectedMonth,
+  selectedYear,
   onSearch,
   onDateFilter,
 }) => {
   const badgeBg = useColorModeValue("blue.50", "blue.900");
   const badgeColor = useColorModeValue("blue.600", "blue.200");
 
+  // Generate months and years for selects
+  const months = [
+    { value: "01", label: "Enero" },
+    { value: "02", label: "Febrero" },
+    { value: "03", label: "Marzo" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Mayo" },
+    { value: "06", label: "Junio" },
+    { value: "07", label: "Julio" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" },
+  ]
+
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 10 }, (_, i) => currentYear - i) // Last 10 years
+
   // Contar filtros activos
   const activeFiltersCount = [
     !!searchQuery,
-    !!startDate,
-    !!endDate,
+    !!selectedMonth,
+    !!selectedYear,
   ].filter(Boolean).length;
 
   const handleClear = () => {
@@ -100,37 +120,53 @@ export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
           </InputGroup>
         </FormControl>
         <FormControl>
-          <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
-            Fecha inicial
+          <FormLabel htmlFor="month-select" fontSize="sm" fontWeight="medium" mb={1}>
+            Mes
           </FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none">
               <Icon as={FiCalendar} color="gray.400" />
             </InputLeftElement>
-            <Input
-              type="date"
-              value={startDate ?? ''}
-              onChange={(e) => onDateFilter(e.target.value, endDate)}
-              borderRadius="md"
+            <Select
+              id="month-select"
+              size="md"
+              value={selectedMonth}
+              onChange={(e) => onDateFilter(e.target.value, selectedYear)}
               pl={10}
-            />
+              borderRadius="md"
+            >
+              <option value="">Todos los meses</option>
+              {months.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
+                </option>
+              ))}
+            </Select>
           </InputGroup>
         </FormControl>
         <FormControl>
-          <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
-            Fecha final
+          <FormLabel htmlFor="year-select" fontSize="sm" fontWeight="medium" mb={1}>
+            Año
           </FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none">
               <Icon as={FiCalendar} color="gray.400" />
             </InputLeftElement>
-            <Input
-              type="date"
-              value={endDate ?? ''}
-              onChange={(e) => onDateFilter(startDate, e.target.value)}
-              borderRadius="md"
+            <Select
+              id="year-select"
+              size="md"
+              value={selectedYear}
+              onChange={(e) => onDateFilter(selectedMonth, e.target.value)}
               pl={10}
-            />
+              borderRadius="md"
+            >
+              <option value="">Todos los años</option>
+              {years.map((year) => (
+                <option key={year} value={year.toString()}>
+                  {year}
+                </option>
+              ))}
+            </Select>
           </InputGroup>
         </FormControl>
       </Stack>

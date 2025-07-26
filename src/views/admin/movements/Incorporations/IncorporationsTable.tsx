@@ -38,13 +38,12 @@ import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
 import { exportBM2ByDepartment } from "views/admin/inventory/utils/inventoryExcel"; // Importar la función de exportación BM2
 
 export default function IncorporationsTable() {
-  const today = new Date().toISOString().slice(0, 10)
   const [incorporations, setIncorporations] = useState<Incorp[]>([])
   const [selectedIncorporation, setSelectedIncorporation] = useState<Incorp | null>(null)
   const [newIncorporation, setNewIncorporation] = useState<Partial<Incorp>>({})
   const [filterDept, setFilterDept] = useState<string>("all")
-  const [startDate, setStartDate] = useState<string>("")
-  const [endDate, setEndDate] = useState<string>()
+  const [selectedMonth, setSelectedMonth] = useState<string>("") // Nuevo estado para el mes
+  const [selectedYear, setSelectedYear] = useState<string>("") // Nuevo estado para el año
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -245,21 +244,41 @@ export default function IncorporationsTable() {
     setFilterDept(deptId)
   }
 
-  const handleFilterDate = (start: string, end: string) => {
-    setStartDate(start)
-    setEndDate(end || today)
+  const handleFilterDate = (month: string, year: string) => {
+    setSelectedMonth(month)
+    setSelectedYear(year)
   }
 
-  // Filtro igual que transfers: useMemo y compara fechas con new Date()
- const filteredIncorporations = useMemo(() => {
-  return filterIncorporations(
-    filteredData, // <--- aquí el cambio
-    "",
-    filterDept,
-    startDate,
-    endDate
-  )
-}, [filteredData, filterDept, startDate, endDate])
+  // Filtro por mes y año
+  const filteredIncorporations = useMemo(() => {
+    let filtered = filteredData;
+
+    if (filterDept !== "all") {
+      filtered = filtered.filter((incorp) => String(incorp.dept_id) === filterDept);
+    }
+
+    if (selectedMonth && selectedYear) {
+      filtered = filtered.filter((incorp) => {
+        const incorpDate = new Date(incorp.fecha);
+        return (
+          incorpDate.getMonth() + 1 === Number(selectedMonth) &&
+          incorpDate.getFullYear() === Number(selectedYear)
+        );
+      });
+    } else if (selectedMonth) {
+      filtered = filtered.filter((incorp) => {
+        const incorpDate = new Date(incorp.fecha);
+        return incorpDate.getMonth() + 1 === Number(selectedMonth);
+      });
+    } else if (selectedYear) {
+      filtered = filtered.filter((incorp) => {
+        const incorpDate = new Date(incorp.fecha);
+        return incorpDate.getFullYear() === Number(selectedYear);
+      });
+    }
+
+    return filtered;
+  }, [filteredData, filterDept, selectedMonth, selectedYear]);
 
   const openEditDialog = (inc: Incorp) => {
     setSelectedIncorporation(inc)
@@ -331,8 +350,8 @@ export default function IncorporationsTable() {
           onFilterDepartment={handleFilterDepartment}
           onFilterDate={handleFilterDate}
           onAddClick={openAddDialog}
-          startDate={startDate}
-          endDate={endDate}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
           departments={departments}
           canFilterByDept={canFilterByDept}
           canNewButton={canNewButton}

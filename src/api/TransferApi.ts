@@ -12,7 +12,11 @@ export interface bienes {
   id_mueble: number;
   nombre_descripcion: string;
   numero_identificacion: string;
+  descripcion?: string; // Nuevo: descripción del bien
   estado: string;
+  estado_nombre?: string; // Nuevo: nombre del estado/condición
+  dept_id?: number; // Nuevo: ID del departamento
+  departamento?: string; // Nuevo: nombre del departamento
 }
 // Actualizar la interfaz Transfer para incluir bienes
 export interface Transfer {
@@ -24,7 +28,12 @@ export interface Transfer {
   responsable_id: number;
   responsable?: string;
   observaciones?: string;
-  bienes: number[]; // Array de IDs de bienes
+  bienes?: bienes[]; // Array de objetos bienes
+}
+
+// Interfaz para el payload de creación de transferencias
+export interface CreateTransferPayload extends Omit<Transfer, "id" | "bienes"> {
+  bienes: number[]; // Array de IDs de bienes para la creación
 }
 
 // Obtener todas las transferencias
@@ -50,7 +59,7 @@ export const getByTransfersId = async (id: string | number): Promise<TransferRes
 };
 
 // Crear una nueva transferencia
-export const createTransfer = async (transferData: Omit<Transfer, "id">) => {
+export const createTransfer = async (transferData: CreateTransferPayload) => {
   try {
     const formattedData = {
       ...transferData,

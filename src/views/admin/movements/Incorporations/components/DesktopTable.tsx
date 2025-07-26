@@ -74,7 +74,6 @@ export default function DesktopTable({
               <Th>N° Identificación</Th>
               <Th>Fecha</Th>
               <Th>Valor</Th>
-              <Th>Cantidad</Th>
               <Th>Concepto</Th>
               <Th>Departamento</Th>
               <Th textAlign="center">Acciones</Th>
@@ -97,7 +96,7 @@ export default function DesktopTable({
                       : ''}
                   </Td>
                   <Td>{Number(item.valor).toFixed(2)}</Td>
-                  <Td>{item.cantidad}</Td>
+               
                   <Td>{item.concepto_nombre}</Td>
                   <Td>{item.dept_nombre}</Td>
                   <Td>

@@ -1,11 +1,11 @@
-import { createTransfer, Transfer } from "api/TransferApi";
+import { createTransfer, Transfer, CreateTransferPayload } from "api/TransferApi";
 
 /**
  * Crea un registro de transferencia (traslado) en el sistema.
  * @param transferData - Objeto con los datos mínimos requeridos para crear el transfer.
  * @returns La respuesta de la API o lanza un error.
  */
-export async function createTransferRecord(transferData: Partial<Transfer>) {
+export async function createTransferRecord(transferData: CreateTransferPayload) {
   // Puedes validar aquí los campos requeridos si lo deseas
   if (
     !transferData.fecha ||
@@ -19,11 +19,11 @@ export async function createTransferRecord(transferData: Partial<Transfer>) {
   }
 
   // Puedes ajustar los defaults aquí si lo necesitas
-  const payload: Omit<Transfer, "id"> = {
+  const payload: CreateTransferPayload = {
     cantidad: transferData.bienes.length, // La cantidad es el número de bienes
     observaciones: "",
     ...transferData,
-  } as Omit<Transfer, "id">;
+  };
 
   return await createTransfer(payload);
 }

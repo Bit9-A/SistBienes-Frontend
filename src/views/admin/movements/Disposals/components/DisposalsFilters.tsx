@@ -23,10 +23,10 @@ import type { Department } from "api/SettingsApi"
 
 interface DisposalsFiltersProps {
   onFilterDepartment: (deptId: string) => void
-  onFilterDate: (startDate: string, endDate: string) => void
+  onFilterDate: (month: string, year: string) => void
   onAddClick: () => void
-  startDate: string
-  endDate: string
+  selectedMonth: string
+  selectedYear: string
   departments: Department[]
   canFilterByDept?: boolean
 }
@@ -35,8 +35,8 @@ export default function DisposalsFilters({
   onFilterDepartment,
   onFilterDate,
   onAddClick,
-  startDate,
-  endDate,
+  selectedMonth,
+  selectedYear,
   departments,
   canFilterByDept = false,
 }: DisposalsFiltersProps) {
@@ -50,8 +50,27 @@ export default function DisposalsFilters({
   const buttonSize = useBreakpointValue({ base: "md", md: "lg" })
   const isMobile = useBreakpointValue({ base: true, md: false })
 
+  // Generate months and years for selects
+  const months = [
+    { value: "01", label: "Enero" },
+    { value: "02", label: "Febrero" },
+    { value: "03", label: "Marzo" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Mayo" },
+    { value: "06", label: "Junio" },
+    { value: "07", label: "Julio" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" },
+  ]
+
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 10 }, (_, i) => currentYear - i) // Last 10 years
+
   // Count active filters
-  const activeFiltersCount = [startDate, endDate].filter(Boolean).length
+  const activeFiltersCount = [selectedMonth, selectedYear].filter(Boolean).length
 
   return (
     <Box>
@@ -68,7 +87,7 @@ export default function DisposalsFilters({
         </Flex>
 
         <Flex gap={2} align="center">
-          {(startDate || endDate) && (
+          {(selectedMonth || selectedYear) && (
             <Button
               size="sm"
               variant="ghost"
@@ -105,42 +124,54 @@ export default function DisposalsFilters({
       {/* Filter Controls */}
       <Stack direction={{ base: "column", md: "row" }} spacing={4} align={{ base: "stretch", md: "flex-end" }}>
         <FormControl>
-          <FormLabel htmlFor="fecha-inicial" fontSize="sm" fontWeight="medium" mb={1}>
-            Fecha inicial
+          <FormLabel htmlFor="month-select" fontSize="sm" fontWeight="medium" mb={1}>
+            Mes
           </FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none">
               <Icon as={FiCalendar} color="gray.400" />
             </InputLeftElement>
-            <Input
-              id="fecha-inicial"
-              type="date"
+            <Select
+              id="month-select"
               size="md"
-              value={startDate}
-              onChange={(e) => onFilterDate(e.target.value, endDate)}
+              value={selectedMonth}
+              onChange={(e) => onFilterDate(e.target.value, selectedYear)}
               pl={10}
               borderRadius="md"
-            />
+            >
+              <option value="">Todos los meses</option>
+              {months.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
+                </option>
+              ))}
+            </Select>
           </InputGroup>
         </FormControl>
 
         <FormControl>
-          <FormLabel htmlFor="fecha-final" fontSize="sm" fontWeight="medium" mb={1}>
-            Fecha final
+          <FormLabel htmlFor="year-select" fontSize="sm" fontWeight="medium" mb={1}>
+            Año
           </FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none">
               <Icon as={FiCalendar} color="gray.400" />
             </InputLeftElement>
-            <Input
-              id="fecha-final"
-              type="date"
+            <Select
+              id="year-select"
               size="md"
-              value={endDate}
-              onChange={(e) => onFilterDate(startDate, e.target.value)}
+              value={selectedYear}
+              onChange={(e) => onFilterDate(selectedMonth, e.target.value)}
               pl={10}
               borderRadius="md"
-            />
+            >
+              <option value="">Todos los años</option>
+              {years.map((year) => (
+                <option key={year} value={year.toString()}>
+                  {year}
+                </option>
+              ))}
+            </Select>
           </InputGroup>
         </FormControl>
         {canFilterByDept && (

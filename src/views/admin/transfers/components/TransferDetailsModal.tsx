@@ -212,7 +212,7 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
       onClose={onClose}
       scrollBehavior="inside"
       motionPreset="slideInBottom"
-      size={isMobile ? "full" : "xl"}
+      size={isMobile ? "full" : "4xl"}
       initialFocusRef={initialRef}
     >
       <ModalOverlay backdropFilter="blur(4px)" />
@@ -421,36 +421,46 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                               )}
 
 
-                              <SimpleGrid columns={3} spacing={2}>
-                                <Box>
-                                  <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
-                                    Serial
+                              <VStack align="start" spacing={1} mb={3}>
+                                <HStack>
+                                  <Icon as={FiHash} color={iconColor} boxSize={4} />
+                                  <Text fontSize="sm" fontWeight="bold" color={subtitleColor}>
+                                    N° Identificación:
                                   </Text>
                                   <Text fontSize="sm">{bien.numero_identificacion || "—"}</Text>
-                                </Box>
-                                <Box>
-                                  <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
-                                    N° Traslado
+                                </HStack>
+                                <HStack>
+                                  <Icon as={FiFileText} color={iconColor} boxSize={4} />
+                                  <Text fontSize="sm" fontWeight="bold" color={subtitleColor}>
+                                    Descripción:
                                   </Text>
-                                  <Text fontSize="sm">{bien.id_traslado || "—"}</Text>
-                                </Box>
-                                <Box>
-                                  <Text fontSize="xs" fontWeight="bold" color={subtitleColor}>
-                                    Estado
+                                  <Text fontSize="sm">{bien.descripcion || "—"}</Text>
+                                </HStack>
+                                <HStack>
+                                  <Icon as={FiCheckCircle} color={iconColor} boxSize={4} />
+                                  <Text fontSize="sm" fontWeight="bold" color={subtitleColor}>
+                                    Condición:
                                   </Text>
                                   <Badge
-                                    colorScheme={getBadgeColor(bien.estado)}
+                                    colorScheme={getBadgeColor(bien.estado_nombre || bien.estado)}
                                     px={2}
                                     py={1}
                                     borderRadius="full"
                                     display="flex"
                                     alignItems="center"
                                   >
-                                    <Icon as={getBadgeIcon(bien.estado)} mr={1} />
-                                    {bien.estado || "Sin estado"}
+                                    <Icon as={getBadgeIcon(bien.estado_nombre || bien.estado)} mr={1} />
+                                    {bien.estado_nombre || bien.estado || "Sin estado"}
                                   </Badge>
-                                </Box>
-                              </SimpleGrid>
+                                </HStack>
+                                <HStack>
+                                  <Icon as={FiHome} color={iconColor} boxSize={4} />
+                                  <Text fontSize="sm" fontWeight="bold" color={subtitleColor}>
+                                    Departamento:
+                                  </Text>
+                                  <Text fontSize="sm">{bien.departamento || "—"}</Text>
+                                </HStack>
+                              </VStack>
                             </CardBody>
                           </Card>
                         ))}
@@ -467,39 +477,39 @@ export const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
                         <Table variant="simple" size={tableSize}>
                           <Thead bg={bgTableHeader}>
                             <Tr>
-                              <Th>N°Traslado</Th>
-                              <Th>Nombre/Descripción</Th>
-                              <Th>Serial</Th>
-                              <Th>Estado</Th>
+                              <Th>N° Identificación</Th>
+                              <Th>Descripción</Th>
+                              <Th>Condición</Th>
+                              <Th>Departamento Actual</Th>
                             </Tr>
                           </Thead>
                           <Tbody>
                             {transfer.bienes.map((bien, index) => (
                               <Tr key={bien.id || index} _hover={{ bg: bgHover }} transition="background 0.2s">
-                                <Td>{bien.id_traslado || "—"}</Td>
+                                <Td>{bien.numero_identificacion || "—"}</Td>
                                 <Td>
                                   <Text fontWeight="medium">{bien.nombre_descripcion}</Text>
-                                  {bien.id_mueble && (
+                                  {bien.descripcion && (
                                     <Text fontSize="xs" color={subtitleColor} noOfLines={1}>
-                                      {bien.id_mueble}
+                                      {bien.descripcion}
                                     </Text>
                                   )}
                                 </Td>
-                                <Td>{bien.numero_identificacion || "—"}</Td>
-                                <Td><HStack justify="space-between" mb={2}>
+                                <Td>
                                   <Badge
-                                    colorScheme={getBadgeColor(bien.estado)}
+                                    colorScheme={getBadgeColor(bien.estado_nombre || bien.estado)}
                                     px={2}
                                     py={1}
                                     borderRadius="full"
                                     display="flex"
                                     alignItems="center"
                                   >
-                                    <Icon as={getBadgeIcon(bien.estado)} mr={1} />
-                                    {bien.estado || "Sin estado"}
+                                    <Icon as={getBadgeIcon(bien.estado_nombre || bien.estado)} mr={1} />
+                                    {bien.estado_nombre || bien.estado || "Sin estado"}
                                   </Badge>
-                                </HStack>
                                 </Td>
+
+                                <Td>{bien.departamento || "—"}</Td>
                               </Tr>
                             ))}
                           </Tbody>

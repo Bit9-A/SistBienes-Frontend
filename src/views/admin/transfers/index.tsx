@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Button,
@@ -37,8 +37,8 @@ export default function TransferPage() {
 
   // Filtros de búsqueda
   const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>(""); // Nuevo estado para el mes
+  const [selectedYear, setSelectedYear] = useState<string>(""); // Nuevo estado para el año
 
   // Colores y estilos
   const cardBg = useColorModeValue("white", "gray.700");
@@ -68,44 +68,85 @@ export default function TransferPage() {
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAllData = async () => {
+      // Cargar traslados de bienes, departamentos y activos de forma independiente
       try {
-        const [transferData, departmentsData, componentTransfersData, assetsData] = await Promise.all([
-          getAllTransfers(),
-          getDepartments(),
-          getTransferComponents(),
-          getAssets(), // Corregido: getAssets en lugar de getMovableAssets
-        ]);
+        const transferData = await getAllTransfers();
         setTransfers(transferData);
+      } catch (error) {
+        console.error("Error fetching transfers:", error);
+        setTransfers([]); // Asegurarse de que el estado se actualice incluso si hay un error
+      }
+
+      try {
+        const departmentsData = await getDepartments();
         setDepartments(departmentsData);
-        setComponentTransfers(componentTransfersData);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+        setDepartments([]);
+      }
+
+      try {
+        const assetsData = await getAssets();
         setAssets(assetsData);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching assets:", error);
+        setAssets([]);
+      }
+
+      // Cargar traslados de componentes de forma independiente
+      try {
+        const componentTransfersData = await getTransferComponents();
+        setComponentTransfers(componentTransfersData);
+      } catch (error) {
+        console.error("Error fetching component transfers:", error);
+        setComponentTransfers([]);
       }
     };
 
-    fetchData();
+    fetchAllData();
   }, []);
 
   // Filtrado simple por búsqueda y fechas
-  const filteredTransfers = Array.isArray(transfers)
-    ? transfers.filter((t) => {
-        const matchesQuery =
-          searchQuery === "" ||
+  const filteredTransfers = useMemo(() => {
+    let filtered = Array.isArray(transfers) ? transfers : [];
+
+    if (searchQuery !== "") {
+      filtered = filtered.filter(
+        (t) =>
           t.id.toString().includes(searchQuery) ||
-          (t.observaciones && t.observaciones.toLowerCase().includes(searchQuery.toLowerCase()));
-        const matchesStart = !startDate || new Date(t.fecha) >= new Date(startDate);
-        const matchesEnd = !endDate || new Date(t.fecha) <= new Date(endDate);
-        return matchesQuery && matchesStart && matchesEnd;
-      })
-    : [];
+          (t.observaciones && t.observaciones.toLowerCase().includes(searchQuery.toLowerCase())),
+      );
+    }
+
+    if (selectedMonth && selectedYear) {
+      filtered = filtered.filter((t) => {
+        const transferDate = new Date(t.fecha);
+        return (
+          transferDate.getMonth() + 1 === Number(selectedMonth) &&
+          transferDate.getFullYear() === Number(selectedYear)
+        );
+      });
+    } else if (selectedMonth) {
+      filtered = filtered.filter((t) => {
+        const transferDate = new Date(t.fecha);
+        return transferDate.getMonth() + 1 === Number(selectedMonth);
+      });
+    } else if (selectedYear) {
+      filtered = filtered.filter((t) => {
+        const transferDate = new Date(t.fecha);
+        return transferDate.getFullYear() === Number(selectedYear);
+      });
+    }
+
+    return filtered;
+  }, [transfers, searchQuery, selectedMonth, selectedYear]);
 
   // Handlers
   const handleSearch = (query: string) => setSearchQuery(query);
-  const handleDateFilter = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
+  const handleDateFilter = (month: string, year: string) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
   };
 
   const handleViewDetails = (transfer: Transfer) => {
@@ -116,7 +157,6 @@ export default function TransferPage() {
   const handleEditTransfer = (transfer: Transfer) => {
     onClose();
   };
-
   return (
     <Box minH="100vh" bg={bg} pt={{ base: "130px", md: "80px", xl: "80px" }}>
       <Container   maxW="100vw"
@@ -232,8 +272,8 @@ export default function TransferPage() {
               >
                 <TransferSearchFilter
                   searchQuery={searchQuery}
-                  startDate={startDate}
-                  endDate={endDate}
+                  selectedMonth={selectedMonth}
+                  selectedYear={selectedYear}
                   onSearch={handleSearch}
                   onDateFilter={handleDateFilter}
                 />
@@ -257,11 +297,7 @@ export default function TransferPage() {
                 </Box>
               )}
               {filteredTransfers.length === 0 && activeTab === "transfers" && <NoTransfersFound />}
-              {componentTransfers.length === 0 && activeTab === "componentTransfers" && (
-                <Flex justify="center" align= "center" minH="200px">
-             
-                </Flex>
-              )}
+              {/* El mensaje de "No hay traslados de componentes" se maneja dentro de ComponentTransferHistory */}
               <TransferDetailsModal
                 isOpen={isOpen}
                 onClose={onClose}
