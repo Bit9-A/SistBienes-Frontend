@@ -13,7 +13,7 @@ export interface GeneralConfig {
 }
 
 // Mostrar los datos de la configuracion general 
-export const getGeneralConfig = async (): Promise<GeneralConfig> => {
+export const getGeneralConfig = async (): Promise<any> => {
     const response = await axiosInstance.get("/config/");
     return response.data;
 };
