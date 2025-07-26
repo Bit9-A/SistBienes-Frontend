@@ -34,6 +34,9 @@ import {
   InputLeftElement,
   Divider,
   Tooltip,
+  Wrap,
+  WrapItem,
+  Stack,
 } from "@chakra-ui/react"
 import { FiSearch, FiChevronLeft, FiChevronRight, FiFilter, FiCheck, FiX, FiPackage } from "react-icons/fi"
 import type { MovableAsset } from "api/AssetsApi"
@@ -49,6 +52,8 @@ interface AssetsTableCustomProps {
   onSelect: (selectedAssets: MovableAsset[]) => void
   departmentId?: number
   excludedAssetIds?: number[]
+  selectedConceptId?: number // Nuevo prop para el ID del concepto seleccionado
+  incorporatedAssetIdsForInitialInventory?: number[] // Nuevo prop para bienes ya incorporados con concepto 01
 }
 
 export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
@@ -61,28 +66,43 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
   onSelect,
   departmentId,
   excludedAssetIds = [],
-  showActiveOnly = true, // Por defecto, mostrar solo activos
+  selectedConceptId, // Recibir el nuevo prop
+  incorporatedAssetIdsForInitialInventory = [], // Recibir el nuevo prop
 }) => {
   const [searchId, setSearchId] = useState("")
   const [searchDept, setSearchDept] = useState("all")
   const [searchSubgroup, setSearchSubgroup] = useState("all")
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(5)
 
   // Responsive values
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const modalSize = useBreakpointValue({ base: "full", md: "6xl" })
+  const isMobile = useBreakpointValue({ base: true, lg: false })
+  const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
+  const modalSize = useBreakpointValue({ base: "full", sm: "xl", md: "4xl", lg: "6xl", xl: "7xl" })
 
   // Theme colors
   const cardBg = useColorModeValue("white", "gray.700")
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const hoverBg = useColorModeValue("gray.50", "gray.600")
   const selectedBg = useColorModeValue("blue.50", "blue.900")
+  const headerBg = useColorModeValue("gray.50", "gray.800")
 
   const filteredAssets = useMemo(() => {
-    return assets.filter((asset) => {
+    const filtered = assets.filter((asset) => {
+      // Excluir bienes que ya están en la selección actual (si aplica)
       if (excludedAssetIds.includes(asset.id)) return false
+
+      // Si el concepto es "Inventario Inicial" (código 01) y el bien ya está incorporado con ese concepto, excluirlo
+      // Asumo que el concepto "Inventario Inicial" tiene un ID específico, por ejemplo, 1.
+      // Si el ID es diferente, se debe ajustar aquí.
+      const INVENTARIO_INICIAL_CONCEPT_ID = 1; // Asume que el ID del concepto "Inventario Inicial" es 1
+      if (
+        selectedConceptId === INVENTARIO_INICIAL_CONCEPT_ID &&
+        incorporatedAssetIdsForInitialInventory.includes(asset.id)
+      ) {
+        return false;
+      }
 
       const matchesId =
         searchId.trim() === "" || asset.numero_identificacion?.toLowerCase().includes(searchId.toLowerCase())
@@ -96,7 +116,20 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
 
       return matchesId && matchesDept && matchesSubgroup
     })
-  }, [assets, mode, departmentId, searchId, searchDept, searchSubgroup, excludedAssetIds])
+
+    // Ordenar por ID descendente (más recientes primero)
+    return filtered.sort((a, b) => (b.id || 0) - (a.id || 0))
+  }, [
+    assets,
+    mode,
+    departmentId,
+    searchId,
+    searchDept,
+    searchSubgroup,
+    excludedAssetIds,
+    selectedConceptId, // Añadir al array de dependencias
+    incorporatedAssetIdsForInitialInventory, // Añadir al array de dependencias
+  ])
 
   // Pagination logic
   const totalPages = Math.ceil(filteredAssets.length / itemsPerPage)
@@ -127,6 +160,7 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
   const handleDone = () => {
     const selectedAssets = assets.filter((a) => selectedIds.includes(a.id))
     onSelect(selectedAssets)
+    setSelectedIds([])
     onClose()
   }
 
@@ -145,6 +179,18 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
     setSelectedIds([])
   }
 
+  const handleClose = () => {
+    setSelectedIds([])
+    setCurrentPage(1)
+    onClose()
+  }
+
+  // Truncate text helper
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text) return "N/A"
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text
+  }
+
   // Mobile card component
   const MobileAssetCard = ({ asset }: { asset: MovableAsset }) => {
     const isSelected = selectedIds.includes(asset.id)
@@ -159,57 +205,69 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
         cursor="pointer"
         onClick={() => handleCheck(asset.id)}
         transition="all 0.2s"
+        w="full"
       >
-        <CardBody p={4}>
+        <CardBody p={3}>
           <Flex justify="space-between" align="start" mb={3}>
             <Checkbox
               isChecked={isSelected}
               onChange={() => handleCheck(asset.id)}
               colorScheme="blue"
-              size="lg"
+              size="md"
               onClick={(e) => e.stopPropagation()}
             />
             {isSelected && (
-              <Badge colorScheme="blue" variant="solid">
+              <Badge colorScheme="blue" variant="solid" fontSize="xs">
                 Seleccionado
               </Badge>
             )}
           </Flex>
 
-          <VStack align="start" spacing={2}>
-            <Box>
-              <Text fontSize="xs" color="gray.500" fontWeight="medium">
+          <VStack align="start" spacing={2} w="full">
+            <Box w="full">
+              <Text fontSize="xs" color="gray.500" fontWeight="medium" mb={1}>
                 N° IDENTIFICACIÓN
               </Text>
-              <Text fontSize="sm" fontWeight="bold">
+              <Text fontSize="sm" fontWeight="bold" wordBreak="break-word">
                 {asset.numero_identificacion}
               </Text>
             </Box>
 
-            <Box>
-              <Text fontSize="xs" color="gray.500" fontWeight="medium">
+            <Box w="full">
+              <Text fontSize="xs" color="gray.500" fontWeight="medium" mb={1}>
                 DESCRIPCIÓN
               </Text>
-              <Text fontSize="sm" noOfLines={2}>
-                {asset.nombre_descripcion}
+              <Text fontSize="sm" wordBreak="break-word" lineHeight="1.3">
+                {truncateText(asset.nombre_descripcion, 100)}
               </Text>
+              {asset.nombre_descripcion && asset.nombre_descripcion.length > 100 && (
+                <Tooltip label={asset.nombre_descripcion} placement="top">
+                  <Text fontSize="xs" color="blue.500" cursor="help" mt={1}>
+                    Ver completo
+                  </Text>
+                </Tooltip>
+              )}
             </Box>
 
-            <Flex justify="space-between" w="full">
-              <Box>
-                <Text fontSize="xs" color="gray.500" fontWeight="medium">
+            <Stack direction={{ base: "column", sm: "row" }} spacing={3} w="full">
+              <Box flex="1" minW="0">
+                <Text fontSize="xs" color="gray.500" fontWeight="medium" mb={1}>
                   DEPARTAMENTO
                 </Text>
-                <Text fontSize="sm">{asset.dept_nombre || "N/A"}</Text>
+                <Text fontSize="sm" wordBreak="break-word">
+                  {truncateText(asset.dept_nombre || "N/A", 30)}
+                </Text>
               </Box>
 
-              <Box>
-                <Text fontSize="xs" color="gray.500" fontWeight="medium">
+              <Box flex="1" minW="0">
+                <Text fontSize="xs" color="gray.500" fontWeight="medium" mb={1}>
                   SUBGRUPO
                 </Text>
-                <Text fontSize="sm">{asset.subgrupo_nombre || "N/A"}</Text>
+                <Text fontSize="sm" wordBreak="break-word">
+                  {truncateText(asset.subgrupo_nombre || "N/A", 30)}
+                </Text>
               </Box>
-            </Flex>
+            </Stack>
           </VStack>
         </CardBody>
       </Card>
@@ -217,27 +275,34 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={modalSize} isCentered>
+    <Modal isOpen={isOpen} onClose={handleClose} size={modalSize} isCentered={!isMobile} scrollBehavior="inside">
       <ModalOverlay />
-      <ModalContent maxH="90vh" mx={isMobile ? 2 : 4}>
-        <ModalHeader pb={2}>
+      <ModalContent
+        maxH={isMobile ? "100vh" : "90vh"}
+        mx={isMobile ? 0 : 4}
+        my={isMobile ? 0 : 4}
+        borderRadius={isMobile ? 0 : "lg"}
+      >
+        <ModalHeader pb={2} position="sticky" top={0} bg={cardBg} zIndex={1} borderRadius={isMobile ? 0 : "lg lg 0 0"}>
           <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
-            <HStack spacing={2}>
+            <HStack spacing={2} minW="0" flex="1">
               <FiPackage />
-              <Text>Seleccionar Bienes</Text>
+              <Text fontSize={isMobile ? "lg" : "xl"} fontWeight="bold" noOfLines={1}>
+                Seleccionar Bienes
+              </Text>
             </HStack>
-            <Badge colorScheme="blue" variant="subtle" px={3} py={1} borderRadius="full">
+            <Badge colorScheme="blue" variant="subtle" px={3} py={1} borderRadius="full" fontSize="xs" flexShrink={0}>
               {selectedIds.length} seleccionados
             </Badge>
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
 
-        <ModalBody pb={6}>
+        <ModalBody pb={6} px={isMobile ? 3 : 6}>
           {/* Filtros */}
           <Card variant="outline" mb={4}>
-            <CardBody p={4}>
-              <Flex align="center" justify="space-between" mb={3}>
+            <CardBody p={isMobile ? 3 : 4}>
+              <Flex align="center" justify="space-between" mb={3} wrap="wrap" gap={2}>
                 <HStack spacing={2}>
                   <FiFilter />
                   <Text fontWeight="medium" fontSize="sm">
@@ -261,7 +326,7 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                   />
                 </InputGroup>
 
-                <Flex direction={{ base: "column", md: "row" }} gap={3}>
+                <Stack direction={{ base: "column", md: "row" }} spacing={3}>
                   {mode === "all" && (
                     <Select size="sm" value={searchDept} onChange={(e) => setSearchDept(e.target.value)} flex="1">
                       <option value="all">Todos los departamentos</option>
@@ -281,20 +346,20 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                       </option>
                     ))}
                   </Select>
-                </Flex>
+                </Stack>
               </VStack>
             </CardBody>
           </Card>
 
           {/* Controles de selección */}
           <Flex justify="space-between" align="center" mb={4} wrap="wrap" gap={2}>
-            <HStack spacing={2}>
+            <HStack spacing={2} wrap="wrap">
               <Text fontSize="sm" color="gray.600">
                 {filteredAssets.length} bienes encontrados
               </Text>
               {filteredAssets.length > 0 && (
                 <>
-                  <Divider orientation="vertical" h="20px" />
+                  <Divider orientation="vertical" h="20px" display={{ base: "none", sm: "block" }} />
                   <Button size="xs" variant="outline" onClick={handleSelectAllFiltered} leftIcon={<FiCheck />}>
                     {filteredAssets.every((a) => selectedIds.includes(a.id))
                       ? "Deseleccionar todos"
@@ -329,8 +394,8 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
               </Card>
             ) : (
               <>
-                {/* Vista móvil */}
-                {isMobile ? (
+                {/* Vista móvil y tablet */}
+                {isMobile || isTablet ? (
                   <VStack spacing={3} align="stretch">
                     {currentAssets.map((asset) => (
                       <MobileAssetCard key={asset.id} asset={asset} />
@@ -339,11 +404,11 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                 ) : (
                   /* Vista de escritorio */
                   <Card variant="outline">
-                    <Box overflowX="auto">
+                    <Box overflowX="auto" maxW="100%">
                       <Table variant="simple" size="sm">
-                        <Thead bg="gray.50">
+                        <Thead bg={headerBg} position="sticky" top={0} zIndex={1}>
                           <Tr>
-                            <Th w="50px">
+                            <Th w="50px" minW="50px">
                               <Checkbox
                                 isChecked={
                                   currentAssets.length > 0 && currentAssets.every((a) => selectedIds.includes(a.id))
@@ -356,10 +421,16 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                                 colorScheme="blue"
                               />
                             </Th>
-                            <Th>N° Identificación</Th>
-                            <Th>Descripción</Th>
-                            <Th>Departamento</Th>
-                            <Th>Subgrupo</Th>
+                            <Th minW="120px">N° Identificación</Th>
+                            <Th minW="200px" maxW="300px">
+                              Descripción
+                            </Th>
+                            <Th minW="120px" maxW="180px">
+                              Departamento
+                            </Th>
+                            <Th minW="120px" maxW="180px">
+                              Subgrupo
+                            </Th>
                           </Tr>
                         </Thead>
                         <Tbody>
@@ -382,14 +453,44 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                                     onClick={(e) => e.stopPropagation()}
                                   />
                                 </Td>
-                                <Td fontWeight={isSelected ? "bold" : "normal"}>{asset.numero_identificacion}</Td>
-                                <Td maxW="300px">
-                                  <Text noOfLines={2} fontWeight={isSelected ? "medium" : "normal"}>
-                                    {asset.nombre_descripcion}
-                                  </Text>
+                                <Td fontWeight={isSelected ? "bold" : "normal"} wordBreak="break-word">
+                                  {asset.numero_identificacion}
                                 </Td>
-                                <Td>{asset.dept_nombre || "N/A"}</Td>
-                                <Td>{asset.subgrupo_nombre || "N/A"}</Td>
+                                <Td maxW="300px">
+                                  <Tooltip
+                                    label={asset.nombre_descripcion}
+                                    placement="top"
+                                    isDisabled={!asset.nombre_descripcion || asset.nombre_descripcion.length <= 80}
+                                  >
+                                    <Text
+                                      fontWeight={isSelected ? "medium" : "normal"}
+                                      wordBreak="break-word"
+                                      lineHeight="1.3"
+                                    >
+                                      {truncateText(asset.nombre_descripcion, 80)}
+                                    </Text>
+                                  </Tooltip>
+                                </Td>
+                                <Td maxW="180px">
+                                  <Tooltip
+                                    label={asset.dept_nombre}
+                                    placement="top"
+                                    isDisabled={!asset.dept_nombre || asset.dept_nombre.length <= 25}
+                                  >
+                                    <Text wordBreak="break-word">{truncateText(asset.dept_nombre || "N/A", 25)}</Text>
+                                  </Tooltip>
+                                </Td>
+                                <Td maxW="180px">
+                                  <Tooltip
+                                    label={asset.subgrupo_nombre}
+                                    placement="top"
+                                    isDisabled={!asset.subgrupo_nombre || asset.subgrupo_nombre.length <= 25}
+                                  >
+                                    <Text wordBreak="break-word">
+                                      {truncateText(asset.subgrupo_nombre || "N/A", 25)}
+                                    </Text>
+                                  </Tooltip>
+                                </Td>
                               </Tr>
                             )
                           })}
@@ -402,7 +503,7 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                 {/* Paginación */}
                 {totalPages > 1 && (
                   <Flex justify="space-between" align="center" mt={4} wrap="wrap" gap={2}>
-                    <HStack spacing={2}>
+                    <HStack spacing={2} wrap="wrap">
                       <Text fontSize="sm" color="gray.600">
                         Página {currentPage} de {totalPages}
                       </Text>
@@ -417,68 +518,72 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                         minW="80px"
                       >
                         <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
+                
                       </Select>
-                      <Text fontSize="sm" color="gray.600">
+                      <Text fontSize="sm" color="gray.600" display={{ base: "none", sm: "block" }}>
                         por página
                       </Text>
                     </HStack>
 
-                    <HStack spacing={1}>
-                      <Tooltip label="Página anterior">
-                        <IconButton
-                          aria-label="Página anterior"
-                          icon={<FiChevronLeft />}
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          isDisabled={currentPage === 1}
-                        />
-                      </Tooltip>
+                    <Wrap spacing={1} justify="center">
+                      <WrapItem>
+                        <Tooltip label="Página anterior">
+                          <IconButton
+                            aria-label="Página anterior"
+                            icon={<FiChevronLeft />}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            isDisabled={currentPage === 1}
+                          />
+                        </Tooltip>
+                      </WrapItem>
 
                       {/* Números de página */}
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      {Array.from({ length: Math.min(isMobile ? 3 : 5, totalPages) }, (_, i) => {
                         let pageNumber
-                        if (totalPages <= 5) {
+                        const maxPages = isMobile ? 3 : 5
+                        if (totalPages <= maxPages) {
                           pageNumber = i + 1
-                        } else if (currentPage <= 3) {
+                        } else if (currentPage <= Math.ceil(maxPages / 2)) {
                           pageNumber = i + 1
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNumber = totalPages - 4 + i
+                        } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
+                          pageNumber = totalPages - maxPages + 1 + i
                         } else {
-                          pageNumber = currentPage - 2 + i
+                          pageNumber = currentPage - Math.floor(maxPages / 2) + i
                         }
 
                         if (pageNumber > 0 && pageNumber <= totalPages) {
                           return (
-                            <Button
-                              key={pageNumber}
-                              size="sm"
-                              variant={currentPage === pageNumber ? "solid" : "outline"}
-                              colorScheme={currentPage === pageNumber ? "blue" : "gray"}
-                              onClick={() => handlePageChange(pageNumber)}
-                              minW="40px"
-                            >
-                              {pageNumber}
-                            </Button>
+                            <WrapItem key={pageNumber}>
+                              <Button
+                                size="sm"
+                                variant={currentPage === pageNumber ? "solid" : "outline"}
+                                colorScheme={currentPage === pageNumber ? "blue" : "gray"}
+                                onClick={() => handlePageChange(pageNumber)}
+                                minW="40px"
+                              >
+                                {pageNumber}
+                              </Button>
+                            </WrapItem>
                           )
                         }
                         return null
                       })}
 
-                      <Tooltip label="Página siguiente">
-                        <IconButton
-                          aria-label="Página siguiente"
-                          icon={<FiChevronRight />}
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          isDisabled={currentPage === totalPages}
-                        />
-                      </Tooltip>
-                    </HStack>
+                      <WrapItem>
+                        <Tooltip label="Página siguiente">
+                          <IconButton
+                            aria-label="Página siguiente"
+                            icon={<FiChevronRight />}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            isDisabled={currentPage === totalPages}
+                          />
+                        </Tooltip>
+                      </WrapItem>
+                    </Wrap>
                   </Flex>
                 )}
               </>
@@ -486,13 +591,27 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
           </Box>
 
           {/* Botones de acción */}
-          <Flex justify="space-between" align="center" mt={6} pt={4} borderTop="1px" borderColor={borderColor}>
-            <Text fontSize="sm" color="gray.600">
+          <Flex
+            justify="space-between"
+            align="center"
+            mt={6}
+            pt={4}
+            borderTop="1px"
+            borderColor={borderColor}
+            position="sticky"
+            bottom={0}
+            bg={cardBg}
+            mx={-6}
+            px={6}
+            wrap="wrap"
+            gap={3}
+          >
+            <Text fontSize="sm" color="gray.600" minW="0">
               {selectedIds.length} bienes seleccionados
             </Text>
 
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={onClose}>
+              <Button variant="ghost" onClick={handleClose} size={isMobile ? "sm" : "md"}>
                 Cancelar
               </Button>
               <Button
@@ -500,6 +619,7 @@ export const AssetsTableCustom: React.FC<AssetsTableCustomProps> = ({
                 onClick={handleDone}
                 isDisabled={selectedIds.length === 0}
                 leftIcon={<FiCheck />}
+                size={isMobile ? "sm" : "md"}
               >
                 Confirmar Selección
               </Button>

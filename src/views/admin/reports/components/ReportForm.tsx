@@ -27,7 +27,7 @@ interface ReportFormProps {
   onClose: () => void
   selectedMissingGood: MissingGoods | null
   newMissingGood: Partial<MissingGoods>
-  setNewMissingGood: (mg: Partial<MissingGoods>) => void
+  setNewMissingGood: (mg: any) => void
   handleAdd: (mgData?: Partial<MissingGoods>) => void
   handleEdit: () => void
   isMobile: boolean
@@ -70,11 +70,11 @@ export default function ReportForm({
           setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: head.id, jefe_nombre: head.nombre_completo || head.nombre }))
         } else {
           setDepartmentHeadName(null)
-          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: undefined, jefe_nombre: undefined }))
+          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: Number || undefined , jefe_nombre: String || undefined }))
         }
       } else {
         setDepartmentHeadName(null)
-        setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: undefined, jefe_nombre: undefined }))
+        setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: Number || undefined, jefe_nombre: String || undefined }))
       }
     }, 300) // Debounce de 300ms
 

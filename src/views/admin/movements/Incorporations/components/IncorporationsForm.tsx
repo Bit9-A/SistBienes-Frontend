@@ -76,7 +76,14 @@ export default function IncorporationsForm({
     }
     // eslint-disable-next-line
   }, [selectedIncorporation, assets]);
-  
+
+  // Obtener el ID del concepto "Inventario Inicial" (código "01")
+  const INVENTARIO_INICIAL_CONCEPT_ID = useMemo(() => {
+    const initialInventoryConcept = concepts.find(
+      (c) => c.codigo === '01',
+    );
+    return initialInventoryConcept ? initialInventoryConcept.id : undefined;
+  }, [concepts]);
 
   // Bienes ya incorporados en el departamento seleccionado
   const bienesIncorporadosEnDept = useMemo(() => {
@@ -86,15 +93,40 @@ export default function IncorporationsForm({
       .map((i) => i.bien_id);
   }, [incorporations, selectedDeptId]);
 
+  // Bienes ya incorporados con el concepto "Inventario Inicial"
+  const incorporatedAssetIdsForInitialInventory = useMemo(() => {
+    if (!INVENTARIO_INICIAL_CONCEPT_ID) return [];
+    return incorporations
+      .filter(
+        (i) =>
+          i.concepto_id === INVENTARIO_INICIAL_CONCEPT_ID &&
+          i.isActive,
+      )
+      .map((i) => i.bien_id);
+  }, [incorporations, INVENTARIO_INICIAL_CONCEPT_ID]);
+
   // Bienes disponibles para incorporar en el departamento seleccionado
   const bienesDisponibles = useMemo(() => {
     if (!selectedDeptId) return [];
-    return assets.filter(
-      (a) =>
-        a.dept_id === selectedDeptId &&
-        !bienesIncorporadosEnDept.includes(a.id),
-    );
-  }, [assets, bienesIncorporadosEnDept, selectedDeptId]);
+
+    // Si el concepto es "Inventario Inicial", aplicar el filtro de bienes ya incorporados
+    if (newIncorporation.concepto_id === INVENTARIO_INICIAL_CONCEPT_ID) {
+      return assets.filter(
+        (a) =>
+          a.dept_id === selectedDeptId &&
+          !incorporatedAssetIdsForInitialInventory.includes(a.id),
+      );
+    } else {
+      // Para otros conceptos, mostrar todos los bienes del departamento
+      return assets.filter((a) => a.dept_id === selectedDeptId);
+    }
+  }, [
+    assets,
+    selectedDeptId,
+    newIncorporation.concepto_id,
+    INVENTARIO_INICIAL_CONCEPT_ID,
+    incorporatedAssetIdsForInitialInventory,
+  ]);
 
   // Cuando seleccionas bienes, guarda los bienes y cierra el modal de selección
   const handleSelectAssets = (assetsSeleccionados: MovableAsset[]) => {
@@ -168,6 +200,8 @@ export default function IncorporationsForm({
           mode="department"
           departmentId={selectedDeptId}
           onSelect={handleSelectAssets}
+          selectedConceptId={newIncorporation.concepto_id} // Pasar el ID del concepto seleccionado
+          incorporatedAssetIdsForInitialInventory={incorporatedAssetIdsForInitialInventory} // Pasar bienes ya incorporados con concepto 01
         />
       )}
 
@@ -205,6 +239,28 @@ export default function IncorporationsForm({
             <ModalBody>
               <Stack spacing={4}>
                 <FormControl isRequired>
+                  <FormLabel>Concepto</FormLabel>
+                  <Select
+                    name="concepto_id"
+                    value={newIncorporation.concepto_id ?? ''}
+                    onChange={(e) =>
+                      setNewIncorporation({
+                        ...newIncorporation,
+                        concepto_id: Number(e.target.value),
+                      })
+                    }
+                  >
+                    <option value="">Seleccione</option>
+                    {concepts
+                      .filter((concept) => concept.codigo !== '02') // Excluir concepto "Incorporación por Traspaso"
+                      .map((concept) => (
+                        <option key={concept.id} value={concept.id}>
+                          {concept.nombre}
+                        </option>
+                      ))}
+                  </Select>
+                </FormControl>
+                <FormControl isRequired>
                   <FormLabel>Departamento</FormLabel>
                   <Select
                     name="dept_id"
@@ -219,6 +275,21 @@ export default function IncorporationsForm({
                       </option>
                     ))}
                   </Select>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Fecha</FormLabel>
+                  <Input
+                    name="fecha"
+                    type="date"
+                    value={newIncorporation.fecha ?? ''}
+                    onChange={(e) =>
+                      setNewIncorporation({
+                        ...newIncorporation,
+                        fecha: e.target.value,
+                      })
+                    }
+                    disabled={!!selectedIncorporation} // Deshabilita si estás editando
+                  />
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel>Bien(es)</FormLabel>
@@ -244,48 +315,21 @@ export default function IncorporationsForm({
                     size="sm"
                     onClick={() =>
                       selectedDeptId &&
+                      newIncorporation.concepto_id &&
                       !selectedIncorporation &&
                       setShowAssetSelector(true)
                     }
-                    isDisabled={!selectedDeptId || !!selectedIncorporation}
+                    isDisabled={
+                      !selectedDeptId ||
+                      !newIncorporation.concepto_id ||
+                      !!selectedIncorporation
+                    }
+                    bgColor="purple.500"
+                    color="white"
+                    _hover={{ bgColor: "purple.600" }}
                   >
                     Buscar bienes
                   </Button>
-                </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>Fecha</FormLabel>
-                  <Input
-                    name="fecha"
-                    type="date"
-                    value={newIncorporation.fecha ?? ''}
-                    onChange={(e) =>
-                      setNewIncorporation({
-                        ...newIncorporation,
-                        fecha: e.target.value,
-                      })
-                    }
-                    disabled={!!selectedIncorporation} // Deshabilita si estás editando
-                  />
-                </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>Concepto</FormLabel>
-                  <Select
-                    name="concepto_id"
-                    value={newIncorporation.concepto_id ?? ''}
-                    onChange={(e) =>
-                      setNewIncorporation({
-                        ...newIncorporation,
-                        concepto_id: Number(e.target.value),
-                      })
-                    }
-                  >
-                    <option value="">Seleccione</option>
-                    {concepts.map((concept) => (
-                      <option key={concept.id} value={concept.id}>
-                        {concept.nombre}
-                      </option>
-                    ))}
-                  </Select>
                 </FormControl>
                 <FormControl>
                   <FormLabel>Observaciones</FormLabel>

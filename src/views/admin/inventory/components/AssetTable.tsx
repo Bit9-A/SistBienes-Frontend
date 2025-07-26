@@ -57,7 +57,6 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   // Estado para la paginación
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const totalPages = Math.ceil(assets.length / itemsPerPage)
 
   // Estado para el modal de detalles
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -68,6 +67,13 @@ export const AssetTable: React.FC<AssetTableProps> = ({
     [key: number]: Component[]
   }>({})
 
+  // Resetear página cuando cambien los assets
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [assets])
+
+  const totalPages = Math.ceil(assets.length / itemsPerPage)
+
   // Calcular los elementos a mostrar en la página actual
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
@@ -76,7 +82,11 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   // Cargar componentes solo para los bienes que son computadoras
   useEffect(() => {
     const fetchComponents = async () => {
+      if (!assets || assets.length === 0) return
+
       const computers = assets.filter((a) => a.isComputer === 1 && a.id)
+      if (computers.length === 0) return
+
       const promises = computers.map(async (asset) => {
         try {
           const comps = await getComponentsByBienId(asset.id)
@@ -85,6 +95,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
           return { id: asset.id, comps: [] }
         }
       })
+
       const results = await Promise.all(promises)
       const map: { [key: number]: Component[] } = {}
       results.forEach(({ id, comps }) => {
@@ -92,9 +103,8 @@ export const AssetTable: React.FC<AssetTableProps> = ({
       })
       setComponentsByAsset(map)
     }
-    if (assets && assets.length > 0) {
-      fetchComponents()
-    }
+
+    fetchComponents()
   }, [assets])
 
   // Cambiar de página
@@ -117,11 +127,8 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   // Formatear valores monetarios
   const formatCurrency = (value: number | string | undefined): string => {
     if (value === undefined || value === null) return "N/A"
-
     const numValue = typeof value === "string" ? Number.parseFloat(value) : value
-
     if (isNaN(numValue)) return "N/A"
-
     return new Intl.NumberFormat("es-VE", {
       style: "currency",
       currency: "VES",
@@ -134,12 +141,10 @@ export const AssetTable: React.FC<AssetTableProps> = ({
     if (!dateString) {
       return "N/A"
     }
-
     const date = new Date(dateString)
     if (isNaN(date.getTime())) {
       return "N/A"
     }
-
     return new Intl.DateTimeFormat("es-VE", {
       year: "numeric",
       month: "2-digit",
@@ -150,7 +155,6 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   // Obtener el nombre del estado según su ID
   const getStatusName = (statusId: string | number | undefined): { name: string; className: string } => {
     if (!statusId) return { name: "Sin estado", className: "" }
-
     switch (statusId.toString()) {
       case "1":
         return { name: "Nuevo", className: "new" }
@@ -175,14 +179,12 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   // Función para formatear la descripción con componentes
   const formatDescriptionWithComponents = (asset: any) => {
     let description = asset.nombre_descripcion
-
     if (asset.isComputer === 1 && componentsByAsset[asset.id] && componentsByAsset[asset.id].length > 0) {
       const componentsText = componentsByAsset[asset.id]
         .map((comp) => `${comp.nombre}${comp.numero_serial ? ` (SN: ${comp.numero_serial})` : ""}`)
         .join(", ")
       description += ` - Componentes: ${componentsText}`
     }
-
     return description
   }
 
@@ -261,8 +263,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                     <Text fontWeight="bold" fontSize="sm">
                       Descripción
                     </Text>
-                    
-                    <Text fontSize="sm" >{formatDescriptionWithComponents(asset)}</Text>
+                    <Text fontSize="sm">{formatDescriptionWithComponents(asset)}</Text>
                   </Box>
                   <Box>
                     <Text fontWeight="bold" fontSize="sm">
@@ -304,25 +305,32 @@ export const AssetTable: React.FC<AssetTableProps> = ({
         <AssetDetailsModal asset={selectedAsset} isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} />
 
         {/* Paginación para móvil */}
-        <Flex mt={4} justify="space-between" align="center">
-          <Text fontSize="sm">
-            Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
-          </Text>
-          <HStack spacing={2}>
-            <IconButton
-              aria-label="Página anterior"
-              icon={<FiChevronLeft />}
-              onClick={goToPreviousPage}
-              isDisabled={currentPage === 1}
-            />
-            <IconButton
-              aria-label="Página siguiente"
-              icon={<FiChevronRight />}
-              onClick={goToNextPage}
-              isDisabled={currentPage === totalPages}
-            />
-          </HStack>
-        </Flex>
+        {totalPages > 1 && (
+          <Flex mt={4} justify="space-between" align="center">
+            <Text fontSize="sm">
+              Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
+            </Text>
+            <HStack spacing={2}>
+              <IconButton
+                aria-label="Página anterior"
+                icon={<FiChevronLeft />}
+                onClick={goToPreviousPage}
+                isDisabled={currentPage === 1}
+                size="sm"
+              />
+              <Text fontSize="sm">
+                {currentPage} de {totalPages}
+              </Text>
+              <IconButton
+                aria-label="Página siguiente"
+                icon={<FiChevronRight />}
+                onClick={goToNextPage}
+                isDisabled={currentPage === totalPages}
+                size="sm"
+              />
+            </HStack>
+          </Flex>
+        )}
       </Box>
     )
   }
@@ -433,51 +441,55 @@ export const AssetTable: React.FC<AssetTableProps> = ({
       <AssetDetailsModal asset={selectedAsset} isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} />
 
       {/* Paginación */}
-      <Flex mt={4} align="center" justify="space-between">
-        <Text fontSize="sm">
-          Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
-        </Text>
-        <HStack spacing={2}>
-          <IconButton
-            aria-label="Página anterior"
-            icon={<FiChevronLeft />}
-            onClick={goToPreviousPage}
-            isDisabled={currentPage === 1}
-          />
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageToShow
-            if (totalPages <= 5) {
-              pageToShow = i + 1
-            } else if (currentPage <= 3) {
-              pageToShow = i + 1
-            } else if (currentPage >= totalPages - 2) {
-              pageToShow = totalPages - 4 + i
-            } else {
-              pageToShow = currentPage - 2 + i
-            }
-            if (pageToShow > 0 && pageToShow <= totalPages) {
-              return (
-                <Button
-                  key={pageToShow}
-                  onClick={() => goToPage(pageToShow)}
-                  variant={currentPage === pageToShow ? "solid" : "outline"}
-                  colorScheme={currentPage === pageToShow ? "purple" : "gray"}
-                  size="sm"
-                >
-                  {pageToShow}
-                </Button>
-              )
-            }
-            return null
-          })}
-          <IconButton
-            aria-label="Página siguiente"
-            icon={<FiChevronRight />}
-            onClick={goToNextPage}
-            isDisabled={currentPage === totalPages}
-          />
-        </HStack>
-      </Flex>
+      {totalPages > 1 && (
+        <Flex mt={4} align="center" justify="space-between">
+          <Text fontSize="sm">
+            Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
+          </Text>
+          <HStack spacing={2}>
+            <IconButton
+              aria-label="Página anterior"
+              icon={<FiChevronLeft />}
+              onClick={goToPreviousPage}
+              isDisabled={currentPage === 1}
+              size="sm"
+            />
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageToShow
+              if (totalPages <= 5) {
+                pageToShow = i + 1
+              } else if (currentPage <= 3) {
+                pageToShow = i + 1
+              } else if (currentPage >= totalPages - 2) {
+                pageToShow = totalPages - 4 + i
+              } else {
+                pageToShow = currentPage - 2 + i
+              }
+              if (pageToShow > 0 && pageToShow <= totalPages) {
+                return (
+                  <Button
+                    key={pageToShow}
+                    onClick={() => goToPage(pageToShow)}
+                    variant={currentPage === pageToShow ? "solid" : "outline"}
+                    colorScheme={currentPage === pageToShow ? "purple" : "gray"}
+                    size="sm"
+                  >
+                    {pageToShow}
+                  </Button>
+                )
+              }
+              return null
+            })}
+            <IconButton
+              aria-label="Página siguiente"
+              icon={<FiChevronRight />}
+              onClick={goToNextPage}
+              isDisabled={currentPage === totalPages}
+              size="sm"
+            />
+          </HStack>
+        </Flex>
+      )}
     </Box>
   )
 }
