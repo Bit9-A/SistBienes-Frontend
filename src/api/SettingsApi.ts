@@ -1,8 +1,19 @@
 import axiosInstance from "../utils/axiosInstance";
 
 // Configuración general
+export interface GeneralConfig {
+    id: number;
+    fecha: string;
+    colorprimario: string;
+    colorsecundario: string;
+    url_banner: string;
+    url_logo: string;
+    url_favicon: string;
+    nombre_institucion: string;
+}
+
 // Mostrar los datos de la configuracion general 
-export const getGeneralConfig = async (): Promise<any> => {
+export const getGeneralConfig = async (): Promise<GeneralConfig> => {
     const response = await axiosInstance.get("/config/");
     return response.data;
 };
@@ -260,8 +271,3 @@ export const deleteConceptoMovimientoDesincorporacion = async (id: number) => {
         throw error;
     }
 }
-
-
-
-
-
