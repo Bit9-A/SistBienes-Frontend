@@ -108,8 +108,8 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
     <Stack spacing={6}>
       {/* Filters Section */}
       <Card bg={cardBg} shadow="md" borderRadius="xl" border="1px" borderColor={borderColor}>
-        <CardBody p={6}>
-          <Flex mb={4} justify="space-between" align="center" flexWrap="wrap" gap={2}>
+        <CardBody p={{ base: 3, md: 4 }}>
+          <Flex mb={4} justify="space-between" align="center" flexWrap="wrap" gap={{ base: 2, md: 4 }}>
             <Flex align="center" gap={2}>
               <Icon as={FiFilter} color="blue.500" />
               <Text fontWeight="medium">Filtros de Sesiones</Text>
@@ -177,7 +177,7 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
 
       {/* Results Section */}
       <Card bg={cardBg} shadow="lg" borderRadius="xl" border="1px" borderColor={borderColor}>
-        <CardBody p={6}>
+        <CardBody p={{ base: 3, md: 4 }}>
           {/* Results Summary */}
           <Flex justify="space-between" align="center" mb={4}>
             <Box>
@@ -217,7 +217,9 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
                 borderColor={borderColor}
                 borderRadius="lg"
                 boxShadow="sm"
-                overflow="auto"
+                overflowX="auto"
+                overflowY="auto" /* Asegura el scroll vertical */
+                maxH="500px" /* Altura máxima para activar el scroll vertical */
                 mb={4}
               >
                 <Table variant="simple" size={tableSize}>
@@ -287,29 +289,36 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
                   <HStack spacing={2}>
                     <Button
                       size="sm"
-                      colorScheme="blue"
+                      colorScheme="purple"
                       variant="outline"
                       isDisabled={currentPage === 1}
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     >
                       Anterior
                     </Button>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <Button
-                        key={i + 1}
-                        size="sm"
-                        bgColor={currentPage === i + 1 ? "blue.500" : undefined}
-                        color={currentPage === i + 1 ? "white" : undefined}
-                        variant={currentPage === i + 1 ? "solid" : "outline"}
-                        colorScheme="blue"
-                        onClick={() => setCurrentPage(i + 1)}
-                      >
-                        {i + 1}
-                      </Button>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((page) => {
+                        const PAGE_BUTTON_LIMIT = 4
+                        const startPage = Math.max(1, currentPage - Math.floor(PAGE_BUTTON_LIMIT / 2))
+                        const endPage = Math.min(totalPages, startPage + PAGE_BUTTON_LIMIT - 1)
+                        return page >= startPage && page <= endPage
+                      })
+                      .map((page) => (
+                        <Button
+                          key={page}
+                          size="sm"
+                          bgColor={currentPage === page ? "type.primary" : undefined}
+                          color={currentPage === page ? "white" : undefined}
+                          variant={currentPage === page ? "solid" : "outline"}
+                          colorScheme="purple"
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      ))}
                     <Button
                       size="sm"
-                      colorScheme="blue"
+                      colorScheme="purple"
                       variant="outline"
                       isDisabled={currentPage === totalPages}
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}

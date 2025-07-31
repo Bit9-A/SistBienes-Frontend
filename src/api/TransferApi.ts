@@ -29,6 +29,8 @@ export interface Transfer {
   responsable?: string;
   observaciones?: string;
   bienes?: bienes[]; // Array de objetos bienes
+  departamento_origen_id?: number; // Nuevo: ID del departamento de origen
+  departamento_destino_id?: number; // Nuevo: ID del departamento de destino
 }
 
 // Interfaz para el payload de creación de transferencias

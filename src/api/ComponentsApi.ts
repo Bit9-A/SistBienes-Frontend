@@ -56,6 +56,7 @@ export interface TransferComponent {
   fecha: string;
   componente_nombre?: string;
   numero_serial?: string | null;
+  observaciones?: string; // Nuevo: Observaciones del traslado de componente
 }
 
 // Obtener todos los traslados de componentes

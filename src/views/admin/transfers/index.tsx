@@ -26,6 +26,7 @@ import { TransferComponent, getTransferComponents } from "../../../api/Component
 import { MovableAsset, getAssets } from "../../../api/AssetsApi"; // Corregido: getAssets en lugar de getMovableAssets
 import { useDisclosure } from "@chakra-ui/react";
 import ComponentTransferHistory from "./components/ComponentTransferHistory";
+import { getProfile, UserProfile } from "../../../api/UserApi"; // Importar getProfile
 
 export default function TransferPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
@@ -35,10 +36,17 @@ export default function TransferPage() {
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  // Estados para el perfil de usuario y permisos
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [canFilterByDept, setCanFilterByDept] = useState(false);
+  const [userTransfers, setUserTransfers] = useState<Transfer[]>([]); // Traslados filtrados por usuario
+  const [userComponentTransfers, setUserComponentTransfers] = useState<TransferComponent[]>([]); // Traslados de componentes filtrados por usuario
+
   // Filtros de búsqueda
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>(""); // Nuevo estado para el mes
   const [selectedYear, setSelectedYear] = useState<string>(""); // Nuevo estado para el año
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>(""); // Nuevo estado para el filtro de departamento
 
   // Colores y estilos
   const cardBg = useColorModeValue("white", "gray.700");
@@ -69,47 +77,96 @@ export default function TransferPage() {
 
   useEffect(() => {
     const fetchAllData = async () => {
-      // Cargar traslados de bienes, departamentos y activos de forma independiente
       try {
-        const transferData = await getAllTransfers();
-        setTransfers(transferData);
-      } catch (error) {
-        console.error("Error fetching transfers:", error);
-        setTransfers([]); // Asegurarse de que el estado se actualice incluso si hay un error
-      }
+        const [transferData, departmentsData, assetsData, componentTransfersData, profileData] =
+          await Promise.allSettled([
+            getAllTransfers(),
+            getDepartments(),
+            getAssets(),
+            getTransferComponents(),
+            getProfile(),
+          ]);
 
-      try {
-        const departmentsData = await getDepartments();
-        setDepartments(departmentsData);
-      } catch (error) {
-        console.error("Error fetching departments:", error);
-        setDepartments([]);
-      }
+        if (transferData.status === "fulfilled") {
+          setTransfers(transferData.value);
+          console.log("Fetched transfers:", transferData.value); // Log para depuración
+        } else {
+          console.error("Error fetching transfers:", transferData.reason);
+          setTransfers([]);
+        }
 
-      try {
-        const assetsData = await getAssets();
-        setAssets(assetsData);
-      } catch (error) {
-        console.error("Error fetching assets:", error);
-        setAssets([]);
-      }
+        if (departmentsData.status === "fulfilled") {
+          setDepartments(departmentsData.value);
+          console.log("Fetched departments:", departmentsData.value); // Log para depuración
+        } else {
+          console.error("Error fetching departments:", departmentsData.reason);
+          setDepartments([]);
+        }
 
-      // Cargar traslados de componentes de forma independiente
-      try {
-        const componentTransfersData = await getTransferComponents();
-        setComponentTransfers(componentTransfersData);
+        if (assetsData.status === "fulfilled") {
+          setAssets(assetsData.value);
+        } else {
+          console.error("Error fetching assets:", assetsData.reason);
+          setAssets([]);
+        }
+
+        if (componentTransfersData.status === "fulfilled") {
+          setComponentTransfers(componentTransfersData.value);
+        } else {
+          console.error("Error fetching component transfers:", componentTransfersData.reason);
+          setComponentTransfers([]);
+        }
+
+        if (profileData.status === "fulfilled") {
+          setUserProfile(profileData.value);
+          // Determinar si el usuario puede filtrar por departamento
+          if (profileData.value?.tipo_usuario === 1 || profileData.value?.dept_nombre === "Bienes") {
+            setCanFilterByDept(true);
+          } else {
+            setCanFilterByDept(false);
+            // Si no puede filtrar, establecer el departamento del usuario como filtro por defecto
+            if (profileData.value?.dept_id) {
+              setSelectedDepartmentId(profileData.value.dept_id.toString());
+            }
+          }
+        } else {
+          console.error("Error fetching user profile:", profileData.reason);
+          setUserProfile(null);
+          setCanFilterByDept(false);
+        }
       } catch (error) {
-        console.error("Error fetching component transfers:", error);
-        setComponentTransfers([]);
+        console.error("Unhandled error in fetchAllData:", error);
       }
     };
 
     fetchAllData();
   }, []);
 
-  // Filtrado simple por búsqueda y fechas
+  // Filtrado principal de traslados y traslados de componentes
   const filteredTransfers = useMemo(() => {
-    let filtered = Array.isArray(transfers) ? transfers : [];
+    let currentTransfers = Array.isArray(transfers) ? transfers : [];
+    let currentComponentTransfers = Array.isArray(componentTransfers) ? componentTransfers : [];
+
+    // Aplicar filtrado por perfil de usuario primero
+    if (userProfile && (userProfile.tipo_usuario !== 1 && userProfile.dept_nombre !== "Bienes")) {
+      if (userProfile.dept_id) {
+        currentTransfers = currentTransfers.filter(
+          (t) => t.origen_id === userProfile.dept_id || t.destino_id === userProfile.dept_id
+        );
+        currentComponentTransfers = currentComponentTransfers.filter((tc) => {
+          const originAsset = assets.find(asset => asset.id === tc.bien_origen_id);
+          const destinationAsset = assets.find(asset => asset.id === tc.bien_destino_id);
+          return (originAsset && originAsset.dept_id === userProfile.dept_id) ||
+                 (destinationAsset && destinationAsset.dept_id === userProfile.dept_id);
+        });
+      } else {
+        currentTransfers = [];
+        currentComponentTransfers = [];
+      }
+    }
+
+    // Aplicar filtros adicionales (búsqueda, fecha, departamento) a los traslados de bienes
+    let filtered = currentTransfers;
 
     if (searchQuery !== "") {
       filtered = filtered.filter(
@@ -139,14 +196,88 @@ export default function TransferPage() {
       });
     }
 
+    // Aplicar filtro por departamento solo si el usuario tiene permiso para filtrar y ha seleccionado un departamento
+    if (canFilterByDept && selectedDepartmentId) {
+      filtered = filtered.filter(
+        (t) =>
+          t.origen_id === Number(selectedDepartmentId) ||
+          t.destino_id === Number(selectedDepartmentId)
+      );
+    }
+
+    console.log("Filtering transfers:", {
+      userTransfers: currentTransfers,
+      searchQuery,
+      selectedMonth,
+      selectedYear,
+      selectedDepartmentId,
+      canFilterByDept,
+      filteredResult: filtered
+    }); // Log para depuración
     return filtered;
-  }, [transfers, searchQuery, selectedMonth, selectedYear]);
+  }, [transfers, userProfile, searchQuery, selectedMonth, selectedYear, selectedDepartmentId, canFilterByDept]); // Dependencias actualizadas
+
+  const filteredComponentTransfers = useMemo(() => {
+    let currentComponentTransfers = Array.isArray(componentTransfers) ? componentTransfers : [];
+
+    // Aplicar filtrado por perfil de usuario primero
+    if (userProfile && (userProfile.tipo_usuario !== 1 && userProfile.dept_nombre !== "Bienes")) {
+      if (userProfile.dept_id) {
+        currentComponentTransfers = currentComponentTransfers.filter((tc) => {
+          const originAsset = assets.find(asset => asset.id === tc.bien_origen_id);
+          const destinationAsset = assets.find(asset => asset.id === tc.bien_destino_id);
+          return (originAsset && originAsset.dept_id === userProfile.dept_id) ||
+                 (destinationAsset && destinationAsset.dept_id === userProfile.dept_id);
+        });
+      } else {
+        currentComponentTransfers = [];
+      }
+    }
+
+    // Aplicar filtros adicionales (búsqueda, fecha) a los traslados de componentes
+    let filtered = currentComponentTransfers;
+
+    if (searchQuery !== "") {
+      filtered = filtered.filter(
+        (tc) =>
+          tc.id.toString().includes(searchQuery) ||
+          (tc.observaciones && tc.observaciones.toLowerCase().includes(searchQuery.toLowerCase())),
+      );
+    }
+
+    if (selectedMonth && selectedYear) {
+      filtered = filtered.filter((tc) => {
+        const transferDate = new Date(tc.fecha);
+        return (
+          transferDate.getMonth() + 1 === Number(selectedMonth) &&
+          transferDate.getFullYear() === Number(selectedYear)
+        );
+      });
+    } else if (selectedMonth) {
+      filtered = filtered.filter((tc) => {
+        const transferDate = new Date(tc.fecha);
+        return transferDate.getMonth() + 1 === Number(selectedMonth);
+      });
+    } else if (selectedYear) {
+      filtered = filtered.filter((tc) => {
+        const transferDate = new Date(tc.fecha);
+        return transferDate.getFullYear() === Number(selectedYear);
+      });
+    }
+
+    return filtered;
+  }, [componentTransfers, userProfile, searchQuery, selectedMonth, selectedYear, assets]); // Dependencias actualizadas
+
 
   // Handlers
   const handleSearch = (query: string) => setSearchQuery(query);
   const handleDateFilter = (month: string, year: string) => {
     setSelectedMonth(month);
     setSelectedYear(year);
+  };
+
+  const handleDepartmentFilter = (departmentId: string) => {
+    setSelectedDepartmentId(departmentId);
   };
 
   const handleViewDetails = (transfer: Transfer) => {
@@ -274,8 +405,12 @@ export default function TransferPage() {
                   searchQuery={searchQuery}
                   selectedMonth={selectedMonth}
                   selectedYear={selectedYear}
+                  selectedDepartmentId={selectedDepartmentId} // Pasar el nuevo estado
                   onSearch={handleSearch}
                   onDateFilter={handleDateFilter}
+                  onDepartmentFilter={handleDepartmentFilter} // Pasar el nuevo handler
+                  departments={departments} // Pasar los departamentos
+                  canFilterByDept={canFilterByDept} // Pasar el permiso de filtro
                 />
               </Flex>
               {activeTab === "transfers" && (
@@ -290,7 +425,7 @@ export default function TransferPage() {
               {activeTab === "componentTransfers" && ( // Nueva condición
                 <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="sm">
                   <ComponentTransferHistory
-                    componentTransfers={componentTransfers}
+                    componentTransfers={filteredComponentTransfers} // Usar los traslados de componentes filtrados
                     assets={assets}
                     departments={departments}
                   />

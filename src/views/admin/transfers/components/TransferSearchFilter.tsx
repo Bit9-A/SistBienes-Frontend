@@ -19,21 +19,30 @@ import {
   Select,
 } from "@chakra-ui/react"
 import { FiCalendar, FiX, FiFilter, FiSearch } from "react-icons/fi"
+import { Department } from "../../../../api/SettingsApi"; // Importar la interfaz Department
 
 interface TransferSearchFilterProps {
   searchQuery: string
   selectedMonth: string
   selectedYear: string
+  selectedDepartmentId: string // Nueva prop
   onSearch: (query: string) => void
   onDateFilter: (month: string, year: string) => void
+  onDepartmentFilter: (departmentId: string) => void // Nueva prop
+  departments: Department[] // Nueva prop
+  canFilterByDept: boolean // Nueva prop
 }
 
 export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
   searchQuery,
   selectedMonth,
   selectedYear,
+  selectedDepartmentId, // Desestructurar nueva prop
   onSearch,
   onDateFilter,
+  onDepartmentFilter, // Desestructurar nueva prop
+  departments, // Desestructurar nueva prop
+  canFilterByDept, // Desestructurar nueva prop
 }) => {
   const badgeBg = useColorModeValue("blue.50", "blue.900");
   const badgeColor = useColorModeValue("blue.600", "blue.200");
@@ -62,11 +71,13 @@ export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
     !!searchQuery,
     !!selectedMonth,
     !!selectedYear,
+    !!selectedDepartmentId, // Incluir el nuevo filtro
   ].filter(Boolean).length;
 
   const handleClear = () => {
     onSearch("");
     onDateFilter("", "");
+    onDepartmentFilter(""); // Limpiar también el filtro de departamento
   };
 
   return (
@@ -169,6 +180,29 @@ export const TransferSearchFilter: React.FC<TransferSearchFilterProps> = ({
             </Select>
           </InputGroup>
         </FormControl>
+        {canFilterByDept && ( // Renderizar condicionalmente el filtro de departamento
+          <FormControl>
+            <FormLabel htmlFor="department-select" fontSize="sm" fontWeight="medium" mb={1}>
+              Departamento
+            </FormLabel>
+            <InputGroup>
+              <Select
+                id="department-select"
+                size="md"
+                value={selectedDepartmentId}
+                onChange={(e) => onDepartmentFilter(e.target.value)}
+                borderRadius="md"
+              >
+                <option value="">Todos los departamentos</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id.toString()}>
+                    {dept.nombre}
+                  </option>
+                ))}
+              </Select>
+            </InputGroup>
+          </FormControl>
+        )}
       </Stack>
     </Box>
   );
