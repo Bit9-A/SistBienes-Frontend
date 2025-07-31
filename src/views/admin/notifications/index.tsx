@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Flex,
@@ -61,9 +61,11 @@ import {
   type Notification,
   fetchNotifications,
   deleteExistingNotification,
+  fetchNotificationsByDeptId, // Importar la función para obtener notificaciones por departamento
 } from './utils/NotificationsUtils';
 import { updateNotificationStatus } from 'api/NotificationsApi';
 import { useThemeColors } from '../../../theme/useThemeColors';
+import { getProfile, type UserProfile } from 'api/UserApi'; // Importar getProfile y UserProfile
 
 const NotificationsHistory = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -73,6 +75,8 @@ const NotificationsHistory = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('all');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const { cardBg, textColor, borderColor, headerBg, hoverBg } =
     useThemeColors();
@@ -88,26 +92,68 @@ const NotificationsHistory = () => {
   const buttonSize = useBreakpointValue({ base: 'sm', md: 'md' });
   const tableSize = useBreakpointValue({ base: 'sm', md: 'md' });
 
+  useEffect(() => {
+    const fetchUserProfileAndNotifications = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const profile = await getProfile();
+        setUserProfile(profile);
+        const userIsAdmin = profile.tipo_usuario === 1;
+        setIsAdmin(userIsAdmin);
+
+        let data: Notification[] = [];
+        if (userIsAdmin) {
+          data = (await fetchNotifications()) || [];
+        } else if (profile?.dept_id) {
+          data = (await fetchNotificationsByDeptId(profile.dept_id)) || [];
+        }
+        setNotifications(data);
+      } catch (error) {
+        console.error('Error fetching user profile or notifications:', error);
+        setError(
+          'Error al cargar el perfil del usuario o las notificaciones. Por favor, intenta nuevamente.',
+        );
+        setNotifications([]);
+        toast({
+          title: 'Error al cargar datos',
+          description: 'No se pudo obtener la información del usuario o las notificaciones.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfileAndNotifications();
+  }, [toast]); // Dependencia de toast para que se pueda usar dentro del useEffect
+
+  // La función loadNotifications ahora se puede simplificar o eliminar si ya no es necesaria como useCallback separada
+  // Si se necesita recargar, se puede llamar a fetchUserProfileAndNotifications directamente.
   const loadNotifications = useCallback(async () => {
+    // Esta función ahora solo recarga las notificaciones basándose en el estado actual de userProfile e isAdmin
     setLoading(true);
     setError(null);
     try {
-      const data = (await fetchNotifications()) || [];
+      let data: Notification[] = [];
+      if (isAdmin) {
+        data = (await fetchNotifications()) || [];
+      } else if (userProfile?.dept_id) {
+        data = (await fetchNotificationsByDeptId(userProfile.dept_id)) || [];
+      }
       setNotifications(data);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Error fetching notifications on reload:', error);
       setError(
-        'Error al cargar las notificaciones. Por favor, intenta nuevamente.',
+        'Error al recargar las notificaciones. Por favor, intenta nuevamente.',
       );
       setNotifications([]);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+  }, [isAdmin, userProfile?.dept_id]); // Dependencias para useCallback
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('es-ES', {
@@ -203,11 +249,11 @@ const NotificationsHistory = () => {
   };
 
   const getUnreadNotifications = () => {
-    return notifications.filter((notification) => notification.isRead === 0);
+    return Array.isArray(notifications) ? notifications.filter((notification) => notification.isRead === 0) : [];
   };
 
   const getReadNotifications = () => {
-    return notifications.filter((notification) => notification.isRead === 1);
+    return Array.isArray(notifications) ? notifications.filter((notification) => notification.isRead === 1) : [];
   };
 
   const getFilteredNotifications = (notificationsList: Notification[]) => {
@@ -215,17 +261,24 @@ const NotificationsHistory = () => {
       const matchesSearch = notification.descripcion
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
-      const matchesDepartment =
-        filterDepartment === 'all' ||
-        notification.dept_id.toString() === filterDepartment;
+
+      // Si es administrador, aplicar filtro de departamento. Si no, no aplicar filtro de departamento.
+      const matchesDepartment = isAdmin
+        ? filterDepartment === 'all' ||
+          notification.dept_id.toString() === filterDepartment
+        : true; // Si no es admin, siempre coincide con el departamento (ya se filtró por su dept_id en loadNotifications)
+
       return matchesSearch && matchesDepartment;
     });
   };
 
-  // Get unique departments for filter
-  const departmentOptions = [
-    ...new Set(notifications.map((n) => n.departamento).filter(Boolean)),
-  ];
+  // Obtener departamentos únicos para el filtro (solo si es administrador)
+  const departmentOptions = useMemo(() => {
+    if (isAdmin) {
+      return [...new Set(notifications.map((n) => n.departamento).filter(Boolean))];
+    }
+    return [];
+  }, [notifications, isAdmin]);
 
   const NotificationsTable = ({
     notifications,
@@ -545,19 +598,21 @@ const NotificationsHistory = () => {
                 />
               </InputGroup>
 
-              <Select
-                flex="1"
-                value={filterDepartment}
-                onChange={(e) => setFilterDepartment(e.target.value)}
-                borderRadius="md"
-              >
-                <option value="all">Todos los departamentos</option>
-                {departmentOptions.map((dept) => (
-                  <option key={dept} value={dept.toString()}>
-                    {dept}
-                  </option>
-                ))}
-              </Select>
+              {isAdmin && ( // Mostrar el filtro de departamento solo si es administrador
+                <Select
+                  flex="1"
+                  value={filterDepartment}
+                  onChange={(e) => setFilterDepartment(e.target.value)}
+                  borderRadius="md"
+                >
+                  <option value="all">Todos los departamentos</option>
+                  {departmentOptions.map((dept: string) => (
+                    <option key={dept} value={dept.toString()}>
+                      {dept}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </Stack>
           </CardBody>
         </Card>

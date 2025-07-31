@@ -81,7 +81,7 @@ export const deleteNotification = async (id: number) => {
 export const getNotificationsByDeptId = async (dept_id: number): Promise<Notification[]> => {
   try {
     const response = await axiosInstance.get(`/notifications/dept/${dept_id}`);
-    return response.data;
+    return response.data.notifications; // Asegurarse de que devuelve el array de notificaciones
   } catch (error) {
     console.error('Error fetching notifications by department ID:', error);
     throw error;

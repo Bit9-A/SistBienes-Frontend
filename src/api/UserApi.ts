@@ -12,7 +12,7 @@ export interface User {
   password?: string
   isActive?: number
   username: string
-  nombre_completo?: string // Agregamos este campo
+  nombre_completo?: string 
 }
 
 export interface UserProfile {
@@ -27,7 +27,8 @@ export interface UserProfile {
   cedula?: string
   username?: string
   password?: string
-  nombre_completo?: string // Agregamos este campo
+  nombre_completo?: string 
+  nombre_tipo_usuario?: string 
 }
 
 
@@ -42,7 +43,7 @@ export const getUsers = async (): Promise<User[]> => {
 
 export const createUser = async (userData: any) => {
   const response = await axiosInstance.post("/auth/register", userData)
-  return response.data // Devuelve el usuario creado
+  return response.data 
 }
 
 // Actualizar un usuario existente
@@ -60,7 +61,7 @@ export const deleteUser = async (id: number) => {
 //Iniciar Sesión
 export const login = async (userData: any) => {
   const response = await axiosInstance.post("/auth/login", userData)
-  return response.data // Devuelve el usuario creado
+  return response.data 
 }
 
 // Cerrar Sesión
@@ -76,7 +77,13 @@ export const logout = async () => {
     ? { Authorization: `Bearer ${token}` }
     : {};
   const response = await axiosInstance.post("/auth/logout", {}, { headers });
-  return response.data; // Devuelve la respuesta de cierre de sesión
+  return response.data; 
+};
+
+// Refrescar token de sesión
+export const refreshToken = async () => {
+  const response = await axiosInstance.post("/auth/refresh-token");
+  return response.data;
 };
 
 // Obtener el profile del usuario

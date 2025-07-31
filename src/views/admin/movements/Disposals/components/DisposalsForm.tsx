@@ -92,8 +92,10 @@ export default function DisposalsForm({
     // eslint-disable-next-line
   }, [userProfile, isAdminOrBienes]);
 
-  // Se eliminó el filtro de conceptos para que siempre se muestren todos.
-  const conceptosFiltrados = concepts;
+  // Filtrar conceptos: excluir el concepto con código '60'
+  const conceptosFiltrados = useMemo(() => {
+    return concepts.filter((concept) => concept.codigo !== '60');
+  }, [concepts]);
 
   useEffect(() => {
     // Si el concepto no es 51, limpia el destino
@@ -133,12 +135,9 @@ export default function DisposalsForm({
   // Bienes disponibles para desincorporar en el departamento seleccionado
   const bienesDisponibles = useMemo(() => {
     if (!selectedDeptId) return [];
-    return assets.filter(
-      (a) =>
-        a.dept_id === selectedDeptId &&
-        !bienesDesincorporadosEnDept.includes(a.id),
-    );
-  }, [assets, bienesDesincorporadosEnDept, selectedDeptId]);
+    // Filtrar por departamento y solo bienes activos (isActive = 1)
+    return assets.filter((a) => a.dept_id === selectedDeptId && a.isActive === 1);
+  }, [assets, selectedDeptId]);
 
   // Cuando seleccionas bienes, guarda los bienes y cierra el modal de selección
   const handleSelectAssets = (assetsSeleccionados: MovableAsset[]) => {
@@ -270,67 +269,6 @@ export default function DisposalsForm({
             <ModalBody>
               <Stack spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel>Departamento</FormLabel>
-                  <Select
-                    name="dept_id"
-                    value={selectedDeptId ?? ''}
-                    onChange={handleDeptChange}
-                    disabled={!isAdminOrBienes || !!selectedDisposal}
-                  >
-                    <option value="">Seleccione</option>
-                    {/* Se eliminó el filtro de departamentos para que siempre se muestren todos. */}
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.nombre}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>Bien(es)</FormLabel>
-                  <Input
-                    value={selectedAssets
-                      .map((a) => a.numero_identificacion)
-                      .join(', ')}
-                    isReadOnly
-                    placeholder="Seleccione bienes"
-                    onClick={() =>
-                      selectedDeptId &&
-                      !selectedDisposal &&
-                      setShowAssetSelector(true)
-                    }
-                    cursor={
-                      selectedDeptId && !selectedDisposal
-                        ? 'pointer'
-                        : 'not-allowed'
-                    }
-                  />
-                  <Button
-                    mt={2}
-                    size="sm"
-                    onClick={() =>
-                      selectedDeptId &&
-                      !selectedDisposal &&
-                      setShowAssetSelector(true)
-                    }
-                    isDisabled={!selectedDeptId || !!selectedDisposal}
-                  >
-                    Buscar bienes
-                  </Button>
-                </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>Fecha</FormLabel>
-                  <Input
-                    name="fecha"
-                    type="date"
-                    value={newDisposal.fecha ?? ''}
-                    onChange={(e) =>
-                      setNewDisposal({ ...newDisposal, fecha: e.target.value })
-                    }
-                    disabled={!!selectedDisposal} // Deshabilita si estás editando
-                  />
-                </FormControl>
-                <FormControl isRequired>
                   <FormLabel>Concepto</FormLabel>
                   <Select
                     name="concepto_id"
@@ -349,6 +287,75 @@ export default function DisposalsForm({
                       </option>
                     ))}
                   </Select>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Departamento</FormLabel>
+                  <Select
+                    name="dept_id"
+                    value={selectedDeptId ?? ''}
+                    onChange={handleDeptChange}
+                    disabled={!isAdminOrBienes || !!selectedDisposal}
+                  >
+                    <option value="">Seleccione</option>
+                    {/* Se eliminó el filtro de departamentos para que siempre se muestren todos. */}
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.nombre}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Fecha</FormLabel>
+                  <Input
+                    name="fecha"
+                    type="date"
+                    value={newDisposal.fecha ?? ''}
+                    onChange={(e) =>
+                      setNewDisposal({ ...newDisposal, fecha: e.target.value })
+                    }
+                    disabled={!!selectedDisposal} // Deshabilita si estás editando
+                  />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Bien(es)</FormLabel>
+                  <Input
+                    value={selectedAssets
+                      .map((a) => a.numero_identificacion)
+                      .join(', ')}
+                    isReadOnly
+                    placeholder="Seleccione bienes"
+                    onClick={() =>
+                      selectedDeptId &&
+                      newDisposal.concepto_id && // Agregado: Requiere concepto seleccionado
+                      !selectedDisposal &&
+                      setShowAssetSelector(true)
+                    }
+                    cursor={
+                      selectedDeptId &&
+                      newDisposal.concepto_id && // Agregado: Requiere concepto seleccionado
+                      !selectedDisposal
+                        ? 'pointer'
+                        : 'not-allowed'
+                    }
+                  />
+                  <Button
+                    mt={2}
+                    size="sm"
+                    onClick={() =>
+                      selectedDeptId &&
+                      newDisposal.concepto_id && // Agregado: Requiere concepto seleccionado
+                      !selectedDisposal &&
+                      setShowAssetSelector(true)
+                    }
+                    isDisabled={
+                      !selectedDeptId ||
+                      !newDisposal.concepto_id || // Agregado: Requiere concepto seleccionado
+                      !!selectedDisposal
+                    }
+                  >
+                    Buscar bienes
+                  </Button>
                 </FormControl>
                 {conceptosFiltrados.find(
                   (c) => c.id === Number(newDisposal.concepto_id),

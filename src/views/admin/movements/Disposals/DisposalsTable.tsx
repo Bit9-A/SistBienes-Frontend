@@ -42,6 +42,7 @@ import { createTransferRecord } from "views/admin/transfers/utils/createTransfer
 import { type Transfer, type CreateTransferPayload } from "api/TransferApi";
 import { createIncorp, type Incorp } from "api/IncorpApi";
 import { exportBM2ByDepartment } from "views/admin/inventory/utils/inventoryExcel"; // Importar la función de exportación BM2
+import { createNotificationAction } from "views/admin/notifications/utils/NotificationsUtils"; // Importar la función de notificación
 
 import { getProfile } from "api/UserApi";
 import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
@@ -272,20 +273,26 @@ export default function DisposalsTable() {
     };
 
     try {
-      await createDesincorp(dataToSend as Omit<Desincorp, "id">); // No necesitamos el 'created' aquí si recargamos
-      
+      await createDesincorp(dataToSend as Omit<Desincorp, "id">);
+
       const selectedConcept = allConcepts?.find((c) => c.id === concepto_id);
+      const assetName = assets.find((a) => a.id === bien_id)?.numero_identificacion || `Bien ID: ${bien_id}`;
+      const deptOrigenName = departments.find((d) => d.id === dept_id)?.nombre || 'desconocido';
+
       console.log(`Single Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
+
       if (selectedConcept?.codigo === '51' && deptDestinoId && incorpConceptoTraspasoId) {
+        const deptDestinoName = departments.find((d) => d.id === deptDestinoId)?.nombre || 'desconocido';
+
         // Crear la incorporación por traspaso
         const incorpDataForTransfer: Omit<Incorp, "id"> = {
           bien_id: bien_id,
           fecha: fecha,
           valor: valor,
           cantidad: cantidad,
-          concepto_id: incorpConceptoTraspasoId, // Concepto de incorporación por traspaso (código 02)
-          dept_id: deptDestinoId, // Departamento de destino de la desincorporación
-          observaciones: `Incorporación automática por traspaso desde el departamento ${departments.find(d => d.id === dept_id)?.nombre || ''}. ${data.observaciones || ''}`,
+          concepto_id: incorpConceptoTraspasoId,
+          dept_id: deptDestinoId,
+          observaciones: `Incorporación automática por traspaso desde el departamento ${deptOrigenName}. ${data.observaciones || ''}`,
         };
         await createIncorp(incorpDataForTransfer);
         toast({
@@ -296,6 +303,17 @@ export default function DisposalsTable() {
           isClosable: true,
         });
 
+        // Notificación para el departamento de origen (desincorporación por traspaso)
+        await createNotificationAction({
+          dept_id: dept_id,
+          descripcion: `El bien ${assetName} ha sido desincorporado de su departamento por traspaso al departamento ${deptDestinoName}.`,
+        });
+        // Notificación para el departamento de destino (incorporación por traspaso)
+        await createNotificationAction({
+          dept_id: deptDestinoId,
+          descripcion: `El bien ${assetName} ha sido incorporado a su departamento por traspaso desde el departamento ${deptOrigenName}.`,
+        });
+
         // Actualizar el departamento del bien y crear el registro de traslado
         await processTransferAndAssetUpdate(
           fecha,
@@ -304,6 +322,38 @@ export default function DisposalsTable() {
           [bien_id],
           data.observaciones || "",
         );
+      } else {
+        // Notificación para el departamento de origen (desincorporación normal)
+        await createNotificationAction({
+          dept_id: dept_id,
+          descripcion: `El bien ${assetName} ha sido desincorporado de su departamento por concepto de ${selectedConcept?.nombre || 'desconocido'}.`,
+        });
+
+        // Cambiar isActive del bien a 0 si no es por traspaso
+        try {
+          const assetToUpdate = assets.find(asset => asset.id === bien_id);
+          if (assetToUpdate) {
+            const updatedAsset = { ...assetToUpdate, isActive: 0 };
+            console.log(`Updating asset ${bien_id} isActive to 0.`);
+            await updateAsset(bien_id, updatedAsset);
+            toast({
+              title: "Estado del bien actualizado",
+              description: `El bien ${assetName} ha sido marcado como inactivo.`,
+              status: "info",
+              duration: 1500,
+              isClosable: true,
+            });
+          }
+        } catch (assetUpdateError) {
+          toast({
+            title: "Error",
+            description: `Error al actualizar el estado del bien ${assetName}.`,
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          console.error(`Error al actualizar el estado del bien ${bien_id}:`, assetUpdateError);
+        }
       }
 
       toast({
@@ -387,13 +437,23 @@ export default function DisposalsTable() {
         // nuevos.push(created); // No es necesario si recargamos todos los datos al final
 
         const selectedConcept = allConcepts.find((c) => c.id === concepto_id);
+        const assetName = assets.find((a) => a.id === bien_id)?.numero_identificacion || `Bien ID: ${bien_id}`;
+        const deptOrigenName = departments.find((d) => d.id === dept_id)?.nombre || 'desconocido';
+
         console.log(`Multiple Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
+
         if (selectedConcept?.codigo === '51') {
           isTransferConcept = true;
           bienesToTransfer.push(bien_id);
           transferFecha = fecha;
           transferOrigenId = dept_id;
           transferObservaciones = data.observaciones || "";
+        } else {
+          // Notificación para el departamento de origen (desincorporación normal)
+          await createNotificationAction({
+            dept_id: dept_id,
+            descripcion: `El bien ${assetName} ha sido desincorporado de su departamento por concepto de ${selectedConcept?.nombre || 'desconocido'}.`,
+          });
         }
       } catch (error) {
         toast({
@@ -408,25 +468,36 @@ export default function DisposalsTable() {
       }
     }
 
-    // setDisposals((prev) => [...prev, ...nuevos]); // No es necesario si recargamos todos los datos al final
-
     console.log("Transfer conditions check: isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id);
 
     if (isTransferConcept && deptDestinoId && bienesToTransfer.length > 0 && incorpConceptoTraspasoId) {
-      // Crear la incorporación por traspaso para cada bien
+      const deptDestinoName = departments.find((d) => d.id === deptDestinoId)?.nombre || 'desconocido';
+      const deptOrigenName = departments.find((d) => d.id === transferOrigenId)?.nombre || 'desconocido';
+
       for (const bienId of bienesToTransfer) {
         const asset = assets.find(a => a.id === bienId);
         if (asset) {
           const incorpDataForTransfer: Omit<Incorp, "id"> = {
             bien_id: bienId,
             fecha: transferFecha,
-            valor: asset.valor_total, // Usar el valor del bien
-            cantidad: 1, // Asumimos cantidad 1 por bien
-            concepto_id: incorpConceptoTraspasoId, // Concepto de incorporación por traspaso (código 02)
-            dept_id: deptDestinoId, // Departamento de destino
-            observaciones: `Incorporación automática por traspaso desde el departamento ${departments.find(d => d.id === transferOrigenId)?.nombre || ''}. ${transferObservaciones || ''}`,
+            valor: asset.valor_total,
+            cantidad: 1,
+            concepto_id: incorpConceptoTraspasoId,
+            dept_id: deptDestinoId,
+            observaciones: `Incorporación automática por traspaso desde el departamento ${deptOrigenName}. ${transferObservaciones || ''}`,
           };
           await createIncorp(incorpDataForTransfer);
+
+          // Notificación para el departamento de origen (desincorporación por traspaso)
+          await createNotificationAction({
+            dept_id: transferOrigenId,
+            descripcion: `El bien ${asset.numero_identificacion} ha sido desincorporado de su departamento por traspaso al departamento ${deptDestinoName}.`,
+          });
+          // Notificación para el departamento de destino (incorporación por traspaso)
+          await createNotificationAction({
+            dept_id: deptDestinoId,
+            descripcion: `El bien ${asset.numero_identificacion} ha sido incorporado a su departamento por traspaso desde el departamento ${deptOrigenName}.`,
+          });
         }
       }
       toast({
@@ -437,7 +508,6 @@ export default function DisposalsTable() {
         isClosable: true,
       });
 
-      // Actualizar el departamento de los bienes y crear el registro de traslado
       await processTransferAndAssetUpdate(
         transferFecha,
         transferOrigenId,
@@ -456,8 +526,8 @@ export default function DisposalsTable() {
       duration: 3000,
       isClosable: true,
     });
-    fetchDisposals(); // Recargar datos después de añadir múltiples
-    onClose(); // Cerrar el modal después de añadir múltiples
+    fetchDisposals();
+    onClose();
   };
 
   const handleTransferAndAssetUpdate = async (

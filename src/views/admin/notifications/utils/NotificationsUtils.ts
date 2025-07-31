@@ -32,13 +32,14 @@ export const createNotificationAction = async ({
   descripcion: string;
 }) => {
   try {
-    const fecha = new Date().toISOString();
+    const now = new Date();
+    const fecha = now.toISOString().slice(0, 19).replace('T', ' '); // Formato YYYY-MM-DD HH:MM:SS
 
     const notificationData = {
       dept_id,
       descripcion,
       fecha,
-      isRead: 0,
+      isRead: false,
     };
 
     const response = await createNotification(notificationData);
