@@ -5,7 +5,7 @@
 
 <p>&nbsp;</p>
 
-[<img alt="Sistema de Gestión de Bienes Nacionales" src="https://i.ibb.co/KV6FDvK/introduction-image-ts.png" /> ](https://github.com/Bit9-A/SistBienes-Frontend)
+[<img alt="Sistema de Gestión de Bienes Nacionales" src="/public/intro.png" /> ](https://github.com/Bit9-A/SistBienes-Frontend)
 
 <p>&nbsp;</p>
 
