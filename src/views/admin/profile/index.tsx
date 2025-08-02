@@ -31,7 +31,7 @@ import {
 } from "@chakra-ui/react"
 import { FiUser, FiBriefcase, FiSettings, FiMapPin } from "react-icons/fi"
 
-import { getProfile, UserProfile } from "../../../api/UserApi"
+import { getProfile, UserProfile, changePassword } from "../../../api/UserApi"
 import { getDepartments } from "../../../api/SettingsApi"
 import { getUserRoles } from "../../../api/UserRoleApi"
 
@@ -39,10 +39,12 @@ const Profile = () => {
 	const [departments, setDepartments] = useState([]) // Lista de departamentos
 	const [userRoles, setUserRoles] = useState([]) // Lista de roles de usuario
 	const [user, setUser] = useState<UserProfile | null>(null); // Estado para el perfil del usuario
-	const [isEditing, setIsEditing] = useState(false) // Estado para controlar si el modo de edición está activado
 	const [isPasswordVisible, setIsPasswordVisible] = useState(false); // Estado para mostrar la contraseña
 	const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
 	const [currentPassword, setCurrentPassword] = useState(""); // Estado para la contraseña actual
+	const [newPassword, setNewPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const fetchDepartments = async () => {
 		try {
@@ -93,35 +95,52 @@ const Profile = () => {
 		}))
 	}
 
-	const handleSave = () => {
-		console.log("Perfil guardado:", user)
-		setIsEditing(false)
-	}
 
-	const handleCancel = () => {
-		setIsEditing(false)
-	}
 
-	const handlePasswordSubmit = () => {
-		// Aquí puedes agregar la lógica para verificar la contraseña actual
-		// Si es correcta, muestra la contraseña
-		setIsPasswordVisible(true);
-		setIsModalOpen(false);
-	}
+	const handleChangePassword = async () => {
+		try {
+			if (newPassword !== confirmPassword) {
+				alert("Las contraseñas no coinciden");
+				return;
+			}
+
+			const user = localStorage.getItem("user");
+			const token = user ? JSON.parse(user).token : null;
+
+			const response = await changePassword({
+				currentPassword,
+				newPassword
+			});
+
+			if (response.ok) {
+				alert("Contraseña cambiada correctamente");
+				setIsModalOpen(false);
+				setCurrentPassword("");
+				setNewPassword("");
+				setConfirmPassword("");
+			} else {
+				alert(response.message || "Error al cambiar la contraseña");
+			}
+		} catch (error) {
+			console.error(error);
+			alert("Ocurrió un error inesperado");
+		}
+		finally {
+			setIsSubmitting(false);
+		}
+	};
+
 
 	const ProfileField = ({
 		label,
 		name,
 		value,
-		isEditing,
 		type = "text",
 		isTextarea = false,
-		onClick, // Agregar onClick aquí
 	}: {
 		label: string
 		name: string
 		value: string
-		isEditing: boolean
 		type?: string
 		isTextarea?: boolean
 		onClick?: () => void // Definir el tipo de onClick
@@ -130,38 +149,8 @@ const Profile = () => {
 			<FormLabel color={secondaryTextColor} fontSize="sm" fontWeight="medium">
 				{label}:
 			</FormLabel>
-			{isEditing ? (
-				isTextarea ? (
-					<Textarea
-						name={name}
-						value={value}
-						onChange={handleChange}
-						bg={cardBg}
-						borderColor={borderColor}
-						_focus={{
-							borderColor: "blue.500",
-							boxShadow: "0 0 0 1px blue.500",
-						}}
-						resize="vertical"
-						rows={3}
-					/>
-				) : (
-					<Input
-						type={type}
-						name={name}
-						value={value}
-						onChange={handleChange}
-						bg={cardBg}
-						borderColor={borderColor}
-						_focus={{
-							borderColor: "blue.500",
-							boxShadow: "0 0 0 1px blue.500",
-						}}
-						onClick={onClick} // Agregar onClick aquí
-					/>
-				)
-			) : (
-				<Box p={3} bg={sectionBg} borderRadius="md" border="1px" borderColor={borderColor} onClick={onClick}>
+			{(
+				<Box p={3} bg={sectionBg} borderRadius="md" border="1px" borderColor={borderColor}>
 					<Text color={textColor} fontWeight="medium">
 						{value}
 					</Text>
@@ -169,7 +158,6 @@ const Profile = () => {
 			)}
 		</FormControl>
 	)
-
 	return (
 		<Box minH="100vh" bg={bg} pt={{ base: '130px', md: '100px', xl: '100px' }}>
 			<Container maxW="6xl">
@@ -185,7 +173,7 @@ const Profile = () => {
 							<Box flexShrink={0}>
 								<Avatar
 									size="2xl"
-									name={user?.nombre} // Cambiado a nombre
+									name={user?.nombre_completo} // Cambiado a nombre
 									border="4px"
 									borderColor="blue.500"
 									shadow="lg"
@@ -228,34 +216,26 @@ const Profile = () => {
 												label="Nombre Completo"
 												name="nombre y Apellido"
 												value={user?.nombre_completo}
-												isEditing={isEditing}
+
 											/>
 											<ProfileField
 												label="Correo Electrónico"
 												name="email"
 												value={user?.email}
-												isEditing={isEditing}
+
 												type="email"
 											/>
 											<ProfileField
 												label="Teléfono"
 												name="telefono"
 												value={user?.telefono}
-												isEditing={isEditing}
+
 											/>
 											<ProfileField
 												label="Cédula"
 												name="cedula"
 												value={user?.cedula}
-												isEditing={isEditing}
-											/>
-											<ProfileField
-												label="Contraseña"
-												name="password"
-												value={isPasswordVisible ? user?.password : "********"} // Muestra la contraseña si es visible
-												isEditing={isEditing}
-												type="text"
-												onClick={() => setIsModalOpen(true)} // Abre el modal al hacer clic
+
 											/>
 										</VStack>
 									</CardBody>
@@ -273,8 +253,7 @@ const Profile = () => {
 											</Heading>
 										</HStack>
 										<VStack spacing={4} align="stretch">
-											<ProfileField label="Departamento" name="dept_nombre" value={user?.dept_nombre} isEditing={isEditing} />
-											<ProfileField label="ID de Usuario" name="id" value={String(user?.id)} isEditing={isEditing} />
+											<ProfileField label="Departamento" name="dept_nombre" value={user?.dept_nombre} />
 										</VStack>
 									</CardBody>
 								</Card>
@@ -283,47 +262,20 @@ const Profile = () => {
 
 						{/* Action Buttons */}
 						<Flex justify="center" gap={4}>
-							{isEditing ? (
-								<>
-									<Button
-										onClick={handleSave}
-										colorScheme="green"
-										size="lg"
-										px={8}
-										py={6}
-										shadow="md"
-										_hover={{ transform: "scale(1.05)" }}
-										transition="all 0.3s"
-									>
-										Guardar
-									</Button>
-									<Button
-										onClick={handleCancel}
-										colorScheme="red"
-										size="lg"
-										px={8}
-										py={6}
-										shadow="md"
-										_hover={{ transform: "scale(1.05)" }}
-										transition="all 0.3s"
-									>
-										Cancelar
-									</Button>
-								</>
-							) : (
-								<Button
-									onClick={() => setIsEditing(true)}
-									colorScheme="blue"
-									size="lg"
-									px={10}
-									py={6}
-									shadow="lg"
-									_hover={{ transform: "scale(1.05)" }}
-									transition="all 0.3s"
-								>
-									Editar Perfil
-								</Button>
-							)}
+							<Button
+								bgColor="type.primary"
+								colorScheme="purple"
+								size="lg"
+								px={8}
+								py={6}
+								shadow="md"
+								_hover={{ transform: "scale(1.05)" }}
+								transition="all 0.3s"
+								onClick={() => setIsModalOpen(true)}
+								alignSelf="start"
+							>
+								Cambiar Contraseña
+							</Button>
 						</Flex>
 					</CardBody>
 				</Card>
@@ -333,22 +285,40 @@ const Profile = () => {
 			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
 				<ModalOverlay />
 				<ModalContent>
-					<ModalHeader>Verificar Contraseña</ModalHeader>
+					<ModalHeader>Cambiar Contraseña</ModalHeader>
 					<ModalCloseButton />
 					<ModalBody>
-						<FormControl>
-							<FormLabel>Contraseña Actual</FormLabel>
-							<Input
-								type="password"
-								value={currentPassword}
-								onChange={(e) => setCurrentPassword(e.target.value)}
-							/>
-						</FormControl>
+						<VStack spacing={4}>
+							<FormControl isRequired>
+								<FormLabel>Contraseña Actual</FormLabel>
+								<Input
+									type="password"
+									value={currentPassword}
+									onChange={(e) => setCurrentPassword(e.target.value)}
+								/>
+							</FormControl>
+							<FormControl isRequired>
+								<FormLabel>Nueva Contraseña</FormLabel>
+								<Input
+									type="password"
+									value={newPassword}
+									onChange={(e) => setNewPassword(e.target.value)}
+								/>
+							</FormControl>
+							<FormControl isRequired>
+								<FormLabel>Confirmar Nueva Contraseña</FormLabel>
+								<Input
+									type="password"
+									value={confirmPassword}
+									onChange={(e) => setConfirmPassword(e.target.value)}
+								/>
+							</FormControl>
+						</VStack>
 					</ModalBody>
 					<ModalFooter>
-						<Button colorScheme="blue" onClick={handlePasswordSubmit}>
-							Ver
-						</Button>
+						<Button bgColor="type.primary"
+							colorScheme="purple" onClick={handleChangePassword}
+							isLoading={isSubmitting}>Cambiar</Button>
 						<Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
 					</ModalFooter>
 				</ModalContent>

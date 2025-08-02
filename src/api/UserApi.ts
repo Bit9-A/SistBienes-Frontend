@@ -18,9 +18,7 @@ export interface User {
 export interface UserProfile {
   id: number
   tipo_usuario: number
-  nombre?: string
-  apellido?: string
-  email?: string
+  email: string
   telefono?: string
   dept_id?: number
   dept_nombre?: string
@@ -29,6 +27,7 @@ export interface UserProfile {
   password?: string
   nombre_completo?: string 
   nombre_tipo_usuario?: string 
+  isActive?: number
 }
 
 
@@ -102,3 +101,22 @@ export const getDepartmentJefe = async (deptId: number): Promise<UserProfile | n
     return null
   }
 }
+
+
+// Cambiar la contraseña del usuario
+export const changePassword = async (passwordData: { currentPassword: string, newPassword: string }) => {
+  const user = localStorage.getItem("user");
+  let token = null;
+  if (user) {
+    try {
+      token = JSON.parse(user).token;
+    } catch { }
+  }
+
+  const headers = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
+  const response = await axiosInstance.post("/auth/change-password", passwordData, { headers });
+  return response.data;
+};
