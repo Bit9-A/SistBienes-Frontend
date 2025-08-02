@@ -66,8 +66,8 @@ export default function ReportForm({
       if (selectedDeptId) {
         const head = await getDepartmentJefe(selectedDeptId)
         if (head) {
-          setDepartmentHeadName(head.nombre_completo || head.nombre || "")
-          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: head.id, jefe_nombre: head.nombre_completo || head.nombre }))
+          setDepartmentHeadName(head.nombre_completo || "")
+          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: head.id, jefe_nombre: head.nombre_completo || "" }))
         } else {
           setDepartmentHeadName(null)
           setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: Number || undefined , jefe_nombre: String || undefined}))
