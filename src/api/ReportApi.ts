@@ -7,7 +7,7 @@ export interface MissingGoods {
   diferencia_cantidad: number
   diferencia_valor: number
   funcionario_id: number
-  jefe_id: number
+  jefe_id?: number // Hacer jefe_id opcional
   observaciones: string
   fecha: string
   bien_id: number
@@ -34,7 +34,7 @@ export const getMissingGoodById = async (id: number): Promise<MissingGoods> => {
 
 // Crear un bien faltante
 export const createMissingGood = async (
-  missingGoodData: Omit<MissingGoods, "id" | "funcionario_nombre" | "jefe_nombre" | "departamento" | "numero_identificacion">
+  missingGoodData: Omit<MissingGoods, "id" | "funcionario_nombre" | "jefe_nombre" | "departamento">
 ): Promise<MissingGoods> => {
   const response = await axiosInstance.post("/missing-goods", missingGoodData);
   return response.data.missingGoods as MissingGoods;
@@ -43,7 +43,7 @@ export const createMissingGood = async (
 // Actualizar un bien faltante
 export const updateMissingGood = async (
   id: number,
-  updates: Partial<Omit<MissingGoods, "id" | "funcionario_nombre" | "jefe_nombre" | "departamento" | "numero_identificacion">>
+  updates: Partial<Omit<MissingGoods, "id" | "funcionario_nombre" | "jefe_nombre" | "departamento">>
 ): Promise<MissingGoods> => {
   const response = await axiosInstance.put(`/missing-goods/${id}`, updates);
   return response.data.missingGoods as MissingGoods;

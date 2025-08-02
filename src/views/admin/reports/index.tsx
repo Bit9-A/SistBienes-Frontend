@@ -53,87 +53,91 @@ import {
 } from 'api/ReportApi';
 import { type Department, getDepartments } from 'api/SettingsApi';
 import ReportForm from './components/ReportForm';
-import DesktopTable from './components/DesktopTable'; // Importar DesktopTable
-import MobileCard from './components/MobileCard';
-import ReportDetailsModal from './components/ReportDetailsModal'; // Importar el nuevo componente de detalles
-import { getAssets, type MovableAsset, updateAsset } from 'api/AssetsApi'; // Importar updateAsset
-import { exportBM3ByMissingGoodsId } from './utils/ReportExcel'; // Importar la función de exportación BM3
-import { createDisposalForMissingGood } from './utils/ReportUtils'; // Importar la función para crear desincorporación
-import { logCustomAction } from 'views/admin/audit/utils/AuditUtils'; // Importar la función de auditoría
+import DesktopTable from './components/DesktopTable'; // Importa el componente de tabla para escritorio
+import MobileCard from './components/MobileCard'; // Importa el componente de tarjeta para móviles
+import ReportDetailsModal from './components/ReportDetailsModal'; // Importa el modal de detalles del reporte
+import { getAssets, type MovableAsset, updateAsset } from 'api/AssetsApi'; // Importa funciones para activos movibles
+import { exportBM3ByMissingGoodsId } from './utils/ReportExcel'; // Importa la función para exportar reportes BM3
+import { createDisposalForMissingGood } from './utils/ReportUtils'; // Importa la función para crear desincorporaciones
+import { logCustomAction } from 'views/admin/audit/utils/AuditUtils'; // Importa la función para registrar acciones de auditoría
+import { createNotificationAction } from 'views/admin/notifications/utils/NotificationsUtils'; // Importa la función para crear notificaciones
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 10; // Define la cantidad de elementos por página para la paginación
 
 export default function MissingGoodsTable() {
-  const [missingGoods, setMissingGoods] = useState<MissingGoods[]>([]);
+  // Estados para almacenar los datos y el control de la UI
+  const [missingGoods, setMissingGoods] = useState<MissingGoods[]>([]); // Lista completa de bienes faltantes
   const [filteredMissingGoods, setFilteredMissingGoods] = useState<
     MissingGoods[]
-  >([]);
+  >([]); // Lista de bienes faltantes después de aplicar filtros
   const [selectedMissingGood, setSelectedMissingGood] =
-    useState<MissingGoods | null>(null); // Para el formulario de edición/adición
+    useState<MissingGoods | null>(null); // Bien faltante seleccionado para edición/adición
   const [selectedMissingGoodForDetails, setSelectedMissingGoodForDetails] =
-    useState<MissingGoods | null>(null); // Para el modal de detalles
+    useState<MissingGoods | null>(null); // Bien faltante seleccionado para ver detalles
   const [newMissingGood, setNewMissingGood] = useState<Partial<MissingGoods>>(
     {},
-  );
-  const [filterDept, setFilterDept] = useState<string>('all');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  ); // Nuevo bien faltante a agregar o editar
+  const [filterDept, setFilterDept] = useState<string>('all'); // Filtro por departamento
+  const [startDate, setStartDate] = useState<string>(''); // Fecha de inicio para el filtro
+  const [endDate, setEndDate] = useState<string>(''); // Fecha de fin para el filtro
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Consulta de búsqueda
+  const [currentPage, setCurrentPage] = useState(1); // Página actual de la tabla
+  const [loading, setLoading] = useState(true); // Estado de carga de datos
+  const [error, setError] = useState<string | null>(null); // Estado de error
+  // Hooks para el control de modales (formularios y detalles)
   const { isOpen, onOpen, onClose } = useDisclosure(); // Para el formulario de edición/adición
   const { isOpen: isDetailsModalOpen, onOpen: onDetailsModalOpen, onClose: onDetailsModalClose } = useDisclosure(); // Para el modal de detalles
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [assets, setAssets] = useState<MovableAsset[]>([]);
-  const toast = useToast();
+  const [departments, setDepartments] = useState<Department[]>([]); // Lista de departamentos
+  const [assets, setAssets] = useState<MovableAsset[]>([]); // Lista de activos movibles
+  const toast = useToast(); // Hook para mostrar notificaciones tipo "toast"
 
-  // Theme colors
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const headerBg = useColorModeValue('gray.100', 'gray.800');
-  const hoverBg = useColorModeValue('gray.50', 'gray.700');
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const badgeBg = useColorModeValue('blue.50', 'blue.900');
-  const badgeColor = useColorModeValue('blue.600', 'blue.200');
+  // Colores del tema para la interfaz de usuario
+  const bgColor = useColorModeValue('gray.50', 'gray.900'); // Color de fondo
+  const borderColor = useColorModeValue('gray.200', 'gray.700'); // Color del borde
+  const headerBg = useColorModeValue('gray.100', 'gray.800'); // Color de fondo del encabezado
+  const hoverBg = useColorModeValue('gray.50', 'gray.700'); // Color de fondo al pasar el ratón
+  const cardBg = useColorModeValue('white', 'gray.800'); // Color de fondo de las tarjetas
+  const textColor = useColorModeValue('gray.800', 'white'); // Color del texto
+  const badgeBg = useColorModeValue('blue.50', 'blue.900'); // Color de fondo de las insignias
+  const badgeColor = useColorModeValue('blue.600', 'blue.200'); // Color del texto de las insignias
 
-  // Responsive values
-  const isMobile = useBreakpointValue({ base: true, md: false });
-  const tableSize = useBreakpointValue({ base: 'sm', md: 'md' });
+  // Valores responsivos para diferentes tamaños de pantalla
+  const isMobile = useBreakpointValue({ base: true, md: false }); // Determina si es una vista móvil
+  const tableSize = useBreakpointValue({ base: 'sm', md: 'md' }); // Tamaño de la tabla
   const buttonSize = useBreakpointValue({ base: 'md', md: 'lg' });
 
-  // Función para cargar los datos de bienes faltantes
+  // Función asíncrona para cargar los datos iniciales de bienes faltantes, departamentos y activos
   const fetchData = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      setLoading(true); // Establece el estado de carga a true
+      setError(null); // Limpia cualquier error previo
+      // Realiza todas las llamadas a la API en paralelo
       const [data, deptData, assetsData] = await Promise.all([
-        getMissingGoods(),
-        getDepartments(),
-        getAssets(),
+        getMissingGoods(), // Obtiene bienes faltantes
+        getDepartments(), // Obtiene departamentos
+        getAssets(), // Obtiene activos
       ]);
-      setDepartments(deptData);
-      setMissingGoods(data);
-      setAssets(assetsData);
+      setDepartments(deptData); // Actualiza el estado de departamentos
+      setMissingGoods(data); // Actualiza el estado de bienes faltantes
+      setAssets(assetsData); // Actualiza el estado de activos
     } catch (error) {
-      setError('Error al cargar los datos. Por favor, intenta nuevamente.');
-      console.error('Error fetching data:', error);
+      setError('Error al cargar los datos. Por favor, intenta nuevamente.'); // Establece un mensaje de error
+      console.error('Error fetching data:', error); // Registra el error en la consola
     } finally {
-      setLoading(false);
+      setLoading(false); // Establece el estado de carga a false, independientemente del resultado
     }
   };
 
-  // Get unique departments for filter
+  // Memoiza las opciones de departamento únicas para el filtro
   const departmentOptions = useMemo(() => {
     return [...new Set(missingGoods.map((good) => good.departamento).filter(Boolean))].sort();
-  }, [missingGoods]);
+  }, [missingGoods]); // Se recalcula solo cuando missingGoods cambia
 
-  // Apply filters
+  // Efecto para aplicar filtros y actualizar la lista de bienes faltantes filtrados
   useEffect(() => {
-    let filtered = [...missingGoods];
+    let filtered = [...missingGoods]; // Copia la lista original para filtrar
 
-    // Search filter
+    // Filtro de búsqueda por texto
     if (searchQuery) {
       filtered = filtered.filter(
         (good) =>
@@ -151,63 +155,69 @@ export default function MissingGoodsTable() {
       );
     }
 
-    // Department filter
+    // Filtro por departamento
     if (filterDept !== 'all') {
       filtered = filtered.filter((good) => good.departamento === filterDept);
     }
 
-    // Date filter
+    // Filtro por rango de fechas (desde)
     if (startDate) {
       filtered = filtered.filter(
         (good) => new Date(good.fecha) >= new Date(startDate),
       );
     }
 
+    // Filtro por rango de fechas (hasta)
     if (endDate) {
       filtered = filtered.filter(
         (good) => new Date(good.fecha) <= new Date(endDate),
       );
     }
 
-    setFilteredMissingGoods(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [missingGoods, searchQuery, filterDept, startDate, endDate]);
+    setFilteredMissingGoods(filtered); // Actualiza la lista filtrada
+    setCurrentPage(1); // Reinicia a la primera página cuando los filtros cambian
+  }, [missingGoods, searchQuery, filterDept, startDate, endDate]); // Dependencias del efecto
 
-  // Pagination
+  // Calcula el número total de páginas para la paginación
   const totalPages = Math.ceil(filteredMissingGoods.length / ITEMS_PER_PAGE);
 
+  // Memoiza los bienes paginados para la tabla actual
   const paginatedGoods = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredMissingGoods.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredMissingGoods, currentPage]);
+    const start = (currentPage - 1) * ITEMS_PER_PAGE; // Calcula el índice de inicio
+    return filteredMissingGoods.slice(start, start + ITEMS_PER_PAGE); // Retorna los elementos de la página actual
+  }, [filteredMissingGoods, currentPage]); // Se recalcula cuando la lista filtrada o la página actual cambian
 
-  // Reset page if out of range
+  // Reinicia la página actual si está fuera de rango (ej. al aplicar filtros que reducen el número de páginas)
   if (currentPage > totalPages && totalPages > 0) {
     setCurrentPage(1);
   }
 
-  // Load data on mount
+  // Efecto para cargar los datos al montar el componente
   useEffect(() => {
     fetchData();
-  }, []);
+  }, []); // Se ejecuta una sola vez al montar
 
+  // Abre el diálogo de edición con los datos del bien faltante seleccionado
   const openEditDialog = (mg: MissingGoods) => {
-    setSelectedMissingGood(mg);
-    setNewMissingGood(mg);
+    setSelectedMissingGood(mg); // Establece el bien seleccionado para edición
+    setNewMissingGood(mg); // Carga los datos en el formulario
     onOpen(); // Abre el modal del formulario
   };
 
+  // Abre el diálogo para añadir un nuevo bien faltante
   const openAddDialog = () => {
-    setSelectedMissingGood(null);
-    setNewMissingGood({});
+    setSelectedMissingGood(null); // No hay bien seleccionado (modo adición)
+    setNewMissingGood({}); // Limpia el formulario
     onOpen(); // Abre el modal del formulario
   };
 
+  // Abre el diálogo de detalles del bien faltante seleccionado
   const openDetailsDialog = (mg: MissingGoods) => {
-    setSelectedMissingGoodForDetails(mg);
+    setSelectedMissingGoodForDetails(mg); // Establece el bien para ver detalles
     onDetailsModalOpen(); // Abre el modal de detalles
   };
 
+  // Maneja la recuperación de un bien faltante
   const handleRecoverMissingGood = async (missingGood: MissingGoods) => {
     try {
       if (!missingGood.id || !missingGood.bien_id) {
@@ -221,18 +231,14 @@ export default function MissingGoodsTable() {
         return;
       }
 
-      // 1. Eliminar el registro de bien faltante
+      // 1. Eliminar el registro de bien faltante de la base de datos
       await deleteMissingGood(missingGood.id);
 
-      // 2. Actualizar el estado del bien a "Activo" y el isActive a 1
-      // Solo actualizar el isActive a 1
+      // 2. Actualizar el estado del bien a "Activo" (isActive: 1)
       const updateData = {
         isActive: 1
       } as MovableAsset;
       await updateAsset(missingGood.bien_id, updateData);
-
-      // 3. Actualizar el estado local de missingGoods
-      setMissingGoods((prev) => prev.filter((item) => item.id !== missingGood.id));
 
       toast({
         title: 'Bien recuperado',
@@ -242,10 +248,12 @@ export default function MissingGoodsTable() {
         isClosable: true,
       });
       onDetailsModalClose(); // Cierra el modal de detalles
+      // Registra la acción de auditoría
       await logCustomAction({
         accion: "Recuperar Bien Faltante",
         detalles: `Se recuperó el bien faltante con ID: ${missingGood.id} (${missingGood.numero_identificacion}).`,
       });
+      await fetchData(); // Recarga los datos para reflejar los cambios
     } catch (error: any) {
       console.error("Error al recuperar el bien faltante:", error);
       toast({
@@ -255,6 +263,7 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
+      // Registra el error en la auditoría
       await logCustomAction({
         accion: "Error Recuperar Bien Faltante",
         detalles: `Fallo al recuperar el bien faltante con ID: ${missingGood.id}. Error: ${error.message}`,
@@ -262,6 +271,7 @@ export default function MissingGoodsTable() {
     }
   };
 
+  // Maneja la exportación del reporte BM3
   const handleExportBM3 = async (missingGood: MissingGoods) => {
     try {
       if (!missingGood.id || !missingGood.funcionario_id || !missingGood.departamento || !missingGood.funcionario_nombre) {
@@ -275,9 +285,10 @@ export default function MissingGoodsTable() {
         return;
       }
 
+      // Llama a la función de exportación con los datos necesarios
       await exportBM3ByMissingGoodsId(
         missingGood.id,
-        missingGood.funcionario_id, // Usar funcionario_id
+        missingGood.funcionario_id,
         missingGood.departamento,
         missingGood.funcionario_nombre
       );
@@ -288,11 +299,12 @@ export default function MissingGoodsTable() {
         duration: 5000,
         isClosable: true,
       });
+      // Registra la acción de auditoría
       await logCustomAction({
         accion: "Exportar Reporte BM3",
         detalles: `Se exportó el reporte BM3 para el bien faltante con ID: ${missingGood.id} (${missingGood.numero_identificacion}).`,
       });
-    } catch (error: any) { // Tipar error como any
+    } catch (error: any) {
       toast({
         title: "Error de exportación",
         description: `No se pudo generar el archivo BM3 para el bien ${missingGood.numero_identificacion}.`,
@@ -301,6 +313,7 @@ export default function MissingGoodsTable() {
         isClosable: true,
       });
       console.error("Error exporting BM3:", error);
+      // Registra el error en la auditoría
       await logCustomAction({
         accion: "Error Exportar Reporte BM3",
         detalles: `Fallo al exportar el reporte BM3 para el bien faltante con ID: ${missingGood.id} (${missingGood.numero_identificacion}). Error: ${error.message}`,
@@ -308,10 +321,11 @@ export default function MissingGoodsTable() {
     }
   };
 
-  // Crear bien faltante
+  // Función para añadir un nuevo bien faltante
   const handleAdd = async (mgData?: Partial<MissingGoods>) => {
     try {
-      if (!mgData) return;
+      if (!mgData) return; // Si no hay datos, sale de la función
+      // Prepara el payload con los datos del nuevo bien faltante
       const payload = {
         unidad: Number(mgData.unidad),
         existencias: Number(mgData.existencias),
@@ -322,9 +336,10 @@ export default function MissingGoodsTable() {
         observaciones: mgData.observaciones ?? '',
         fecha: mgData.fecha ?? '',
         bien_id: Number(mgData.bien_id),
+        numero_identificacion: mgData.numero_identificacion ?? '',
       };
+      // Crea el registro de bien faltante en la base de datos
       const created = await createMissingGood(payload as any);
-      setMissingGoods((prev) => [created, ...prev]);
 
       // Actualizar el isActive del bien a 0 (inactivo)
       try {
@@ -341,9 +356,38 @@ export default function MissingGoodsTable() {
         });
       }
 
+      // Crear notificación al departamento del bien reportado
+      try {
+        const department = departments.find(d => d.nombre === mgData.departamento);
+        if (department) {
+          await createNotificationAction({
+            dept_id: department.id,
+            descripcion: `Se ha reportado un bien faltante: ${mgData.numero_identificacion || 'N/A'} - ${mgData.observaciones || 'Sin observaciones'}.`,
+          });
+          toast({
+            title: 'Notificación creada',
+            description: 'Se ha enviado una notificación al departamento correspondiente.',
+            status: 'info',
+            duration: 3000,
+            isClosable: true,
+          });
+        } else {
+          console.warn("Departamento no encontrado para la notificación:", mgData.departamento);
+        }
+      } catch (notificationError: any) {
+        console.error("Error al crear la notificación:", notificationError);
+        toast({
+          title: 'Advertencia',
+          description: 'El bien faltante se agregó, pero hubo un error al crear la notificación.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+
       // Crear desincorporación automáticamente
       try {
-        await createDisposalForMissingGood(created);
+        await createDisposalForMissingGood(created); // Llama a la función para crear la desincorporación
         toast({
           title: 'Desincorporación creada',
           description: 'Se ha creado una desincorporación para el bien faltante.',
@@ -351,9 +395,10 @@ export default function MissingGoodsTable() {
           duration: 3000,
           isClosable: true,
         });
+        // Registra la acción de auditoría
         await logCustomAction({
           accion: "Crear Bien Faltante y Desincorporación",
-          detalles: `Se creó el bien faltante con ID: ${created.id} (${created.numero_identificacion}) y su desincorporación asociada.`,
+          detalles: `Se creó el bien faltante con ID: ${created.id} (${mgData.numero_identificacion || 'N/A'}) y su desincorporación asociada.`,
         });
       } catch (disposalError: any) {
         console.error("Error al crear la desincorporación:", disposalError);
@@ -364,9 +409,10 @@ export default function MissingGoodsTable() {
           duration: 5000,
           isClosable: true,
         });
+        // Registra el error en la auditoría
         await logCustomAction({
           accion: "Error Crear Desincorporación por Bien Faltante",
-          detalles: `El bien faltante con ID: ${created.id} (${created.numero_identificacion}) se agregó, pero falló la creación de la desincorporación. Error: ${disposalError.message}`,
+          detalles: `El bien faltante con ID: ${created.id} (${mgData.numero_identificacion || 'N/A'}) se agregó, pero falló la creación de la desincorporación. Error: ${disposalError.message}`,
         });
       }
 
@@ -376,8 +422,9 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
-      onClose();
-    } catch (error: any) { // Tipar error como any
+      onClose(); // Cierra el modal del formulario
+      await fetchData(); // Recarga los datos para actualizar la tabla
+    } catch (error: any) {
       toast({
         title: 'Error',
         description: 'No se pudo agregar el bien faltante',
@@ -385,6 +432,7 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
+      // Registra el error en la auditoría
       await logCustomAction({
         accion: "Error Crear Bien Faltante",
         detalles: `Fallo al agregar el bien faltante. Error: ${error.message}`,
@@ -392,9 +440,11 @@ export default function MissingGoodsTable() {
     }
   };
 
+  // Función para editar un bien faltante existente
   const handleEdit = async () => {
     try {
-      if (!selectedMissingGood || !newMissingGood) return;
+      if (!selectedMissingGood || !newMissingGood) return; // Si no hay bien seleccionado o datos nuevos, sale
+      // Prepara el payload con los datos actualizados
       const payload = {
         unidad: Number(newMissingGood.unidad),
         existencias: Number(newMissingGood.existencias),
@@ -406,12 +456,10 @@ export default function MissingGoodsTable() {
         fecha: newMissingGood.fecha ?? '',
         bien_id: Number(newMissingGood.bien_id),
       };
+      // Actualiza el registro de bien faltante en la base de datos
       const updated = await updateMissingGood(
         selectedMissingGood.id,
         payload as any,
-      );
-      setMissingGoods((prev) =>
-        prev.map((item) => (item.id === updated.id ? updated : item)),
       );
       toast({
         title: 'Bien faltante actualizado',
@@ -419,12 +467,14 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
-      onClose();
+      onClose(); // Cierra el modal del formulario
+      // Registra la acción de auditoría
       await logCustomAction({
         accion: "Editar Bien Faltante",
-        detalles: `Se editó el bien faltante con ID: ${updated.id} (${updated.numero_identificacion}).`,
+        detalles: `Se editó el bien faltante con ID: ${updated.id} (${newMissingGood.numero_identificacion || 'N/A'}).`,
       });
-    } catch (error: any) { // Tipar error como any
+      await fetchData(); // Recarga los datos para actualizar la tabla
+    } catch (error: any) {
       toast({
         title: 'Error',
         description: 'No se pudo actualizar el bien faltante',
@@ -432,6 +482,7 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
+      // Registra el error en la auditoría
       await logCustomAction({
         accion: "Error Editar Bien Faltante",
         detalles: `Fallo al editar el bien faltante con ID: ${selectedMissingGood?.id}. Error: ${error.message}`,
@@ -439,11 +490,10 @@ export default function MissingGoodsTable() {
     }
   };
 
-  // Eliminar bien faltante
+  // Función para eliminar un bien faltante
   const handleDelete = async (id: number) => {
     try {
-      await deleteMissingGood(id);
-      setMissingGoods((prev) => prev.filter((item) => item.id !== id));
+      await deleteMissingGood(id); // Elimina el registro de la base de datos
       toast({
         title: 'Bien faltante eliminado',
         description: 'El registro se ha eliminado exitosamente',
@@ -451,11 +501,13 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
+      // Registra la acción de auditoría
       await logCustomAction({
         accion: "Eliminar Bien Faltante",
         detalles: `Se eliminó el bien faltante con ID: ${id}.`,
       });
-    } catch (error: any) { // Tipar error como any
+      await fetchData(); // Recarga los datos para actualizar la tabla
+    } catch (error: any) {
       toast({
         title: 'Error',
         description: 'Error al eliminar registro',
@@ -463,6 +515,7 @@ export default function MissingGoodsTable() {
         duration: 3000,
         isClosable: true,
       });
+      // Registra el error en la auditoría
       await logCustomAction({
         accion: "Error Eliminar Bien Faltante",
         detalles: `Fallo al eliminar el bien faltante con ID: ${id}. Error: ${error.message}`,
@@ -470,7 +523,7 @@ export default function MissingGoodsTable() {
     }
   };
 
-  // Count active filters
+  // Cuenta el número de filtros activos
   const activeFiltersCount = [
     searchQuery,
     filterDept !== 'all' ? filterDept : '',
@@ -478,24 +531,26 @@ export default function MissingGoodsTable() {
     endDate,
   ].filter(Boolean).length;
 
+  // Limpia todos los filtros aplicados
   const clearAllFilters = () => {
-    setSearchQuery('');
-    setFilterDept('all');
-    setStartDate('');
-    setEndDate('');
-    setCurrentPage(1);
+    setSearchQuery(''); // Limpia la consulta de búsqueda
+    setFilterDept('all'); // Restablece el filtro de departamento
+    setStartDate(''); // Limpia la fecha de inicio
+    setEndDate(''); // Limpia la fecha de fin
+    setCurrentPage(1); // Vuelve a la primera página
   };
 
-  // Pagination info
+  // Información de paginación para mostrar en la UI
   const startRow =
     filteredMissingGoods.length === 0
       ? 0
-      : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+      : (currentPage - 1) * ITEMS_PER_PAGE + 1; // Calcula el número de fila inicial
   const endRow = Math.min(
     currentPage * ITEMS_PER_PAGE,
     filteredMissingGoods.length,
-  );
+  ); // Calcula el número de fila final
 
+  // Renderizado condicional: Muestra un spinner de carga si los datos están cargando
   if (loading) {
     return (
       <Box
@@ -517,6 +572,7 @@ export default function MissingGoodsTable() {
     );
   }
 
+  // Renderizado condicional: Muestra un mensaje de error si hubo un problema al cargar los datos
   if (error) {
     return (
       <Box
@@ -537,6 +593,7 @@ export default function MissingGoodsTable() {
     );
   }
 
+  // Renderizado principal del componente
   return (
     <Box
       minH="100vh"
@@ -549,7 +606,7 @@ export default function MissingGoodsTable() {
         py={{ base: 2, md: 4 }}
         w="full"
       >
-        {/* Header Section */}
+        {/* Sección del encabezado */}
         <Card
           bg={cardBg}
           shadow="lg"
@@ -601,7 +658,7 @@ export default function MissingGoodsTable() {
           </CardHeader>
         </Card>
 
-        {/* Filters Section */}
+        {/* Sección de filtros */}
         <Card
           bg={cardBg}
           shadow="md"
@@ -649,14 +706,14 @@ export default function MissingGoodsTable() {
             <Divider mb={4} />
 
             <Stack spacing={4}>
-              {/* Search and Department Filter */}
+              {/* Filtro de búsqueda y departamento */}
               <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
                 <InputGroup flex="2">
                   <InputLeftElement pointerEvents="none">
                     <Icon as={FiSearch} color="gray.400" />
                   </InputLeftElement>
                   <Input
-                    placeholder="Buscar por funcionario, jefe, departamento, bien, identificaciรณn u observaciones..."
+                    placeholder="Buscar por funcionario, jefe, departamento, bien, identificación u observaciones..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     borderRadius="md"
@@ -678,7 +735,7 @@ export default function MissingGoodsTable() {
                 </Select>
               </Stack>
 
-              {/* Date Filters */}
+              {/* Filtros de fecha */}
               <Stack
                 direction={{ base: 'column', md: 'row' }}
                 spacing={4}
@@ -724,7 +781,7 @@ export default function MissingGoodsTable() {
           </CardBody>
         </Card>
 
-        {/* Content Section */}
+        {/* Sección de contenido (tabla o tarjetas) */}
         <Card
           bg={cardBg}
           shadow="lg"
@@ -733,7 +790,7 @@ export default function MissingGoodsTable() {
           borderColor={borderColor}
         >
           <CardBody p={6}>
-            {/* Results Summary */}
+            {/* Resumen de resultados */}
             <Flex justify="space-between" align="center" mb={4}>
               <Box>
                 <Heading size="md" color={textColor} mb={1}>
@@ -747,7 +804,7 @@ export default function MissingGoodsTable() {
               </Box>
             </Flex>
 
-            {/* Table Content */}
+            {/* Contenido de la tabla */}
             {filteredMissingGoods.length === 0 ? (
               <Center py={12}>
                 <Stack align="center" spacing={4}>
@@ -775,7 +832,7 @@ export default function MissingGoodsTable() {
                     headerBg={headerBg}
                     hoverBg={hoverBg}
                     tableSize={tableSize}
-                    onViewDetails={openDetailsDialog} // Usar la nueva función para ver detalles
+                    onViewDetails={openDetailsDialog} // Usa la función para ver detalles
                     onExportBM3={handleExportBM3}
                   />
                 ) : (
@@ -783,12 +840,12 @@ export default function MissingGoodsTable() {
                     missingGoods={paginatedGoods}
                     borderColor={borderColor}
                     departments={departments}
-                    onViewDetails={openDetailsDialog} // Usar la nueva función para ver detalles
+                    onViewDetails={openDetailsDialog} // Usa la función para ver detalles
                     onExportBM3={handleExportBM3}
                   />
                 )}
 
-                {/* Pagination */}
+                {/* Paginación */}
                 {totalPages > 1 && (
                   <Flex justify="space-between" align="center" mt={4}>
                     <Text color="gray.600" fontSize="sm">
@@ -841,7 +898,7 @@ export default function MissingGoodsTable() {
           </CardBody>
         </Card>
 
-        {/* Form Modal (Add/Edit) */}
+        {/* Modal del formulario (Agregar/Editar) */}
         <ReportForm
           assets={assets}
           isOpen={isOpen}
@@ -856,12 +913,12 @@ export default function MissingGoodsTable() {
           missingGoods={missingGoods}
         />
 
-        {/* Details Modal */}
+        {/* Modal de detalles */}
         <ReportDetailsModal
           isOpen={isDetailsModalOpen}
           onClose={onDetailsModalClose}
           missingGood={selectedMissingGoodForDetails}
-          onRecover={handleRecoverMissingGood} // Pasar la función de recuperar
+          onRecover={handleRecoverMissingGood} // Pasa la función de recuperar
         />
       </Container>
     </Box>

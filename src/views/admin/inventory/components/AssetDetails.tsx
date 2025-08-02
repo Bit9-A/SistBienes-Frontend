@@ -38,11 +38,20 @@ import {
   FiPlus,
   FiServer,
   FiMinusCircle, // Importar FiMinusCircle para el historial
+  FiChevronDown, // Import FiChevronDown
 } from "react-icons/fi"
+import {
+  Menu, // Import Menu
+  MenuButton, // Import MenuButton
+  MenuList, // Import MenuList
+  MenuItem, // Import MenuItem
+} from "@chakra-ui/react"
 import { getComponentsByBienId, createComponent, deleteComponent, type Component } from "../../../../api/ComponentsApi"
 import { getAssetHistory } from "../../../../api/AssetsApi" // Importar la función para obtener el historial
 import AssetComponents, { type ComponentData } from "components/AssetComponents/AssetComponents"
 import { AssetHistory } from "components/AssetHistory/AssetHistory" // Importar el nuevo componente AssetHistory
+import { TransferComponentModal } from "./TransferComponentModal" // Importar el nuevo modal de transferencia
+import { ReplaceComponentModal } from "./ReplaceComponentModal" // Importar el nuevo modal de reemplazo
 
 interface AssetDetailsModalProps {
   asset: any
@@ -58,6 +67,10 @@ export const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({ asset, isO
   const [componentFormData, setComponentFormData] = useState<ComponentData[]>([])
   const [assetHistory, setAssetHistory] = useState<any[]>([]) // Estado para el historial
   const [loadingHistory, setLoadingHistory] = useState(false) // Estado para la carga del historial
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false) // Estado para el modal de transferencia
+  const [selectedComponentToTransfer, setSelectedComponentToTransfer] = useState<Component | null>(null) // Componente seleccionado para transferir
+  const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false) // Estado para el modal de reemplazo
+  const [selectedComponentToReplace, setSelectedComponentToReplace] = useState<Component | null>(null) // Componente seleccionado para reemplazar
 
   const cardBg = useColorModeValue("white", "gray.700")
   const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -573,9 +586,42 @@ useEffect(() => {
                                 {component.nombre}
                               </Text>
                               <Text fontSize="sm" color="gray.600">
+                                ID: {component.id}
+                              </Text>
+                              <Text fontSize="sm" color="gray.600">
                                 Serial: {component.numero_serial || "Sin serial"}
                               </Text>
                             </VStack>
+                            <HStack spacing={2}> {/* Added HStack for buttons */}
+                              <Menu>
+                                <MenuButton
+                                  as={Button}
+                                  size="sm"
+                                  colorScheme="blue"
+                                  rightIcon={<FiChevronDown />}
+                                >
+                                  Acciones
+                                </MenuButton>
+                                <MenuList>
+                                  <MenuItem
+                                    onClick={() => {
+                                      setSelectedComponentToTransfer(component)
+                                      setIsTransferModalOpen(true)
+                                    }}
+                                  >
+                                    Transferir a otro bien
+                                  </MenuItem>
+                                  <MenuItem
+                                    onClick={() => {
+                                      setSelectedComponentToReplace(component)
+                                      setIsReplaceModalOpen(true)
+                                    }}
+                                  >
+                                    Reemplazar con nuevo componente
+                                  </MenuItem>
+                                </MenuList>
+                              </Menu>
+                            </HStack>
                           </HStack>
                         </CardBody>
                       </Card>
@@ -595,6 +641,30 @@ useEffect(() => {
           )}
         </ModalBody>
       </ModalContent>
+
+      {/* Modal de Transferencia de Componentes */}
+      <TransferComponentModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        component={selectedComponentToTransfer}
+        currentAssetId={asset.id}
+        onTransferSuccess={() => {
+          loadComponents() // Recargar componentes después de una transferencia exitosa
+          loadAssetHistory() // Recargar historial también
+        }}
+      />
+
+      {/* Modal de Reemplazo de Componentes */}
+      <ReplaceComponentModal
+        isOpen={isReplaceModalOpen}
+        onClose={() => setIsReplaceModalOpen(false)}
+        oldComponent={selectedComponentToReplace}
+        currentAssetId={asset.id}
+        onReplaceSuccess={() => {
+          loadComponents() // Recargar componentes después de un reemplazo exitoso
+          loadAssetHistory() // Recargar historial también
+        }}
+      />
     </Modal>
   )
 }

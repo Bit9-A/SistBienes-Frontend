@@ -234,14 +234,16 @@ export default function TransferPage() {
       }
     }
 
-    // Aplicar filtros adicionales (búsqueda, fecha) a los traslados de componentes
+    // Aplicar filtros adicionales (búsqueda, fecha, departamento) a los traslados de componentes
     let filtered = currentComponentTransfers;
 
     if (searchQuery !== "") {
       filtered = filtered.filter(
         (tc) =>
           tc.id.toString().includes(searchQuery) ||
-          (tc.observaciones && tc.observaciones.toLowerCase().includes(searchQuery.toLowerCase())),
+          (tc.observaciones && tc.observaciones.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tc.componente_nombre && tc.componente_nombre.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tc.numero_serial && tc.numero_serial.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -265,8 +267,17 @@ export default function TransferPage() {
       });
     }
 
+    // Aplicar filtro por departamento solo si el usuario tiene permiso para filtrar y ha seleccionado un departamento
+    if (canFilterByDept && selectedDepartmentId) {
+      filtered = filtered.filter(
+        (tc) =>
+          tc.dept_origen === Number(selectedDepartmentId) ||
+          tc.dept_destino === Number(selectedDepartmentId)
+      );
+    }
+
     return filtered;
-  }, [componentTransfers, userProfile, searchQuery, selectedMonth, selectedYear, assets]); // Dependencias actualizadas
+  }, [componentTransfers, userProfile, searchQuery, selectedMonth, selectedYear, assets, canFilterByDept, selectedDepartmentId]); // Dependencias actualizadas
 
 
   // Handlers

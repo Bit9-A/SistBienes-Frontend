@@ -10,26 +10,26 @@ import {
   Text,
   Flex,
   useColorModeValue,
-  TableContainer, // Nueva importación
-  Icon, // Ya estaba, pero para asegurar
-  Badge, // Nueva importación
-  Tooltip, // Nueva importación
-  useBreakpointValue, // Nueva importación
-  Card, // Nueva importación
-  CardBody, // Nueva importación
-  SimpleGrid, // Nueva importación
-  VStack, // Nueva importación
-  HStack, // Nueva importación
-  Avatar, // Nueva importación
-  Button, // Nueva importación
-  Divider, // Nueva importación
-  Skeleton, // Nueva importación
-  Tag, // Nueva importación
-  TagLeftIcon, // Nueva importación
-  TagLabel, // Nueva importación
+  TableContainer, 
+  Icon, 
+  Badge, 
+  Tooltip, 
+  useBreakpointValue,
+  Card, 
+  CardBody, 
+  SimpleGrid, 
+  VStack, 
+  HStack, 
+  Avatar, 
+  Button, 
+  Divider, 
+  Skeleton,
+  Tag, 
+  TagLeftIcon, 
+  TagLabel, 
 } from '@chakra-ui/react';
 import { FiEye, FiCalendar, FiArrowRight, FiUser, FiPackage, FiFileText, FiHome, FiInfo } from "react-icons/fi"; // Nuevas importaciones de iconos
-import { BsBoxes } from "react-icons/bs"; // Nueva importación de icono
+import { BsBoxes } from "react-icons/bs"; 
 import { TransferComponent } from 'api/ComponentsApi';
 import { MovableAsset } from 'api/AssetsApi';
 import { Department } from 'api/SettingsApi';
@@ -185,7 +185,12 @@ export default function ComponentTransferHistory({
                       Bien Origen
                     </Text>
                   </HStack>
-                  <Text fontSize="sm">{truncateText(getAssetName(item.bien_origen_id), 20)}</Text>
+            <Text fontSize="sm">{truncateText(getAssetName(item.bien_origen_id), 20)}</Text>
+            {item.dept_origen_nombre && (
+              <Text fontSize="xs" color={textMutedColor}>
+                ({truncateText(item.dept_origen_nombre, 20)})
+              </Text>
+            )}
                 </Box>
                 <Box>
                   <HStack spacing={1} mb={1}>
@@ -194,7 +199,12 @@ export default function ComponentTransferHistory({
                       Bien Destino
                     </Text>
                   </HStack>
-                  <Text fontSize="sm">{truncateText(getAssetName(item.bien_destino_id), 20)}</Text>
+            <Text fontSize="sm">{truncateText(getAssetName(item.bien_destino_id), 20)}</Text>
+            {item.dept_destino_nombre && (
+              <Text fontSize="xs" color={textMutedColor}>
+                ({truncateText(item.dept_destino_nombre, 20)})
+              </Text>
+            )}
                 </Box>
               </SimpleGrid>
 
@@ -224,12 +234,7 @@ export default function ComponentTransferHistory({
       <Table variant="simple" size={tableSize}>
         <Thead bg={headerBg}>
           <Tr>
-            <Th>ID</Th>
-            <Th>Fecha</Th>
-            <Th>Componente</Th>
-            <Th>Serial</Th>
-            <Th>Bien Origen</Th>
-            <Th>Bien Destino</Th>
+            <Th>ID</Th><Th>Fecha</Th><Th>Componente</Th><Th>Serial</Th><Th>Bien Origen</Th><Th>Departamento Origen</Th>{/* Nueva columna */}<Th>Bien Destino</Th><Th>Departamento Destino</Th>{/* Nueva columna */}
           </Tr>
         </Thead>
         <Tbody>
@@ -281,8 +286,18 @@ export default function ComponentTransferHistory({
                 </Tooltip>
               </Td>
               <Td>
+                <Tooltip label={item.dept_origen_nombre || ''} placement="top" hasArrow>
+                  <Text>{truncateText(item.dept_origen_nombre || 'N/A', 20)}</Text>
+                </Tooltip>
+              </Td>
+              <Td>
                 <Tooltip label={getAssetName(item.bien_destino_id)} placement="top" hasArrow>
                   <Text>{truncateText(getAssetName(item.bien_destino_id), 20)}</Text>
+                </Tooltip>
+              </Td>
+              <Td>
+                <Tooltip label={item.dept_destino_nombre || ''} placement="top" hasArrow>
+                  <Text>{truncateText(item.dept_destino_nombre || 'N/A', 20)}</Text>
                 </Tooltip>
               </Td>
             </Tr>

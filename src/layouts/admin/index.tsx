@@ -153,7 +153,7 @@ export default function Dashboard(props: { [x: string]: any }) {
         clearInterval(sessionTimer)
       }
     }
-  }, [navigate, getTokenExpiration, handleRefreshToken, sessionTimer]) // Añadir handleRefreshToken a las dependencias
+  }, [navigate, getTokenExpiration, handleRefreshToken]) // Se elimina sessionTimer de las dependencias
 
   // Obtener el perfil del usuario y configurar el interceptor de Axios
   useEffect(() => {

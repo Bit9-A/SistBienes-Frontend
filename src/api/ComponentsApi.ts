@@ -2,7 +2,7 @@ import axiosInstance from "../utils/axiosInstance";
 
 export interface Component {
   id: number;
-  bien_id: number;
+  bien_id: number | null; 
   nombre: string;
   numero_serial?: string | null;
 }
@@ -28,9 +28,7 @@ export const getComponentsByBienId = async (bien_id: number): Promise<Component[
 
 // Crear un nuevo componente
 export const createComponent = async (componentData: Omit<Component, "id">): Promise<Component> => {
-  console.log("Creating component with data:", componentData);
   const response = await axiosInstance.post("/components", componentData);
-  console.log("Response from createComponent:", response.data);
   return response.data.component as Component;
 };
 
@@ -56,14 +54,18 @@ export interface TransferComponent {
   fecha: string;
   componente_nombre?: string;
   numero_serial?: string | null;
-  observaciones?: string; // Nuevo: Observaciones del traslado de componente
+  observaciones?: string;
+  dept_origen?: number | null; // ID del departamento de origen del bien
+  dept_destino?: number | null; // ID del departamento de destino del bien
+  dept_origen_nombre?: string; // Nombre del departamento de origen
+  dept_destino_nombre?: string; // Nombre del departamento de destino
 }
 
 // Obtener todos los traslados de componentes
 export const getTransferComponents = async (): Promise<TransferComponent[]> => {
   const response = await axiosInstance.get("/transfer-component");
-  // Si tu backend responde con { ok, transferComponents }
-  return response.data.transferComponents || response.data as TransferComponent[];
+  // Asumiendo que el backend siempre devuelve { ok: boolean, transfers: TransferComponent[] }
+  return response.data.transfers as TransferComponent[];
 };
 
 // Obtener un traslado de componente por ID

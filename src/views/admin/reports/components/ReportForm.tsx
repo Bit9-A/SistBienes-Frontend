@@ -70,7 +70,7 @@ export default function ReportForm({
           setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: head.id, jefe_nombre: head.nombre_completo || head.nombre }))
         } else {
           setDepartmentHeadName(null)
-          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: Number || undefined , jefe_nombre: String || undefined }))
+          setNewMissingGood((prev: Partial<MissingGoods>) => ({ ...prev, jefe_id: Number || undefined , jefe_nombre: String || undefined}))
         }
       } else {
         setDepartmentHeadName(null)
@@ -100,6 +100,7 @@ export default function ReportForm({
     setNewMissingGood((prev: Partial<MissingGoods>) => ({
       ...prev,
       bien_id: assetsSeleccionados.length === 1 ? assetsSeleccionados[0].id : undefined,
+      numero_identificacion: assetsSeleccionados.length === 1 ? assetsSeleccionados[0].numero_identificacion : undefined,
     }))
   }
 
@@ -117,6 +118,7 @@ export default function ReportForm({
         observaciones: newMissingGood.observaciones ?? "",
         fecha: newMissingGood.fecha ?? new Date().toISOString().slice(0, 10),
         bien_id: asset.id,
+        numero_identificacion: asset.numero_identificacion, // Add numero_identificacion here
       }
       await handleAdd(dataToSend)
     }
@@ -131,7 +133,7 @@ export default function ReportForm({
         <AssetsTableCustom
           isOpen={showAssetSelector}
           onClose={() => setShowAssetSelector(false)}
-          assets={assets.filter(a => a.dept_id === selectedDeptId)}
+          assets={assets.filter(a => a.dept_id === selectedDeptId && a.isActive === 1)} 
           departments={departments}
           subgroups={[]} // Si tienes subgrupos, pásalos aquí
           mode="department"
