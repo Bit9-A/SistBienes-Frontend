@@ -64,36 +64,45 @@ export const AssetHistory: React.FC<AssetHistoryProps> = ({
               >
                 <CardBody>
                   <VStack align="start" spacing={2}>
-                    {event.fecha_incorporacion && (
+                    {event.tipo_evento === "Incorporacion" && (
                       <HStack>
                         <Icon as={FiPlus} color="green.500" />
                         <Text fontWeight="bold">Incorporación:</Text>
                         <Text>
-                          Fecha: {formatDate(event.fecha_incorporacion)} - Departamento Origen:{" "}
-                          {event.dept_origen || "N/A"}
+                          Fecha: {formatDate(event.fecha_evento)} - Departamento Origen:{" "}
+                          {event.departamento_origen || "N/A"}
                         </Text>
                       </HStack>
                     )}
-                    {event.fecha_traslado && (
+                    {event.tipo_evento === "Traslado" && (
                       <HStack>
                         <Icon as={FiMapPin} color="blue.500" />
                         <Text fontWeight="bold">Traslado:</Text>
                         <Text>
-                          Fecha: {formatDate(event.fecha_traslado)} - De: {event.dept_origen || "N/A"} a:{" "}
-                          {event.dept_destino || "N/A"}
+                          Fecha: {formatDate(event.fecha_evento)} - De: {event.departamento_origen || "N/A"} a:{" "}
+                          {event.departamento_destino || "N/A"}
                         </Text>
                       </HStack>
                     )}
-                    {event.fecha_desincorporacion && (
+                    {event.tipo_evento === "Desincorporacion" && (
                       <HStack>
                         <Icon as={FiMinusCircle} color="red.500" />
                         <Text fontWeight="bold">Desincorporación:</Text>
                         <Text>
-                          Fecha: {formatDate(event.fecha_desincorporacion)} - Concepto:{" "}
-                          {event.estado_desincorporacion || "N/A"} - Valor:{" "}
+                          Fecha: {formatDate(event.fecha_evento)} - Concepto:{" "}
+                          {event.concepto_desincorporacion || "N/A"} - Valor:{" "}
                           {formatCurrency(event.valor_desincorporacion)} - Cantidad:{" "}
-                          {event.cantidad_desincorporacion || "N/A"} - Departamento:{" "}
-                          {event.dept_desincorporacion || "N/A"}
+                          {event.cantidad_desincorporacion || "N/A"}
+                        </Text>
+                      </HStack>
+                    )}
+                    {event.tipo_evento === "Modificacion" && (
+                      <HStack>
+                        <Icon as={FiCalendar} color="purple.500" /> {/* Using FiCalendar for generic modification */}
+                        <Text fontWeight="bold">Modificación:</Text>
+                        <Text>
+                          Fecha: {formatDate(event.fecha_evento)} - Campo: {event.campo_modificado || "N/A"} - Valor Anterior:{" "}
+                          {event.valor_anterior || "N/A"} - Valor Nuevo: {event.valor_nuevo || "N/A"}
                         </Text>
                       </HStack>
                     )}
@@ -101,14 +110,9 @@ export const AssetHistory: React.FC<AssetHistoryProps> = ({
                     <Text fontSize="sm" color="gray.600">
                       Bien: {event.bien_nombre} (ID: {event.bien_id})
                     </Text>
-                    {event.funcionario_nombre && (
+                    {event.departamento_relacionado && (
                       <Text fontSize="sm" color="gray.600">
-                        Funcionario: {event.funcionario_nombre}
-                      </Text>
-                    )}
-                    {event.dept_actual && (
-                      <Text fontSize="sm" color="gray.600">
-                        Departamento Actual: {event.dept_actual}
+                        Departamento Relacionado: {event.departamento_relacionado}
                       </Text>
                     )}
                   </VStack>
