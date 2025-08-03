@@ -46,12 +46,13 @@ import {
   MenuList, // Import MenuList
   MenuItem, // Import MenuItem
 } from "@chakra-ui/react"
-import { getComponentsByBienId, createComponent, deleteComponent, type Component } from "../../../../api/ComponentsApi"
+import { getComponentsByBienId, createComponent, deleteComponent, removeComponentFromAsset, updateComponent, type Component } from "../../../../api/ComponentsApi"
 import { getAssetHistory } from "../../../../api/AssetsApi" // Importar la función para obtener el historial
 import AssetComponents, { type ComponentData } from "components/AssetComponents/AssetComponents"
 import { AssetHistory } from "components/AssetHistory/AssetHistory" // Importar el nuevo componente AssetHistory
 import { TransferComponentModal } from "./TransferComponentModal" // Importar el nuevo modal de transferencia
 import { ReplaceComponentModal } from "./ReplaceComponentModal" // Importar el nuevo modal de reemplazo
+import { AddComponentModal } from "./AddComponentModal" // Importar el nuevo modal para añadir componentes
 
 interface AssetDetailsModalProps {
   asset: any
@@ -71,6 +72,7 @@ export const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({ asset, isO
   const [selectedComponentToTransfer, setSelectedComponentToTransfer] = useState<Component | null>(null) // Componente seleccionado para transferir
   const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false) // Estado para el modal de reemplazo
   const [selectedComponentToReplace, setSelectedComponentToReplace] = useState<Component | null>(null) // Componente seleccionado para reemplazar
+  const [isAddComponentModalOpen, setIsAddComponentModalOpen] = useState(false) // Estado para el modal de añadir componentes
 
   const cardBg = useColorModeValue("white", "gray.700")
   const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -81,7 +83,6 @@ export const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({ asset, isO
 
   // Verificar si es computadora
   const isComputer = asset?.isComputer === 1
-console.log("Asset: ", asset)
   // Cargar componentes cuando se abre el modal y es una computadora
 useEffect(() => {
   if (isOpen && asset && isComputer) {
@@ -132,7 +133,7 @@ useEffect(() => {
 
   const handleEditComponents = () => {
     // Convertir componentes existentes al formato del formulario
-    const formData: ComponentData[] = components.map((comp) => {
+    const formData: ComponentData[] = components.map((comp: Component) => {
       let tipoDeterminado: string = "OTHER"
       if (comp.nombre.includes("TM") || comp.nombre.includes("Tarjeta Madre")) {
         tipoDeterminado = "TM"
@@ -162,21 +163,48 @@ useEffect(() => {
 
   const handleSaveComponents = async () => {
     try {
-      // Eliminar todos los componentes existentes asociados a este bien
-      await Promise.all(components.map((comp) => deleteComponent(comp.id)))
+      const componentsToCreate: Omit<Component, "id">[] = []
+      const componentsToUpdate: { id: number; updates: Partial<Omit<Component, "id">> }[] = []
+      const componentsToRemove: number[] = []
 
-      // Crear los nuevos componentes basados en el formulario
-      const validComponents = componentFormData.filter((comp) => comp.nombre.trim())
-
-      await Promise.all(
-        validComponents.map((comp) =>
-          createComponent({
+      // Identify components to create or update
+      componentFormData.forEach((formDataComp) => {
+        if (formDataComp.id) {
+          // Existing component, check for updates
+          const originalComp = components.find((c) => c.id === formDataComp.id)
+          if (originalComp && (originalComp.nombre !== formDataComp.nombre || originalComp.numero_serial !== formDataComp.numero_serial)) {
+            componentsToUpdate.push({
+              id: formDataComp.id,
+              updates: {
+                nombre: formDataComp.nombre,
+                numero_serial: formDataComp.numero_serial || "N/A",
+              },
+            })
+          }
+        } else if (formDataComp.nombre.trim()) {
+          // New component
+          componentsToCreate.push({
             bien_id: asset.id,
-            nombre: comp.nombre,
-            numero_serial: comp.numero_serial || "N/A", // Asegurar que el serial no sea vacío
-          }),
-        ),
-      )
+            nombre: formDataComp.nombre,
+            numero_serial: formDataComp.numero_serial || "N/A",
+          })
+        }
+      })
+
+      // Identify components to remove (those in original 'components' but not in 'componentFormData')
+      components.forEach((originalComp) => {
+        const foundInForm = componentFormData.some((formDataComp) => formDataComp.id === originalComp.id)
+        if (!foundInForm) {
+          componentsToRemove.push(originalComp.id)
+        }
+      })
+
+      // Execute all operations
+      await Promise.all([
+        ...componentsToCreate.map((comp) => createComponent(comp)),
+        ...componentsToUpdate.map((op) => updateComponent(op.id, op.updates)),
+        ...componentsToRemove.map((id) => removeComponentFromAsset(id)), // Use removeComponentFromAsset
+      ])
 
       toast({
         title: "Éxito",
@@ -188,6 +216,7 @@ useEffect(() => {
 
       setIsEditingComponents(false)
       await loadComponents()
+      await loadAssetHistory() // Also reload history as component changes affect it
     } catch (error) {
       console.error("Error saving components:", error)
       toast({
@@ -203,6 +232,30 @@ useEffect(() => {
   const handleCancelEdit = () => {
     setIsEditingComponents(false)
     setComponentFormData([])
+  }
+
+  const handleRemoveComponent = async (component: Component) => {
+    try {
+      await removeComponentFromAsset(component.id)
+      toast({
+        title: "Éxito",
+        description: "Componente quitado del bien correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+      await loadComponents() // Recargar componentes después de quitar uno
+      await loadAssetHistory() // Recargar historial también
+    } catch (error) {
+      console.error("Error removing component from asset:", error)
+      toast({
+        title: "Error",
+        description: "Error al quitar el componente del bien",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
   }
 
   if (!asset) return null
@@ -270,13 +323,25 @@ useEffect(() => {
     return FiBox
   }
 
+  // Función auxiliar para determinar el tipo de componente (duplicada para evitar circular dependency con AddComponentModal)
+  const getComponentType = (name: string): string => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes("tm") || lowerName.includes("tarjeta madre")) return "TM";
+    if (lowerName.includes("cpu") || lowerName.includes("procesador")) return "CPU";
+    if (lowerName.includes("ram") || lowerName.includes("memoria ram")) return "RAM";
+    if (lowerName.includes("hdd") || lowerName.includes("disco duro hdd")) return "HDD";
+    if (lowerName.includes("ssd") || lowerName.includes("disco duro ssd")) return "SSD";
+    if (lowerName.includes("ps") || lowerName.includes("fuente de poder")) return "PS";
+    return "OTHER";
+  };
+
   // Función para formatear la descripción con componentes
   const formatDescriptionWithComponents = () => {
     let description = asset.nombre_descripcion
 
     if (isComputer && components.length > 0) {
       const componentsText = components
-        .map((comp) => `${comp.nombre}${comp.numero_serial ? ` (SN: ${comp.numero_serial})` : ""}`)
+        .map((comp: Component) => `${comp.nombre}${comp.numero_serial ? ` (SN: ${comp.numero_serial})` : ""}`)
         .join(", ")
       description += ` - Componentes: ${componentsText}`
     }
@@ -563,9 +628,14 @@ useEffect(() => {
                     <Text fontSize="lg" fontWeight="bold" color="type.primary">
                       Componentes de la Computadora ({components.length})
                     </Text>
-                    <Button leftIcon={<FiEdit />} size="sm" color="type.title" colorScheme="white" onClick={handleEditComponents}>
-                      Editar
-                    </Button>
+                    <HStack spacing={2}>
+                      <Button leftIcon={<FiPlus />} size="sm" color="type.title" colorScheme="white" onClick={() => setIsAddComponentModalOpen(true)}>
+                        Añadir
+                      </Button>
+                      <Button leftIcon={<FiEdit />} size="sm" color="type.title" colorScheme="white" onClick={handleEditComponents}>
+                        Editar
+                      </Button>
+                    </HStack>
                   </HStack>
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
@@ -611,13 +681,12 @@ useEffect(() => {
                                   >
                                     Transferir a otro bien
                                   </MenuItem>
+                                 
                                   <MenuItem
-                                    onClick={() => {
-                                      setSelectedComponentToReplace(component)
-                                      setIsReplaceModalOpen(true)
-                                    }}
+                                    onClick={() => handleRemoveComponent(component)}
+                                    color="red.500"
                                   >
-                                    Reemplazar con nuevo componente
+                                    Quitar del Bien
                                   </MenuItem>
                                 </MenuList>
                               </Menu>
@@ -662,6 +731,18 @@ useEffect(() => {
         currentAssetId={asset.id}
         onReplaceSuccess={() => {
           loadComponents() // Recargar componentes después de un reemplazo exitoso
+          loadAssetHistory() // Recargar historial también
+        }}
+      />
+
+      {/* Modal para Añadir Componentes */}
+      <AddComponentModal
+        isOpen={isAddComponentModalOpen}
+        onClose={() => setIsAddComponentModalOpen(false)}
+        asset={asset}
+        currentComponents={components}
+        onAddComponentSuccess={() => {
+          loadComponents() // Recargar componentes después de añadir uno exitosamente
           loadAssetHistory() // Recargar historial también
         }}
       />

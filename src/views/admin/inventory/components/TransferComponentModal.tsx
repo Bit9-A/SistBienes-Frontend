@@ -246,10 +246,10 @@ export const TransferComponentModal: React.FC<TransferComponentModalProps> = ({
         <ModalBody>
           <VStack spacing={4}>
             <Text fontSize="md" fontWeight="medium" color="gray.700">
-              **ID del Componente:** <Text as="span" fontWeight="normal">{component.id}</Text>
+              ID del Componente: <Text as="span" fontWeight="normal">{component.id}</Text>
             </Text>
             <Text fontSize="md" fontWeight="medium" color="gray.700">
-              **Serial:** <Text as="span" fontWeight="normal">{component.numero_serial || "N/A"}</Text>
+              Serial: <Text as="span" fontWeight="normal">{component.numero_serial || "N/A"}</Text>
             </Text>
             <FormControl id="destinationAsset">
               <FormLabel>Transferir a:</FormLabel>
@@ -265,17 +265,6 @@ export const TransferComponentModal: React.FC<TransferComponentModalProps> = ({
                   ? `${selectedDestinationAsset.numero_identificacion} - ${selectedDestinationAsset.nombre_descripcion}`
                   : "Seleccionar Bien de Destino"}
               </Button>
-              <Select
-                placeholder="O seleccionar Inventario General"
-                value={destinationAssetId}
-                onChange={(e) => {
-                  setDestinationAssetId(e.target.value);
-                  setSelectedDestinationAsset(null);
-                }}
-                mt={2}
-              >
-                <option value="null">Inventario General (Desasignar)</option>
-              </Select>
             </FormControl>
 
             {selectedDestinationAsset && destinationAssetId !== "null" && (

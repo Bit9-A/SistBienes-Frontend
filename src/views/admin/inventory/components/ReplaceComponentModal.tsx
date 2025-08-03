@@ -112,7 +112,7 @@ export const ReplaceComponentModal: React.FC<ReplaceComponentModalProps> = ({
         <ModalBody>
           <VStack spacing={4}>
             <Text fontSize="md" fontWeight="medium" color="gray.700">
-              **Componente Actual:** <Text as="span" fontWeight="normal">{oldComponent.nombre}</Text> (ID: <Text as="span" fontWeight="normal">{oldComponent.id}</Text>, Serial: <Text as="span" fontWeight="normal">{oldComponent.numero_serial || "N/A"}</Text>)
+              Componente Actual: <Text as="span" fontWeight="normal">{oldComponent.nombre}</Text> (ID: <Text as="span" fontWeight="normal">{oldComponent.id}</Text>, Serial: <Text as="span" fontWeight="normal">{oldComponent.numero_serial || "N/A"}</Text>)
             </Text>
             <FormControl id="newComponentName" isRequired>
               <FormLabel>Nombre del Nuevo Componente:</FormLabel>

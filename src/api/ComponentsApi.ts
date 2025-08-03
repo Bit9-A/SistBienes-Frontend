@@ -46,6 +46,12 @@ export const deleteComponent = async (id: number): Promise<void> => {
   await axiosInstance.delete(`/components/${id}`);
 };
 
+// Quitar un componente de un bien (establecer bien_id a null)
+export const removeComponentFromAsset = async (id: number): Promise<Component> => {
+  const response = await axiosInstance.put(`/components/${id}`, { bien_id: null });
+  return response.data.component as Component;
+};
+
 export interface TransferComponent {
   id: number;
   componente_id: number;

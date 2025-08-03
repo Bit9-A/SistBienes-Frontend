@@ -89,7 +89,7 @@ export default function TransferPage() {
 
         if (transferData.status === "fulfilled") {
           setTransfers(transferData.value);
-          console.log("Fetched transfers:", transferData.value); // Log para depuración
+          //console.log("Fetched transfers:", transferData.value); // Log para depuración
         } else {
           console.error("Error fetching transfers:", transferData.reason);
           setTransfers([]);
@@ -97,7 +97,7 @@ export default function TransferPage() {
 
         if (departmentsData.status === "fulfilled") {
           setDepartments(departmentsData.value);
-          console.log("Fetched departments:", departmentsData.value); // Log para depuración
+        //  console.log("Fetched departments:", departmentsData.value); // Log para depuración
         } else {
           console.error("Error fetching departments:", departmentsData.reason);
           setDepartments([]);
@@ -205,7 +205,7 @@ export default function TransferPage() {
       );
     }
 
-    console.log("Filtering transfers:", {
+   /* console.log("Filtering transfers:", {
       userTransfers: currentTransfers,
       searchQuery,
       selectedMonth,
@@ -213,7 +213,7 @@ export default function TransferPage() {
       selectedDepartmentId,
       canFilterByDept,
       filteredResult: filtered
-    }); // Log para depuración
+    }); // Log para depuración*/
     return filtered;
   }, [transfers, userProfile, searchQuery, selectedMonth, selectedYear, selectedDepartmentId, canFilterByDept]); // Dependencias actualizadas
 
