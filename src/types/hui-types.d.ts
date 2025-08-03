@@ -1,4 +1,4 @@
-export {};
+export { };
 
 declare global {
   /**
@@ -12,5 +12,10 @@ declare global {
     icon: JSX.Element | string;
     path: string;
     secondary?: boolean;
+    hidden?: boolean;
+  }
+
+  interface Window {
+    openPieModal?: () => void;
   }
 }

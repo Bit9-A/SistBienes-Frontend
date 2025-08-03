@@ -28,7 +28,8 @@
       "@contexts/*": ["contexts/*"], // Alias para contextos
       "@hooks/*": ["hooks/*"], // Alias para hooks
       "@types/*": ["types/*"], // Alias para types
-      "@themes/*": ["themes/*"] // Alias para themes
+      "@themes/*": ["themes/*"],
+      "@api/":["api/*"] // Alias para themes
     }
   },
   "include": [

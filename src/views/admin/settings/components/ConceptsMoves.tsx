@@ -19,75 +19,75 @@ import {
   useDisclosure,
   TableContainer,
   Flex,
-  IconButton,
   Text,
   useColorModeValue,
   HStack,
 } from '@chakra-ui/react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
-
-interface Concept {
-  id: number;
-  nombre: string;
-}
-
+import {
+  handleAddConceptoMovimiento,
+  handleEditConceptoMovimiento,
+  handleDeleteConceptoMovimiento,
+} from '../utils/ConceptsMovesUtils';
+import { ConceptoMovimiento,getConceptosMovimientoDesincorporacion,getConceptosMovimientoIncorporacion } from 'api/SettingsApi';
+import { v4 as uuidv4 } from 'uuid'; // Asegúrate de instalar uuid si no lo tienes
 const ConceptsMoves = () => {
-  const [concepts, setConcepts] = useState<Concept[]>([]);
-  const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
+  const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([]);
+  const [selectedConcept, setSelectedConcept] = useState<ConceptoMovimiento | null>(null);
   const [newConceptName, setNewConceptName] = useState('');
+  const [newConceptCode, setNewConceptCode] = useState('');
   const [activeType, setActiveType] = useState<'incorporacion' | 'desincorporacion'>('incorporacion');
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('gray.100', 'gray.800');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
-
-  // Simulación de datos iniciales
-  useEffect(() => {
-    if (activeType === 'incorporacion') {
-      setConcepts([
-        { id: 1, nombre: 'Compra' },
-        { id: 2, nombre: 'Donación' },
-      ]);
-    } else {
-      setConcepts([
-        { id: 1, nombre: 'Venta' },
-        { id: 2, nombre: 'Destrucción' },
-      ]);
+  // Fetch inicial de conceptos de movimiento
+  const fetchConcepts = async () => {
+    try {
+      const data =
+        activeType === 'incorporacion'
+          ? await getConceptosMovimientoIncorporacion()
+          : await getConceptosMovimientoDesincorporacion();
+          setConcepts(data);
+    } catch (error) {
+      console.error('Error fetching concepts:', error);
     }
+  };
+
+  useEffect(() => {
+    fetchConcepts();
   }, [activeType]);
 
-  const handleAdd = () => {
-    if (newConceptName.trim() === '') return;
-    const newConcept = {
-      id: concepts.length + 1,
-      nombre: newConceptName,
-    };
-    setConcepts([...concepts, newConcept]);
-    setNewConceptName('');
-    onClose();
+  const handleAdd = async () => {
+    if (newConceptName.trim() === '' || newConceptCode.trim() === '') return;
+    await handleAddConceptoMovimiento(activeType, newConceptName, newConceptCode, setConcepts, onClose);
+    fetchConcepts();
   };
 
-  const handleEdit = () => {
-    if (selectedConcept && newConceptName.trim() !== '') {
-      setConcepts((prev) =>
-        prev.map((concept) =>
-          concept.id === selectedConcept.id ? { ...concept, nombre: newConceptName } : concept
-        )
+  const handleEdit = async () => {
+    if (selectedConcept && newConceptName.trim() !== '' && newConceptCode.trim() !== '') {
+      await handleEditConceptoMovimiento(
+        activeType,
+        selectedConcept,
+        newConceptName,
+        newConceptCode,
+        setConcepts,
+        onClose
       );
-      setSelectedConcept(null);
-      setNewConceptName('');
-      onClose();
+      fetchConcepts();
     }
   };
 
-  const handleDelete = (id: number) => {
-    setConcepts((prev) => prev.filter((concept) => concept.id !== id));
+  const handleDelete = async (id: number) => {
+    await handleDeleteConceptoMovimiento(activeType, id, setConcepts);
+    fetchConcepts();
   };
 
-  const openEditModal = (concept: Concept) => {
+  const openEditModal = (concept: ConceptoMovimiento) => {
     setSelectedConcept(concept);
     setNewConceptName(concept.nombre);
+    setNewConceptCode(concept.codigo);
     onOpen();
   };
 
@@ -109,7 +109,17 @@ const ConceptsMoves = () => {
         </Button>
       </HStack>
 
-      <Button colorScheme="purple" bgColor={'type.bgbutton'} onClick={onOpen} mb={4}>
+      <Button
+        colorScheme="purple"
+        bgColor={'type.primary'}
+        onClick={() => {
+          setSelectedConcept(null);
+          setNewConceptName('');
+          setNewConceptCode('');
+          onOpen();
+        }}
+        mb={4}
+      >
         Agregar Concepto
       </Button>
       <TableContainer
@@ -123,15 +133,17 @@ const ConceptsMoves = () => {
         <Table variant="simple" size="md">
           <Thead bg={headerBg}>
             <Tr>
-              <Th>ID</Th>
+              <Th>N°</Th>
+              <Th>Código</Th>
               <Th>Nombre</Th>
               <Th textAlign="center">Acciones</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {concepts.map((concept) => (
-              <Tr key={concept.id} _hover={{ bg: hoverBg }} transition="background 0.2s">
-                <Td>{concept.id}</Td>
+            {concepts.map((concept, index) => (
+              <Tr key={uuidv4()} _hover={{ bg: hoverBg }} transition="background 0.2s">
+                <Td>{index + 1}</Td>
+                <Td>{concept.codigo}</Td>
                 <Td>
                   <Text fontWeight="medium">{concept.nombre}</Text>
                 </Td>
@@ -178,11 +190,17 @@ const ConceptsMoves = () => {
               value={newConceptName}
               onChange={(e) => setNewConceptName(e.target.value)}
             />
+            <Input
+              mt={4}
+              placeholder="Código del Concepto"
+              value={newConceptCode}
+              onChange={(e) => setNewConceptCode(e.target.value)}
+            />
           </ModalBody>
           <ModalFooter>
             <Button
               colorScheme="purple"
-              bgColor={'type.bgbutton'}
+              bgColor={'type.primary'}
               mr={3}
               onClick={selectedConcept ? handleEdit : handleAdd}
             >

@@ -1,18 +1,78 @@
-// Chakra imports
 import { Box, Flex, Text, Select, useColorModeValue } from '@chakra-ui/react';
+import { getDashboardCounts, DashboardCounts } from '../../../../api/DashboardApi';
+import React, { useEffect, useState } from 'react';
+
 // Custom components
 import Card from 'components/card/Card';
 import PieChart from 'components/charts/PieChart';
-import { pieChartData, pieChartOptions } from 'variables/charts';
-import { VSeparator } from 'components/separator/Separator';
+import { pieChartOptions } from 'variables/charts';
+import {
+	Modal,
+	ModalOverlay,
+	ModalContent,
+	ModalHeader,
+	ModalBody,
+	ModalCloseButton,
+	Button,
+	useDisclosure,
+} from '@chakra-ui/react';
 export default function Conversion(props: { [x: string]: any }) {
 	const { ...rest } = props;
 
-	// Chakra Color Mode
+	// Chakra UI - colores
 	const textColor = useColorModeValue('secondaryGray.900', 'white');
 	const cardColor = useColorModeValue('white', 'navy.700');
+
+	// Estado
+	const [counts, setCounts] = useState<DashboardCounts[]>([]);
+	const [loading, setLoading] = useState(true);
+	const { isOpen, onOpen, onClose } = useDisclosure();
+	// Fetch API
+	useEffect(() => {
+		const fetchCounts = async () => {
+			try {
+				const response = await getDashboardCounts();
+				setCounts(response);
+			} catch (error) {
+				console.error('Error fetching dashboard counts:', error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchCounts();
+	}, []);
+
+	useEffect(() => {
+
+		window.openPieModal = onOpen;
+		return () => {
+			delete window.openPieModal;
+		};
+	}, [onOpen]);
+
+	// Filtrado y formato
+	const filteredCounts = counts
+		.filter((item) => Number(item.total) > 0)
+		.map((item) => ({
+			label: item.nombre,
+			value: Number(item.total),
+		}));
+
+	const pieChartData = filteredCounts.map((item) => item.value);
+	const pieChartLabels = filteredCounts.map((item) => item.label);
+
+	const colors = [
+		'#0059ae', '#ef4444', '#c4bf21', '#5a21c4', '#ffdb70', '#c42170', '#c47021', '#24c421', '#33cdeb', '#2e81c9', '#ee6f93',
+		'#61a152', '#d2a82d', '#a3a3a3'];
+
+	const percent = (value: number) => {
+		const total = filteredCounts.reduce((acc, item) => acc + item.value, 0);
+		return total > 0 ? `${Math.round((value / total) * 100).toFixed(1)}%` : '0%';
+	};
+
 	return (
 		<Card p='20px' alignItems='center' flexDirection='column' w='100%' {...rest}>
+			{/* Header */}
 			<Flex
 				px={{ base: '0px', '2xl': '10px' }}
 				justifyContent='space-between'
@@ -20,100 +80,54 @@ export default function Conversion(props: { [x: string]: any }) {
 				w='100%'
 				mb='8px'>
 				<Box>
-					<Text fontSize="xl" fontWeight="bold" color={'type.title'}>
-						Distribución por Categoría
+					<Text fontSize="xl" fontWeight="bold" color='type.title'>
+						Bienes por Subgrupo
 					</Text>
 					<Text fontSize="sm" color="gray.500">
-						Porcentaje de bienes por tipo
+						Distribución porcentual por categoría
 					</Text>
+
 				</Box>
-				<Select fontSize='sm' variant='subtle' defaultValue='monthly' width='unset' fontWeight='700'>
-					<option value='monthly'>Monthly</option>
-					<option value='yearly'>Yearly</option>
-				</Select>
 			</Flex>
 
-			<PieChart h='100%' w='100%' chartData={pieChartData} chartOptions={pieChartOptions} />
-			<Card
-				bg={cardColor}
-				flexDirection='row'
+			{/* PieChart */}
+			<PieChart
+				h='100%'
 				w='100%'
-				p='15px'
-				px='20px'
-				mt='15px'
-				mx='auto'
-			>
-				<Flex direction="row" align="center" justify="space-between" w="100%" wrap="wrap">
-					{/* Equipos Informáticos */}
-					<Flex direction='column' py='5px' align="center" flex="1" minW="120px" maxW="180px">
-						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#47a7f5' borderRadius='50%' me='4px' />
-							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
-								Equipos Informáticos
-							</Text>
-						</Flex>
-						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							53%
-						</Text>
-					</Flex>
-					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
-
-					{/* Mobiliario */}
-					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
-						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#f176a0' borderRadius='50%' me='4px' />
-							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
-								Mobiliario
-							</Text>
-						</Flex>
-						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							22%
-						</Text>
-					</Flex>
-					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
-
-					{/* Vehículos */}
-					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
-						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#87cb80' borderRadius='50%' me='4px' />
-							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
-								Vehículos
-							</Text>
-						</Flex>
-						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							12%
-						</Text>
-					</Flex>
-					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
-
-					{/* Equipos de Oficina */}
-					<Flex direction='column' py='5px' align="center" flex="1" minW="120px" maxW="160px">
-						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#ffcd36' borderRadius='50%' me='4px' />
-							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
-								Equipos de Oficina
-							</Text>
-						</Flex>
-						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							8%
-						</Text>
-					</Flex>
-					<VSeparator mx={{ base: '10px', xl: '20px', '2xl': '30px' }} />
-
-					{/* Audiovisuales */}
-					<Flex direction='column' py='5px' align="center" flex="1" minW="100px" maxW="140px">
-						<Flex align='center'>
-							<Box h='8px' w='8px' bg='#00dafc' borderRadius='50%' me='4px' />
-							<Text fontSize='xs' color='secondaryGray.600' fontWeight='700' mb='5px' isTruncated>
-								Audiovisuales
-							</Text>
-						</Flex>
-						<Text fontSize='lg' color={textColor} fontWeight='700'>
-							5%
-						</Text>
-					</Flex>
-				</Flex>
-			</Card>
+				chartData={pieChartData}
+				chartOptions={{
+					...pieChartOptions,
+					labels: pieChartLabels,
+					colors: colors,
+					legend: { show: false },
+				}}
+			/>
+			<Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+				<ModalOverlay />
+				<ModalContent>
+					<ModalHeader>Porcentajes por categoría</ModalHeader>
+					<ModalCloseButton />
+					<ModalBody>
+						{filteredCounts.map((item, index) => (
+							<Flex key={index} align="center" mb={2}>
+								<Box
+									h="10px"
+									w="10px"
+									bg={colors[index % colors.length]}
+									borderRadius="full"
+									mr={3}
+								/>
+								<Text flex="1" fontWeight="500" fontSize="sm">
+									{item.label}
+								</Text>
+								<Text fontWeight="bold" fontSize="sm">
+									{percent(item.value)}
+								</Text>
+							</Flex>
+						))}
+					</ModalBody>
+				</ModalContent>
+			</Modal>
 		</Card>
 	);
 }

@@ -1,280 +1,342 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react"
 import {
   Box,
   Flex,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
   Heading,
-  Text,
-  Badge,
-  useColorModeValue,
   Card,
   CardHeader,
   CardBody,
-  HStack,
   Button,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Select,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-} from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
-import { FiClock, FiUser, FiDownload, FiFilter, FiFileText } from "react-icons/fi";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+  Spinner,
+  Container,
+  useColorModeValue,
+  Center,
+  Stack,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Badge,
+  useToast,
+  useBreakpointValue,
+  Icon,
+} from "@chakra-ui/react"
+import { FiDownload, FiShield, FiActivity, FiUsers } from "react-icons/fi"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import { fetchAudits, fetchLogs } from "./utils/AuditUtils"
+import type { Audit, Log } from "api/AuditApi"
+import LoginAudit from "./components/LoginAudit"
+import ActionAudit from "./components/ActionsAudit"
+import { useThemeColors } from "../../../theme/useThemeColors"
 
-// Datos de ejemplo para auditoría
-const sampleAuditLogs = [
-  {
-    id: 1,
-    usuario: "Juan Pérez",
-    accion: "Inicio de sesión",
-    fecha: "2025-04-01 10:30 AM",
-    descripcion: "El usuario inició sesión en el sistema.",
-    tipo: "Autenticación",
-    departamento: "Recursos Humanos",
-  },
-  {
-    id: 2,
-    usuario: "María Gómez",
-    accion: "Creación de registro",
-    fecha: "2025-04-02 02:15 PM",
-    descripcion: "Se creó un nuevo registro de bienes nacionales.",
-    tipo: "Creación",
-    departamento: "Finanzas",
-  },
-  {
-    id: 3,
-    usuario: "Carlos Rodríguez",
-    accion: "Eliminación de registro",
-    fecha: "2025-04-03 11:45 AM",
-    descripcion: "Se eliminó un registro de bienes nacionales.",
-    tipo: "Eliminación",
-    departamento: "Tecnología",
-  },
-];
+export default function AuditModule() {
+  const [audits, setAudits] = useState<Audit[]>([])
+  const [logs, setLogs] = useState<Log[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("login")
 
-const AuditModule = () => {
-  const [auditLogs, setAuditLogs] = useState(sampleAuditLogs);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [filterDepartment, setFilterDepartment] = useState("all");
-  const [selectedLog, setSelectedLog] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { cardBg, textColor, borderColor, headerBg, hoverBg } = useThemeColors()
+  const toast = useToast()
 
-  // Colores para el tema
-  const cardBg = useColorModeValue("white", "gray.700");
-  const headerBg = useColorModeValue("gray.50", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
-  const textColor = useColorModeValue("type.title", "white");
+  // Theme colors
+  const tabBorderColor = useColorModeValue("gray.200", "gray.700")
+  const bg = useColorModeValue("gray.50", "gray.900")
 
-  // Filtrar registros por tipo, departamento y búsqueda
-  const filteredLogs = auditLogs.filter((log) => {
-    const matchesSearch =
-      log.usuario.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType =
-      filterType === "all" || log.tipo.toLowerCase() === filterType.toLowerCase();
-    const matchesDepartment =
-      filterDepartment === "all" || log.departamento === filterDepartment;
-    return matchesSearch && matchesType && matchesDepartment;
-  });
+  // Responsive values
+  const buttonSize = useBreakpointValue({ base: "md", md: "lg" })
 
-  // Exportar registros a PDF
+  // Load audits and logs on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const [auditsData, logsData] = await Promise.all([fetchAudits(), fetchLogs()])
+        setAudits(auditsData || [])
+        setLogs(logsData || [])
+      } catch (error) {
+        console.error("Error fetching audit data:", error)
+        setError("Error al cargar los datos de auditoría. Por favor, intenta nuevamente.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Export to PDF based on active tab
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Registros de Auditoría", 14, 10);
-    autoTable(doc, {
-      head: [["ID", "Usuario", "Acción", "Fecha", "Descripción", "Tipo", "Departamento"]],
-      body: filteredLogs.map((log) => [
-        log.id,
-        log.usuario,
-        log.accion,
-        log.fecha,
-        log.descripcion,
-        log.tipo,
-        log.departamento,
-      ]),
-      startY: 20,
-    });
-    doc.save("audit_logs.pdf");
-  };
+    try {
+      const doc = new jsPDF()
+
+      if (activeTab === "login") {
+        // Export login/logout data
+        doc.text("Registro de Entradas y Salidas", 14, 10)
+        autoTable(doc, {
+          head: [["#", "Usuario", "Departamento", "Entrada", "Salida", "IP", "Estado"]],
+          body: audits.map((audit, index) => [
+            index + 1,
+            audit.nombre,
+            audit.departamento,
+            formatDate(audit.entrada),
+            formatDate(audit.salida),
+            audit.ip,
+            audit.salida ? "Finalizada" : "Activa",
+          ]),
+          startY: 20,
+        })
+        doc.save("login_audit.pdf")
+      } else {
+        // Export actions data
+        doc.text("Registro de Acciones", 14, 10)
+        autoTable(doc, {
+          head: [["#", "Usuario", "Acción", "Fecha", "Detalles", "Departamento"]],
+          body: logs.map((log, index) => [
+            index + 1,
+            log.usuario_nombre || log.usuario_id,
+            log.accion,
+            formatDate(log.fecha),
+            log.detalles,
+            log.departamento,
+          ]),
+          startY: 20,
+        })
+        doc.save("action_audit.pdf")
+      }
+
+      toast({
+        title: "Exportación exitosa",
+        description: "El archivo PDF se ha descargado correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error("Error exporting PDF:", error)
+      toast({
+        title: "Error en la exportación",
+        description: "No se pudo generar el archivo PDF",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  // Format date for PDF export
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Sin salida"
+    return new Date(dateString).toLocaleString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  if (loading) {
+    return (
+      <Box minH="100vh" bg={bg} pt={{ base: "130px", md: "80px", xl: "80px" }}>
+        <Container maxW="7xl">
+          <Center py={20}>
+            <Stack align="center" spacing={4}>
+              <Spinner size="xl" color="blue.500" thickness="4px" />
+              <Heading size="md" color={textColor}>
+                Cargando datos de auditoría...
+              </Heading>
+            </Stack>
+          </Center>
+        </Container>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Box minH="100vh" bg={bg} pt={{ base: "130px", md: "80px", xl: "80px" }}>
+        <Container maxW="7xl">
+          <Alert status="error" borderRadius="lg" mt={8}>
+            <AlertIcon />
+            <Box>
+              <AlertTitle>Error al cargar datos</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Box>
+          </Alert>
+        </Container>
+      </Box>
+    )
+  }
+
+  const activeSessionsCount = audits.filter((audit) => !audit.salida).length
+  const totalActionsCount = logs.length
+
+  // Tabs configuration
+  const tabs = [
+    {
+      id: "login",
+      label: "Entradas y Salidas",
+      icon: FiUsers,
+      color: "blue",
+      description: "Sesiones de usuario",
+    },
+    {
+      id: "actions",
+      label: "Registro de Acciones",
+      icon: FiActivity,
+      color: "purple",
+      description: "Actividades del sistema",
+    },
+  ]
+
+  const activeTabData = tabs.find((tab) => tab.id === activeTab)
 
   return (
-    <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-      {/* Contenedor principal */}
-      <Card
-        bg={cardBg}
-        boxShadow="sm"
-        borderRadius="xl"
-        border="1px"
-        borderColor={borderColor}
-        mb={6}
-      >
-        {/* Encabezado del card */}
-        <CardHeader>
-          <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
-            <Heading size="lg" fontWeight="bold" color={textColor}>
-              Auditoría de Usuarios
-            </Heading>
-            <HStack spacing={4}>
-              <Button
-                bgColor="type.bgbutton"
-                colorScheme="purple"
-                leftIcon={<FiDownload />}
-                onClick={exportToPDF}
-              >
-                Exportar a PDF
-              </Button>
-            </HStack>
-          </Flex>
-        </CardHeader>
-
-        {/* Cuerpo del card */}
-        <CardBody>
-          {/* Filtros y búsqueda */}
-          <Flex
-            direction={{ base: "column", md: "row" }}
-            justify="space-between"
-            align={{ base: "stretch", md: "center" }}
-            mb={6}
-            gap={4}
-          >
-            <HStack spacing={4} flex={{ md: 2 }}>
-              <InputGroup maxW={{ md: "320px" }}>
-                <InputLeftElement pointerEvents="none">
-                  <SearchIcon color="gray.400" />
-                </InputLeftElement>
-                <Input
-                  placeholder="Buscar usuario o acción..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  borderRadius="md"
-                />
-              </InputGroup>
-
+    <Box minH="100vh" bg={bg} pt={{ base: "130px", md: "80px", xl: "80px" }}>
+      <Container maxW="100vw" px={{ base: 2, md: 4 }} py={{ base: 2, md: 4 }} w="full">
+        {/* Main Header */}
+        <Card
+          bg={cardBg}
+          shadow="lg"
+          borderRadius="xl"
+          border="1px"
+          borderColor={tabBorderColor}
+          mb={{ base: 4, md: 6 }}
+        >
+          <CardHeader p={{ base: 4, md: 6 }}>
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              justify="space-between"
+              align={{ base: "start", lg: "center" }}
+              gap={{ base: 3, md: 4 }}
+            >
               <Box>
-                <Select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  borderRadius="md"
-                  w={{ base: "full", md: "auto" }}
-                >
-                  <option value="all">Todos los tipos</option>
-                  <option value="autenticación">Autenticación</option>
-                  <option value="creación">Creación</option>
-                  <option value="eliminación">Eliminación</option>
-                  <option value="actualización">Actualización</option>
-                </Select>
+                <Flex align="center" gap={{ base: 2, md: 3 }} mb={2}>
+                  <Box p={{ base: 1.5, md: 2 }} bg="blue.100" borderRadius="lg">
+                    <FiShield size={24} color="#0059ae" />
+                  </Box>
+                  <Heading size={{ base: "md", md: "lg" }} fontWeight="bold" color={textColor}>
+                    Auditoría del Sistema
+                  </Heading>
+                </Flex>
+                <Box color="gray.600" fontSize={{ base: "xs", md: "sm" }} display={{ base: "none", sm: "block" }}>
+                  Monitoreo y seguimiento de actividades de usuarios en el sistema
+                </Box>
               </Box>
-
-              <Box>
-                <Select
-                  value={filterDepartment}
-                  onChange={(e) => setFilterDepartment(e.target.value)}
-                  borderRadius="md"
-                  w={{ base: "full", md: "auto" }}
+              {activeTabData && (
+                <Badge
+                  colorScheme={activeTabData.color}
+                  variant="subtle"
+                  px={{ base: 2, md: 3 }}
+                  py={1}
+                  borderRadius="full"
+                  fontSize={{ base: "xs", md: "sm" }}
+                  mt={{ base: 2, lg: 0 }}
                 >
-                  <option value="all">Todos los departamentos</option>
-                  <option value="Recursos Humanos">Recursos Humanos</option>
-                  <option value="Finanzas">Finanzas</option>
-                  <option value="Tecnología">Tecnología</option>
-                </Select>
-              </Box>
-            </HStack>
-          </Flex>
+                  {activeTabData.label}
+                </Badge>
+              )}
+            </Flex>
+          </CardHeader>
+        </Card>
 
-          {/* Tabla de auditoría */}
-          <TableContainer
-            border="1px"
-            borderColor={borderColor}
-            borderRadius="lg"
-            boxShadow="sm"
-            overflow="auto"
-            mb={4}
+        {/* Tab Navigation */}
+        <Card
+          bg={cardBg}
+          shadow="md"
+          borderRadius="xl"
+          border="1px"
+          borderColor={tabBorderColor}
+          mb={{ base: 4, md: 6 }}
+        >
+          <CardBody p={{ base: 3, md: 4 }}>
+            <Stack direction={{ base: "column", md: "row" }} spacing={{ base: 2, md: 2 }}>
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "solid" : "ghost"}
+                  colorScheme="purple" /* Usar colorScheme purple para todos los botones */
+                  bg={activeTab === tab.id ? "type.primary" : "transparent"} /* Color de fondo personalizado para la pestaña activa */
+                  color={activeTab === tab.id ? "white" : textColor}
+                  borderRadius="lg"
+                  _hover={{
+                    bg: activeTab === tab.id ? "type.primary" : hoverBg, /* Hover para la pestaña activa */
+                    transform: "translateY(-1px)",
+                  }}
+                  transition="all 0.2s"
+                  leftIcon={<Icon as={tab.icon} />}
+                  size={{ base: "md", md: "lg" }}
+                  fontWeight="medium"
+                  flex={{ base: "1", md: "auto" }}
+                  minW={{ base: "auto", md: "200px" }}
+                  boxShadow={activeTab === tab.id ? "md" : "none"}
+                  isActive={activeTab === tab.id}
+                  w={{ base: "full", md: "auto" }}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <Box textAlign="left">
+                    <Box fontSize={{ base: "sm", md: "md" }}>{tab.label}</Box>
+                    <Box
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      opacity={0.8}
+                      fontWeight="normal"
+                      display={{ base: "none", md: "block" }}
+                    >
+                      {tab.description}
+                    </Box>
+                  </Box>
+                </Button>
+              ))}
+            </Stack>
+          </CardBody>
+        </Card>
+
+        {/* Export Button */}
+        <Flex justifyContent="flex-end" mb={4}>
+          <Button
+            bgColor="type.primary"
+            colorScheme="purple"
+            leftIcon={<FiDownload />}
+            onClick={exportToPDF}
+            size={buttonSize}
+            boxShadow="lg"
+            _hover={{
+              transform: "translateY(-2px)",
+              boxShadow: "xl",
+            }}
+            transition="all 0.2s"
           >
-            <Table variant="simple" size="md">
-              <Thead bg={headerBg}>
-                <Tr>
-                  <Th>ID</Th>
-                  <Th>Usuario</Th>
-                  <Th>Acción</Th>
-                  <Th>Fecha</Th>
-                  <Th>Descripción</Th>
-                  <Th>Tipo</Th>
-                  <Th>Departamento</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredLogs.map((log) => (
-                  <Tr
-                    key={log.id}
-                    _hover={{ bg: hoverBg }}
-                    transition="background 0.2s"
-                  >
-                    <Td>
-                      <Badge colorScheme="blue" borderRadius="full" px={2}>
-                        {log.id}
-                      </Badge>
-                    </Td>
-                    <Td>
-                      <Flex align="center" gap={2}>
-                        <FiUser />
-                        <Text>{log.usuario}</Text>
-                      </Flex>
-                    </Td>
-                    <Td>
-                      <Text>{log.accion}</Text>
-                    </Td>
-                    <Td>
-                      <Text>{log.fecha}</Text>
-                    </Td>
-                    <Td>
-                      <Text>{log.descripcion}</Text>
-                    </Td>
-                    <Td>
-                      <Badge
-                        colorScheme={
-                          log.tipo === "Autenticación"
-                            ? "green"
-                            : log.tipo === "Creación"
-                              ? "blue"
-                              : log.tipo === "Eliminación"
-                                ? "red"
-                                : "yellow"
-                        }
-                        borderRadius="full"
-                        px={2}
-                      >
-                        {log.tipo}
-                      </Badge>
-                    </Td>
-                    <Td>
-                      <Text>{log.departamento}</Text>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </CardBody>
-      </Card>
+            Exportar PDF
+          </Button>
+        </Flex>
+
+        {/* Tab Content */}
+        <Box>
+          {activeTab === "login" && (
+            <LoginAudit
+              audits={audits}
+              loading={loading}
+              headerBg={headerBg}
+              hoverBg={hoverBg}
+              borderColor={borderColor}
+            />
+          )}
+          {activeTab === "actions" && (
+            <ActionAudit
+              logs={logs}
+              loading={loading}
+              headerBg={headerBg}
+              hoverBg={hoverBg}
+              borderColor={borderColor}
+            />
+          )}
+        </Box>
+      </Container>
     </Box>
-  );
-};
-
-export default AuditModule;
+  )
+}

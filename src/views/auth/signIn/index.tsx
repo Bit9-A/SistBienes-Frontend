@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from 'react';
 import {
   Box,
   Button,
@@ -13,62 +13,83 @@ import {
   Image,
   useColorModeValue,
   useToast,
-} from "@chakra-ui/react";
-import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { RiEyeCloseLine } from "react-icons/ri";
-import { useNavigate } from "react-router-dom"; // Importa useNavigate
-import banner from "assets/img/banner.png";
+} from '@chakra-ui/react';
+import { MdOutlineRemoveRedEye } from 'react-icons/md';
+import { RiEyeCloseLine } from 'react-icons/ri';
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import banner from 'assets/img/banner.png';
+import { handleLogin,handleLogout } from '../signIn/utils/authUtils'; // Asegúrate de que la ruta sea correcta
+import { getProfile } from '../../../api/UserApi'; // Ajusta la ruta si es necesario
+
+
+
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const toast = useToast();
   const navigate = useNavigate(); // Inicializa useNavigate
 
   const handlePasswordVisibility = () => setShowPassword(!showPassword);
 
-  // Usuario predefinido
-  const predefinedUser = {
-    email: "adrian24vergel@gmail.com",
-    password: "123456",
-  };
-
-  const handleSubmit = () => {
-    if (!email || !password) {
+  useEffect(() => {
+    // Verifica si el usuario ya está autenticado al cargar el componente
+    if (localStorage.getItem("user") || localStorage.getItem("token")) {
+      handleLogout()
       toast({
-        title: "Error",
-        description: "Por favor, completa todos los campos.",
-        status: "error",
+        title: 'Sesión cerrada',
+        description: 'Has sido desconectado exitosamente.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, []);
+
+
+  const handleSubmit = async () => {
+    if (!username || !password) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, completa todos los campos.',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
       return;
     }
 
-    if (email === predefinedUser.email && password === predefinedUser.password) {
+    try {
+      await handleLogin(username, password);
+      // Obtener el perfil del usuario después de iniciar sesión
+      const profile = await getProfile();
       toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido al sistema.",
-        status: "success",
+        title: 'Inicio de sesión exitoso',
+        description: 'Bienvenido al sistema.',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
-      navigate("/admin/default"); // Redirige al dashboard
-    } else {
+      // Redirigir según el tipo de usuario
+      if (profile.nombre_tipo_usuario === 'Administrador') {
+        navigate('/admin/default');
+      } else {
+        navigate('/admin/asset-management');
+      }
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Correo o contraseña incorrectos.",
-        status: "error",
+        title: 'Error',
+        description: error.message,
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
     }
   };
-
   // Chakra color mode
-  const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = useColorModeValue("gray.400", "gray.400");
+  const textColor = useColorModeValue('navy.700', 'white');
+  const textColorSecondary = useColorModeValue('gray.400', 'gray.400');
 
   return (
     <Flex
@@ -76,11 +97,11 @@ const SignIn = () => {
       h="100vh"
       alignItems="center"
       justifyContent="center"
-      bg={useColorModeValue("gray.50", "gray.800")}
+      bg={useColorModeValue('gray.50', 'gray.800')}
     >
       <Flex
-        w={{ base: "90%", md: "800px" }}
-        bg={useColorModeValue("white", "gray.700")}
+        w={{ base: '90%', md: '800px' }}
+        bg={useColorModeValue('white', 'gray.700')}
         borderRadius="lg"
         boxShadow="lg"
         overflow="hidden"
@@ -89,14 +110,14 @@ const SignIn = () => {
         <Flex
           alignItems="center"
           justifyContent="center"
-          bgColor="type.bgbutton"
-          display={{ base: "none", md: "flex" }}
+          bgColor="type.primary"
+          display={{ base: 'none', md: 'flex' }}
         >
           <Image src={banner} alt="Banner Alcaldía" objectFit="contain" />
         </Flex>
 
         {/* Formulario de inicio de sesión */}
-        <Box w={{ base: "100%", md: "60%" }} p={8}>
+        <Box w={{ base: '100%', md: '60%' }} p={8}>
           <Heading color={textColor} fontSize="2xl" mb={4}>
             Iniciar Sesión
           </Heading>
@@ -104,24 +125,29 @@ const SignIn = () => {
             Ingresa tu correo y contraseña para acceder al sistema.
           </Text>
           <FormControl mb={4}>
-            <FormLabel color={textColor}>Correo Electrónico</FormLabel>
+            <FormLabel color={textColor}>Nombre de Usuario</FormLabel>
             <Input
-              type="email"
-              placeholder="correo@ejemplo.com"
-              focusBorderColor="type.bgbutton"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Nombre de usuario"
+              focusBorderColor="type.primary"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </FormControl>
           <FormControl mb={6}>
             <FormLabel color={textColor}>Contraseña</FormLabel>
             <InputGroup>
               <Input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="********"
-                focusBorderColor="type.bgbutton"
+                focusBorderColor="type.primary"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSubmit();
+                  }
+                }}
               />
               <InputRightElement>
                 <Button
@@ -138,12 +164,14 @@ const SignIn = () => {
               </InputRightElement>
             </InputGroup>
           </FormControl>
-          <Button w="100%"
-            bg="type.bgbutton"
+          <Button
+            w="100%"
+            bg="type.primary"
             color="white"
-            _hover={{ bg: "type.bgbutton", opacity: 0.9 }}
+            _hover={{ bg: 'type.primary', opacity: 0.9 }}
             mb={4}
-            onClick={handleSubmit}>
+            onClick={handleSubmit}
+          >
             Iniciar Sesión
           </Button>
           <Text fontSize="sm" color={textColorSecondary} textAlign="center">
