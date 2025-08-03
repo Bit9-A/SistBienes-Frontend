@@ -64,7 +64,7 @@ export default function LoginAudit({ audits, loading, headerBg, hoverBg, borderC
   const filteredAudits = audits.filter((audit) => {
     const matchesSearch =
       audit.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      audit.departamento.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (audit.departamento || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       audit.ip.toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesDepartment = filterDepartment === "all" || audit.departamento === filterDepartment

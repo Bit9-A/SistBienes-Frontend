@@ -10,7 +10,7 @@ import {
   SimpleGrid,
   useColorModeValue,
 } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 //Data Api
 import {
   DashboardCountsTotal,
@@ -23,7 +23,7 @@ import MiniCalendar from 'components/calendar/MiniCalendar';
 import MiniStatistics from 'components/card/MiniStatistics';
 import IconBox from 'components/icons/IconBox';
 import { MdFileCopy } from 'react-icons/md';
-import PieCard from 'views/admin/default/components/PieCard';
+const PieCard = React.lazy(() => import('views/admin/default/components/PieCard'));
 import TotalSpent from 'views/admin/default/components/TotalSpent';
 import BarChart from 'views/admin/default/components/BarChart';
 import ColumnChart from 'views/admin/default/components/ColummChart';
@@ -74,7 +74,9 @@ export default function UserReports() {
           mb="20px"
         >
           <BarChart />
-          <PieCard />
+          <Suspense fallback={<div>Cargando gráfico...</div>}>
+            <PieCard />
+          </Suspense>
           <MiniCalendar h="100%" minW="100%" selectRange={false} />
           <MiniStatistics
             startContent={

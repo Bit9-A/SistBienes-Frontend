@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer'; // Importar visualizer
 import { theme } from '@chakra-ui/react';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    visualizer({
+      filename: 'bundle-stats.html', // Nombre del archivo de salida
+      open: true, // Abrir automáticamente el archivo en el navegador después del build
+      gzipSize: true, // Mostrar el tamaño gzip
+      brotliSize: true, // Mostrar el tamaño brotli
+    }),
+  ],
   resolve: {
     alias: {
       routes: path.resolve(__dirname, './src/routes'), // Alias para routes

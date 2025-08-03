@@ -71,7 +71,8 @@ export default function ActionAudit({ logs, loading, headerBg, hoverBg, borderCo
       (log.usuario_id?.toString() || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (log.detalles || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (log.accion || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (log.usuario_nombre || "").toLowerCase().includes(searchQuery.toLowerCase())
+      (log.usuario_nombre || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (log.departamento || "").toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesType = filterType === "all" || log.accion === filterType
 

@@ -12,24 +12,22 @@ import {
 } from 'react-icons/md';
 
 // Admin Imports
-import MainDashboard from 'views/admin/default';
+import React from 'react';
 
-import Profile from 'views/admin/profile';
-
-import Inventory from 'views/admin/inventory';
-
+// Admin Imports
+const MainDashboard = React.lazy(() => import('views/admin/default'));
+const Profile = React.lazy(() => import('views/admin/profile'));
+const Inventory = React.lazy(() => import('views/admin/inventory'));
+const UserManage = React.lazy(() => import('views/admin/user'));
+const Settings = React.lazy(() => import('views/admin/settings'));
+const AssetManagementPage = React.lazy(() => import('views/admin/movements/index'));
+const NotificationsHistory = React.lazy(() => import('views/admin/notifications'));
+const Transfer = React.lazy(() => import('views/admin/transfers'));
+const AuditModule = React.lazy(() => import('views/admin/audit'));
+const MissingGoodsTable = React.lazy(() => import('views/admin/reports'));
 
 // Auth Imports
-import SignInCentered from 'views/auth/signIn';
-import UserManage from 'views/admin/user';
-
-import Settings from 'views/admin/settings';
-import AssetManagementPage from 'views/admin/movements/index';
-import NotificationsHistory from 'views/admin/notifications';
-import Transfer from 'views/admin/transfers';
-
-import AuditModule from 'views/admin/audit';
-import MissingGoodsTable from 'views/admin/reports';
+const SignInCentered = React.lazy(() => import('views/auth/signIn'));
 
 
 // Define las rutas con sus permisos
@@ -142,4 +140,3 @@ export const getFilteredRoutes = (isAdmin: boolean) => {
 };
 
 export default routes;
-

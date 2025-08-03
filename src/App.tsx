@@ -4,11 +4,10 @@ import AuthLayout from './layouts/auth';
 import AdminLayout from './layouts/admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
-import Profile from 'views/admin/profile'
 
 import { ChakraProvider } from '@chakra-ui/react';
 import initialTheme from './theme/theme';
-import { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 
 export default function Main() {
   const [currentTheme, setCurrentTheme] = useState(initialTheme);
@@ -21,7 +20,9 @@ export default function Main() {
             path="admin/*"
             element={
               <ProtectedRoute>
-                <AdminLayout theme={currentTheme} setTheme={setCurrentTheme} />
+                <Suspense fallback={<div>Cargando...</div>}> {/* Add a loading fallback */}
+                  <AdminLayout theme={currentTheme} setTheme={setCurrentTheme} />
+                </Suspense>
               </ProtectedRoute>
             }
           />
