@@ -49,7 +49,6 @@ export default function TotalSpent(props: { [x: string]: any }) {
 			data: dataByMonth
 		}
 	];
-	console.log('Data for chart:', lineChartDataTotalSpent);
 
 	const chartOptions = {
 		...lineChartOptionsTotalSpent,

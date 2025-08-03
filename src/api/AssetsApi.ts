@@ -80,7 +80,6 @@ export const createAsset = async (assetData: MovableAsset) => {
     try {
         
         const response = await axiosInstance.post('/furniture', assetData);
-        console.log('Asset created successfully:', response.data); // Imprime el mensaje del servidor
         return response.data; // Devuelve el activo creado
     } catch (error:any) {
         console.error('Error creating asset:', error.response?.data || error.message); // Imprime el mensaje del servidor
@@ -94,7 +93,6 @@ export const updateAsset = async (assetId: number, assetData: Partial<MovableAss
             ...assetData,
             fecha: assetData.fecha ? new Date(assetData.fecha).toISOString().slice(0, 10) : assetData.fecha,
         };
-        console.log('Updating asset with ID:', assetId, 'Data:', formattedAssetData); // Imprime el ID y los datos del activo
         const response = await axiosInstance.put(`/furniture/${assetId}`, formattedAssetData);
         return response.data;
     } catch (error: any) {

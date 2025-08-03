@@ -344,7 +344,7 @@ export default function MissingGoodsTable() {
       // Actualizar el isActive del bien a 0 (inactivo)
       try {
         await updateAsset(Number(mgData.bien_id), { isActive: 0 } as MovableAsset);
-        console.log(`Bien con ID ${mgData.bien_id} marcado como inactivo (isActive: 0)`);
+       // console.log(`Bien con ID ${mgData.bien_id} marcado como inactivo (isActive: 0)`);
       } catch (assetUpdateError: any) {
         console.error("Error al actualizar isActive del bien:", assetUpdateError);
         toast({

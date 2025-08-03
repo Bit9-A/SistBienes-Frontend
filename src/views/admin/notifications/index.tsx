@@ -108,7 +108,7 @@ const NotificationsHistory = () => {
         } else if (profile?.dept_id) {
           data = (await fetchNotificationsByDeptId(profile.dept_id)) || [];
         }
-        console.log('Notifications fetched:', data);
+        //console.log('Notifications fetched:', data);
         setNotifications(data);
       } catch (error) {
         console.error('Error fetching user profile or notifications:', error);

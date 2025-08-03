@@ -583,7 +583,6 @@ export const AssetForm: React.FC<AssetFormProps> = ({
         })
       }
 
-      console.log("Sending asset data:", assetData) // Debug log
       await onSubmit(assetData, logDetails) // Pass logDetails to onSubmit
 
       toast({

@@ -41,7 +41,6 @@ export async function exportBM1WithMarkers(deptId: number, departamentoNombre: s
     a.remove();
     window.URL.revokeObjectURL(url);
 
-    console.log('¡Archivo Excel descargado exitosamente!');
   } catch (error: any) {
     console.error('Error al descargar el archivo Excel:', error);
     alert(`Error: ${error.message}`);
@@ -103,7 +102,6 @@ export async function generateBM4Pdf(
     a.remove();
     window.URL.revokeObjectURL(url);
 
-    console.log('¡Archivo PDF BM4 descargado exitosamente!');
   } catch (error: any) {
     console.error('Error al descargar el archivo PDF BM4:', error);
     alert(`Error: ${error.message}`);
@@ -167,7 +165,6 @@ export async function exportBM2ByDepartment(
     a.remove();
     window.URL.revokeObjectURL(url);
 
-    console.log(`¡Archivo Excel BM2 de ${tipo} descargado exitosamente!`);
   } catch (error: any) {
     console.error(`Error al descargar el archivo Excel BM2 de ${tipo}:`, error);
     alert(`Error: ${error.message}`);

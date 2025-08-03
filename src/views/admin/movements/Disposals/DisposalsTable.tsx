@@ -97,7 +97,7 @@ export default function DisposalsTable() {
         setError(null); // Importante: limpiar cualquier error previo si es un 404
       } else {
         setError("Error al cargar los datos de desincorporaciones. Por favor, intenta nuevamente.");
-        console.error("Error fetching data:", error);
+       // console.error("Error fetching data:", error);
       }
     } finally {
       setLoading(false);
@@ -138,7 +138,7 @@ export default function DisposalsTable() {
         if (conceptoTraspasoIncorp) {
           setIncorpConceptoTraspasoId(conceptoTraspasoIncorp.id);
         } else {
-          console.warn("Concepto de incorporación con código '02' no encontrado.");
+         // console.warn("Concepto de incorporación con código '02' no encontrado.");
         }
 
       } catch (error) {
@@ -149,7 +149,7 @@ export default function DisposalsTable() {
           duration: 5000,
           isClosable: true,
         });
-        console.error("Error fetching catalogs:", error);
+       // console.error("Error fetching catalogs:", error);
       }
     };
 
@@ -164,7 +164,7 @@ export default function DisposalsTable() {
     bienesToTransfer: number[],
     observaciones: string,
   ) => {
-    console.log("Executing processTransferAndAssetUpdate");
+    ////console.log("Executing processTransferAndAssetUpdate");
     if (!userProfile?.id) {
       toast({
         title: "Error",
@@ -186,7 +186,7 @@ export default function DisposalsTable() {
         responsable_id: userProfile.id,
         observaciones: observaciones,
       };
-      console.log("Transfer Payload:", transferPayload);
+      ////console.log("Transfer Payload:", transferPayload);
       await createTransferRecord(transferPayload);
       toast({
         title: "Traslado creado",
@@ -202,7 +202,7 @@ export default function DisposalsTable() {
           const assetToUpdate = assets.find(asset => asset.id === bienId);
           if (assetToUpdate) {
             const updatedAsset = { ...assetToUpdate, dept_id: destino_id };
-            console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
+            ////console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
             await updateAsset(bienId, updatedAsset);
             toast({
               title: "Bien actualizado",
@@ -212,7 +212,7 @@ export default function DisposalsTable() {
               isClosable: true,
             });
           } else {
-            console.warn(`Asset with ID ${bienId} not found in local state.`);
+           // console.warn(`Asset with ID ${bienId} not found in local state.`);
           }
         } catch (assetUpdateError) {
           toast({
@@ -222,7 +222,7 @@ export default function DisposalsTable() {
             duration: 3000,
             isClosable: true,
           });
-          console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
+         // console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
         }
       }
     } catch (error) {
@@ -233,7 +233,7 @@ export default function DisposalsTable() {
         duration: 3000,
         isClosable: true,
       });
-      console.error("Error al crear traslado:", error);
+     // console.error("Error al crear traslado:", error);
     }
   };
 
@@ -242,7 +242,7 @@ export default function DisposalsTable() {
     deptDestinoId?: number,
     allConcepts?: ConceptoMovimiento[],
   ) => {
-    console.log("Executing handleAdd (single disposal)");
+   //// console.log("Executing handleAdd (single disposal)");
     const data = disposalData || newDisposal;
     const bien_id = Number(data.bien_id);
     const fecha = data.fecha ? data.fecha : "";
@@ -279,7 +279,7 @@ export default function DisposalsTable() {
       const assetName = assets.find((a) => a.id === bien_id)?.numero_identificacion || `Bien ID: ${bien_id}`;
       const deptOrigenName = departments.find((d) => d.id === dept_id)?.nombre || 'desconocido';
 
-      console.log(`Single Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
+     //// console.log(`Single Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
 
       if (selectedConcept?.codigo === '51' && deptDestinoId && incorpConceptoTraspasoId) {
         const deptDestinoName = departments.find((d) => d.id === deptDestinoId)?.nombre || 'desconocido';
@@ -334,7 +334,7 @@ export default function DisposalsTable() {
           const assetToUpdate = assets.find(asset => asset.id === bien_id);
           if (assetToUpdate) {
             const updatedAsset = { ...assetToUpdate, isActive: 0 };
-            console.log(`Updating asset ${bien_id} isActive to 0.`);
+           //// console.log(`Updating asset ${bien_id} isActive to 0.`);
             await updateAsset(bien_id, updatedAsset);
             toast({
               title: "Estado del bien actualizado",
@@ -352,7 +352,7 @@ export default function DisposalsTable() {
             duration: 3000,
             isClosable: true,
           });
-          console.error(`Error al actualizar el estado del bien ${bien_id}:`, assetUpdateError);
+         // console.error(`Error al actualizar el estado del bien ${bien_id}:`, assetUpdateError);
         }
       }
 
@@ -373,7 +373,7 @@ export default function DisposalsTable() {
         duration: 3000,
         isClosable: true,
       });
-      console.error("Error al crear desincorporación:", error);
+     // console.error("Error al crear desincorporación:", error);
     }
   };
 
@@ -383,8 +383,8 @@ export default function DisposalsTable() {
     allConcepts: ConceptoMovimiento[],
     selectedAssetIds: number[],
   ) => {
-    console.log("Executing handleMultipleAdd (multiple disposals)");
-    console.log("User Profile at start of handleMultipleAdd:", userProfile);
+   // console.log("Executing handleMultipleAdd (multiple disposals)");
+   // console.log("User Profile at start of handleMultipleAdd:", userProfile);
     if (!userProfile?.id) {
       toast({
         title: "Error",
@@ -440,7 +440,7 @@ export default function DisposalsTable() {
         const assetName = assets.find((a) => a.id === bien_id)?.numero_identificacion || `Bien ID: ${bien_id}`;
         const deptOrigenName = departments.find((d) => d.id === dept_id)?.nombre || 'desconocido';
 
-        console.log(`Multiple Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
+       // console.log(`Multiple Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
 
         if (selectedConcept?.codigo === '51') {
           isTransferConcept = true;
@@ -463,12 +463,12 @@ export default function DisposalsTable() {
           duration: 3000,
           isClosable: true,
         });
-        console.error(`Error al crear desincorporación para el bien ${bien_id}:`, error);
+       // console.error(`Error al crear desincorporación para el bien ${bien_id}:`, error);
         return; // Stop if one fails
       }
     }
 
-    console.log("Transfer conditions check: isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id);
+   // console.log("Transfer conditions check: isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id);
 
     if (isTransferConcept && deptDestinoId && bienesToTransfer.length > 0 && incorpConceptoTraspasoId) {
       const deptDestinoName = departments.find((d) => d.id === deptDestinoId)?.nombre || 'desconocido';
@@ -516,7 +516,7 @@ export default function DisposalsTable() {
         transferObservaciones,
       );
     } else {
-      console.log("Transfer conditions not met. isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id, "incorpConceptoTraspasoId:", incorpConceptoTraspasoId);
+     // console.log("Transfer conditions not met. isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id, "incorpConceptoTraspasoId:", incorpConceptoTraspasoId);
     }
 
     toast({
@@ -558,7 +558,7 @@ export default function DisposalsTable() {
         responsable_id: userProfile.id,
         observaciones: observaciones,
       };
-      console.log("Transfer Payload:", transferPayload);
+     // console.log("Transfer Payload:", transferPayload);
       await createTransferRecord(transferPayload);
       toast({
         title: "Traslado creado",
@@ -574,7 +574,7 @@ export default function DisposalsTable() {
           const assetToUpdate = assets.find(asset => asset.id === bienId);
           if (assetToUpdate) {
             const updatedAsset = { ...assetToUpdate, dept_id: destino_id };
-            console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
+           // console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
             await updateAsset(bienId, updatedAsset);
             toast({
               title: "Bien actualizado",
@@ -584,7 +584,7 @@ export default function DisposalsTable() {
               isClosable: true,
             });
           } else {
-            console.warn(`Asset with ID ${bienId} not found in local state.`);
+           // console.warn(`Asset with ID ${bienId} not found in local state.`);
           }
         } catch (assetUpdateError) {
           toast({
@@ -594,7 +594,7 @@ export default function DisposalsTable() {
             duration: 3000,
             isClosable: true,
           });
-          console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
+         // console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
         }
       }
     } catch (error) {
@@ -605,7 +605,7 @@ export default function DisposalsTable() {
         duration: 3000,
         isClosable: true,
       });
-      console.error("Error al crear traslado:", error);
+     // console.error("Error al crear traslado:", error);
     }
   };
 
@@ -729,7 +729,7 @@ export default function DisposalsTable() {
         duration: 5000,
         isClosable: true,
       });
-      console.error("Error exporting BM2:", error);
+     // console.error("Error exporting BM2:", error);
     }
   };
 

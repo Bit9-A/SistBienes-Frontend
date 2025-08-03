@@ -188,11 +188,11 @@ export default function DisposalsForm({
       observaciones: newDisposal.observaciones ?? '',
     }));
 
-    console.log("Calling handleMultipleAdd from DisposalsForm.tsx");
-    console.log("disposalDataArray:", disposalDataArray);
-    console.log("selectedDeptDestinoId:", selectedDeptDestinoId);
-    console.log("concepts:", concepts);
-    console.log("selectedAssets.map((a) => a.id):", selectedAssets.map((a) => a.id));
+    //console.log("Calling handleMultipleAdd from DisposalsForm.tsx");
+    //console.log("disposalDataArray:", disposalDataArray);
+    //console.log("selectedDeptDestinoId:", selectedDeptDestinoId);
+    //console.log("concepts:", concepts);
+    //console.log("selectedAssets.map((a) => a.id):", selectedAssets.map((a) => a.id));
 
     handleMultipleAdd(
       disposalDataArray,
@@ -235,17 +235,17 @@ export default function DisposalsForm({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              console.log("Form submitted. selectedAssets.length:", selectedAssets.length);
-              console.log("selectedDisposal:", selectedDisposal);
+              //console.log("Form submitted. selectedAssets.length:", selectedAssets.length);
+              //console.log("selectedDisposal:", selectedDisposal);
 
               if (selectedAssets.length > 1) {
-                console.log("Executing handleAddMultiple branch.");
+                //console.log("Executing handleAddMultiple branch.");
                 handleAddMultiple();
               } else if (selectedDisposal) {
-                console.log("Executing handleEdit branch.");
+                //console.log("Executing handleEdit branch.");
                 handleEdit();
               } else if (selectedAssets.length === 1) {
-                console.log("Executing handleAdd (single asset) branch.");
+                //console.log("Executing handleAdd (single asset) branch.");
                 handleAdd(
                   {
                     ...newDisposal,
@@ -262,7 +262,7 @@ export default function DisposalsForm({
                 setNewDisposal({});
                 onClose();
               } else {
-                console.log("No specific action taken (e.g., no assets selected for add, not editing).");
+                //console.log("No specific action taken (e.g., no assets selected for add, not editing).");
               }
             }}
           >

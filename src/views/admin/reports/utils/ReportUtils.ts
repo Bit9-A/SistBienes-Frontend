@@ -32,7 +32,7 @@ export const createDisposalForMissingGood = async (
     };
 
     const newDisposal = await createDesincorp(disposalData);
-    console.log("Desincorporación creada exitosamente:", newDisposal);
+    //console.log("Desincorporación creada exitosamente:", newDisposal);
     return newDisposal;
   } catch (error) {
     console.error("Error al crear la desincorporación para el bien faltante:", error);

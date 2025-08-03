@@ -109,7 +109,6 @@ export default function Dashboard(props: { [x: string]: any }) {
         if (storedUser) {
           const userData = JSON.parse(storedUser)
           localStorage.setItem("user", JSON.stringify({ ...userData, token: response.token }))
-          console.log("Token refrescado exitosamente.")
           setShowSessionWarning(false) // Ocultar advertencia después de refrescar
         }
       }

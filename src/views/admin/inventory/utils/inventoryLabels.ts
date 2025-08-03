@@ -37,7 +37,6 @@ export async function exportQRLabels(deptId: number, departamentoNombre: string)
     a.remove();
     window.URL.revokeObjectURL(url);
 
-    console.log('¡Archivo PDF de etiquetas QR descargado exitosamente!');
   } catch (error: any) {
     console.error('Error al descargar el archivo PDF de etiquetas QR:', error);
     alert(`Error: ${error.message}`);
