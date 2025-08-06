@@ -10,7 +10,7 @@ import {
   FormLabel,
   InputGroup,
   InputLeftElement,
-  Stack,
+  // Stack, // Ya no se usa
   Divider,
   useColorModeValue,
   Icon,
@@ -18,6 +18,7 @@ import {
   Badge,
   useBreakpointValue,
   Button,
+  // Grid, // Ya no se usa
 } from '@chakra-ui/react';
 import {
   FiCalendar,
@@ -131,12 +132,12 @@ const handleClear = () => {
       <Divider mb={4} />
 
       {/* Filter Controls */}
-      <Stack
-        direction={{ base: 'column', md: 'row' }}
-        spacing={4}
-        align={{ base: 'stretch', md: 'flex-end' }}
+      <Flex
+        flexWrap="wrap" // Permite que los elementos se envuelvan a la siguiente línea
+        gap={6} // Aumentado el espacio entre los elementos
+        alignItems="flex-end" // Alinea los elementos al final para que los labels queden alineados
       >
-        <FormControl>
+        <FormControl flexGrow={1} flexShrink={0} flexBasis={{ base: '100%', md: '180px', lg: '200px' }} maxWidth={{ base: 'full', md: '280px', lg: '320px' }}>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
             Buscar
           </FormLabel>
@@ -154,7 +155,7 @@ const handleClear = () => {
           </InputGroup>
         </FormControl>
         {canFilterByDept && (
-          <FormControl>
+          <FormControl flexGrow={1} flexShrink={0} flexBasis={{ base: '100%', md: '180px', lg: '200px' }} maxWidth={{ base: 'full', md: '280px', lg: '320px' }}>
             <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
               Departamento
             </FormLabel>
@@ -183,7 +184,7 @@ const handleClear = () => {
           </FormControl>
         )}
 
-        <FormControl>
+        <FormControl flexGrow={1} flexShrink={0} flexBasis={{ base: '100%', md: '180px', lg: '200px' }} maxWidth={{ base: 'full', md: '280px', lg: '320px' }}>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
             Fecha desde
           </FormLabel>
@@ -200,7 +201,7 @@ const handleClear = () => {
             />
           </InputGroup>
         </FormControl>
-        <FormControl>
+        <FormControl flexGrow={1} flexShrink={0} flexBasis={{ base: '100%', md: '180px', lg: '200px' }} maxWidth={{ base: 'full', md: '280px', lg: '320px' }}>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
             Fecha hasta
           </FormLabel>
@@ -217,7 +218,7 @@ const handleClear = () => {
             />
           </InputGroup>
         </FormControl>
-        <FormControl>
+        <FormControl flexGrow={1} flexShrink={0} flexBasis={{ base: '100%', md: '180px', lg: '200px' }} maxWidth={{ base: 'full', md: '280px', lg: '320px' }}>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
             Estado
           </FormLabel>
@@ -232,7 +233,7 @@ const handleClear = () => {
             <option value={-1}>Todos</option>
           </Select>
         </FormControl>
-        <FormControl>
+        <FormControl flexGrow={1} flexShrink={0} flexBasis={{ base: '100%', md: '180px', lg: '200px' }} maxWidth={{ base: 'full', md: '280px', lg: '320px' }}>
           <FormLabel fontSize="sm" fontWeight="medium" mb={1}>
             Orden
           </FormLabel>
@@ -248,7 +249,7 @@ const handleClear = () => {
             <option value="oldest">Más antiguos</option>
           </Select>
         </FormControl>
-      </Stack>
+      </Flex> {/* Cambiado de Grid a Flex con minWidth */}
     </Box>
   );
 };

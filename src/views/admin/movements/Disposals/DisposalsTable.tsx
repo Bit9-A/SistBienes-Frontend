@@ -18,7 +18,7 @@ import {
   AlertTitle,
   AlertDescription,
   useToast,
-  Button, // Añadir Button aquí
+  Button,
 } from "@chakra-ui/react"
 import { FiTrash2 } from "react-icons/fi"
 import {
@@ -28,21 +28,20 @@ import {
   deleteDesincorp,
   Desincorp,
 } from "api/IncorpApi"
-import { filterDisposals } from "./utils/DisposalsUtils"
 import DisposalsFilters from "./components/DisposalsFilters"
 import DisposalsForm from "./components/DisposalsForm"
 import DesktopTable from "./components/DesktopTable"
 import MobileCards from "./components/MobileCard"
-import { ExportBM2Modal } from "./components/ExportBM2Modal" // Importar el nuevo modal
+import { ExportBM2Modal } from "./components/ExportBM2Modal"
 import { type Department, getDepartments } from "api/SettingsApi"
 import { type ConceptoMovimiento, getConceptosMovimientoDesincorporacion, getConceptosMovimientoIncorporacion } from "api/SettingsApi"
 import { type MovableAsset, getAssets, updateAsset } from "api/AssetsApi"
 import { type SubGroup, getSubGroupsM } from "api/SettingsApi"
 import { createTransferRecord } from "views/admin/transfers/utils/createTransfers";
-import { type Transfer, type CreateTransferPayload } from "api/TransferApi";
+import { type CreateTransferPayload } from "api/TransferApi";
 import { createIncorp, type Incorp } from "api/IncorpApi";
-import { exportBM2ByDepartment } from "views/admin/inventory/utils/inventoryExcel"; // Importar la función de exportación BM2
-import { createNotificationAction } from "views/admin/notifications/utils/NotificationsUtils"; // Importar la función de notificación
+import { exportBM2ByDepartment } from "views/admin/inventory/utils/inventoryExcel";
+import { createNotificationAction } from "views/admin/notifications/utils/NotificationsUtils";
 
 import { getProfile } from "api/UserApi";
 import { filterByUserProfile } from "../../../../utils/filterByUserProfile";
@@ -52,12 +51,12 @@ export default function DisposalsTable() {
   const [selectedDisposal, setSelectedDisposal] = useState<Desincorp | null>(null)
   const [newDisposal, setNewDisposal] = useState<Partial<Desincorp>>({})
   const [filterDept, setFilterDept] = useState<string>("all")
-  const [selectedMonth, setSelectedMonth] = useState<string>("") // Nuevo estado para el mes
-  const [selectedYear, setSelectedYear] = useState<string>("") // Nuevo estado para el año
+  const [selectedMonth, setSelectedMonth] = useState<string>("")
+  const [selectedYear, setSelectedYear] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { isOpen: isBM2ModalOpen, onOpen: onBM2ModalOpen, onClose: onBM2ModalClose } = useDisclosure(); // Para el modal BM2
+  const { isOpen: isBM2ModalOpen, onOpen: onBM2ModalOpen, onClose: onBM2ModalClose } = useDisclosure();
   const [departments, setDepartments] = useState<Department[]>([])
   const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([])
   const [assets, setAssets] = useState<MovableAsset[]>([])
@@ -70,34 +69,30 @@ export default function DisposalsTable() {
   const [canFilterByDept, setCanFilterByDept] = useState(false);
   const toast = useToast()
 
-  // UI theme values
   const borderColor = useColorModeValue("gray.200", "gray.700")
   const headerBg = useColorModeValue("gray.100", "gray.800")
   const hoverBg = useColorModeValue("gray.50", "gray.700")
   const cardBg = useColorModeValue("white", "gray.800")
   const textColor = useColorModeValue("gray.800", "white")
 
-  // Responsive values
   const isMobile = useBreakpointValue({ base: true, md: false })
   const tableSize = useBreakpointValue({ base: "sm", md: "md" })
 
-  // Función para cargar las desincorporaciones
   const fetchDisposals = async () => {
     try {
       setLoading(true);
       const data = await getDesincorps();
       setDisposals(data);
-      setError(null); // Limpiar errores si la carga es exitosa
+      setError(null);
     } catch (error: any) {
       if (
         error?.response?.status === 404 &&
         error?.response?.data?.message === "No se encontraron desincorporaciones"
       ) {
-        setDisposals([]); // No hay registros, pero no es un error
-        setError(null); // Importante: limpiar cualquier error previo si es un 404
+        setDisposals([]);
+        setError(null);
       } else {
         setError("Error al cargar los datos de desincorporaciones. Por favor, intenta nuevamente.");
-       // console.error("Error fetching data:", error);
       }
     } finally {
       setLoading(false);
@@ -115,8 +110,6 @@ export default function DisposalsTable() {
     fetchProfileAndFilter();
   }, [disposals]);
 
-
-  // Load data on mount
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -125,10 +118,10 @@ export default function DisposalsTable() {
           getConceptosMovimientoDesincorporacion(),
           getAssets(),
           getSubGroupsM(),
-          getConceptosMovimientoIncorporacion(), // Obtener conceptos de incorporación
+          getConceptosMovimientoIncorporacion(),
         ]);
         setDepartments(deptData);
-        setConcepts(conceptDesincorpData); // Estos son los conceptos de desincorporación
+        setConcepts(conceptDesincorpData);
         setAssets(assetData);
         setSubgroups(subGroupData);
 
@@ -137,10 +130,7 @@ export default function DisposalsTable() {
         );
         if (conceptoTraspasoIncorp) {
           setIncorpConceptoTraspasoId(conceptoTraspasoIncorp.id);
-        } else {
-         // console.warn("Concepto de incorporación con código '02' no encontrado.");
         }
-
       } catch (error) {
         toast({
           title: "Error al cargar catálogos",
@@ -149,12 +139,11 @@ export default function DisposalsTable() {
           duration: 5000,
           isClosable: true,
         });
-       // console.error("Error fetching catalogs:", error);
       }
     };
 
     fetchCatalogs();
-    fetchDisposals(); // Llamar a la función de carga de desincorporaciones
+    fetchDisposals();
   }, []);
 
   const processTransferAndAssetUpdate = async (
@@ -164,7 +153,6 @@ export default function DisposalsTable() {
     bienesToTransfer: number[],
     observaciones: string,
   ) => {
-    ////console.log("Executing processTransferAndAssetUpdate");
     if (!userProfile?.id) {
       toast({
         title: "Error",
@@ -186,7 +174,6 @@ export default function DisposalsTable() {
         responsable_id: userProfile.id,
         observaciones: observaciones,
       };
-      ////console.log("Transfer Payload:", transferPayload);
       await createTransferRecord(transferPayload);
       toast({
         title: "Traslado creado",
@@ -196,13 +183,11 @@ export default function DisposalsTable() {
         isClosable: true,
       });
 
-      // Actualizar el departamento de los bienes
       for (const bienId of bienesToTransfer) {
         try {
           const assetToUpdate = assets.find(asset => asset.id === bienId);
           if (assetToUpdate) {
             const updatedAsset = { ...assetToUpdate, dept_id: destino_id };
-            ////console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
             await updateAsset(bienId, updatedAsset);
             toast({
               title: "Bien actualizado",
@@ -211,8 +196,6 @@ export default function DisposalsTable() {
               duration: 1500,
               isClosable: true,
             });
-          } else {
-           // console.warn(`Asset with ID ${bienId} not found in local state.`);
           }
         } catch (assetUpdateError) {
           toast({
@@ -222,7 +205,6 @@ export default function DisposalsTable() {
             duration: 3000,
             isClosable: true,
           });
-         // console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
         }
       }
     } catch (error) {
@@ -233,17 +215,15 @@ export default function DisposalsTable() {
         duration: 3000,
         isClosable: true,
       });
-     // console.error("Error al crear traslado:", error);
     }
   };
 
-  const handleAdd = async (
-    disposalData?: Partial<Desincorp>,
+  const processDisposal = async (
+    data: Partial<Desincorp>,
     deptDestinoId?: number,
     allConcepts?: ConceptoMovimiento[],
+    isMultiple: boolean = false
   ) => {
-   //// console.log("Executing handleAdd (single disposal)");
-    const data = disposalData || newDisposal;
     const bien_id = Number(data.bien_id);
     const fecha = data.fecha ? data.fecha : "";
     const valor = Number(data.valor);
@@ -259,7 +239,7 @@ export default function DisposalsTable() {
         duration: 3000,
         isClosable: true,
       });
-      return;
+      return false;
     }
 
     const dataToSend = {
@@ -279,12 +259,9 @@ export default function DisposalsTable() {
       const assetName = assets.find((a) => a.id === bien_id)?.numero_identificacion || `Bien ID: ${bien_id}`;
       const deptOrigenName = departments.find((d) => d.id === dept_id)?.nombre || 'desconocido';
 
-     //// console.log(`Single Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
-
       if (selectedConcept?.codigo === '51' && deptDestinoId && incorpConceptoTraspasoId) {
         const deptDestinoName = departments.find((d) => d.id === deptDestinoId)?.nombre || 'desconocido';
 
-        // Crear la incorporación por traspaso
         const incorpDataForTransfer: Omit<Incorp, "id"> = {
           bien_id: bien_id,
           fecha: fecha,
@@ -303,18 +280,15 @@ export default function DisposalsTable() {
           isClosable: true,
         });
 
-        // Notificación para el departamento de origen (desincorporación por traspaso)
         await createNotificationAction({
           dept_id: dept_id,
           descripcion: `El bien ${assetName} ha sido desincorporado de su departamento por traspaso al departamento ${deptDestinoName}.`,
         });
-        // Notificación para el departamento de destino (incorporación por traspaso)
         await createNotificationAction({
           dept_id: deptDestinoId,
           descripcion: `El bien ${assetName} ha sido incorporado a su departamento por traspaso desde el departamento ${deptOrigenName}.`,
         });
 
-        // Actualizar el departamento del bien y crear el registro de traslado
         await processTransferAndAssetUpdate(
           fecha,
           dept_id,
@@ -323,18 +297,15 @@ export default function DisposalsTable() {
           data.observaciones || "",
         );
       } else {
-        // Notificación para el departamento de origen (desincorporación normal)
         await createNotificationAction({
           dept_id: dept_id,
           descripcion: `El bien ${assetName} ha sido desincorporado de su departamento por concepto de ${selectedConcept?.nombre || 'desconocido'}.`,
         });
 
-        // Cambiar isActive del bien a 0 si no es por traspaso
         try {
           const assetToUpdate = assets.find(asset => asset.id === bien_id);
           if (assetToUpdate) {
             const updatedAsset = { ...assetToUpdate, isActive: 0 };
-           //// console.log(`Updating asset ${bien_id} isActive to 0.`);
             await updateAsset(bien_id, updatedAsset);
             toast({
               title: "Estado del bien actualizado",
@@ -352,28 +323,41 @@ export default function DisposalsTable() {
             duration: 3000,
             isClosable: true,
           });
-         // console.error(`Error al actualizar el estado del bien ${bien_id}:`, assetUpdateError);
         }
       }
 
-      toast({
-        title: "Desincorporación creada",
-        description: "La desincorporación se ha creado exitosamente",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      fetchDisposals(); // Recargar datos después de añadir
-      onClose(); // Cerrar el modal después de añadir
+      if (!isMultiple) {
+        toast({
+          title: "Desincorporación creada",
+          description: "La desincorporación se ha creado exitosamente",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+      return true;
     } catch (error) {
       toast({
         title: "Error",
-        description: "Error al crear desincorporación",
+        description: `Error al crear desincorporación para el bien ${bien_id}`,
         status: "error",
         duration: 3000,
         isClosable: true,
       });
-     // console.error("Error al crear desincorporación:", error);
+      return false;
+    }
+  };
+
+  const handleAdd = async (
+    disposalData?: Partial<Desincorp>,
+    deptDestinoId?: number,
+    allConcepts?: ConceptoMovimiento[],
+  ) => {
+    const data = disposalData || newDisposal;
+    const success = await processDisposal(data, deptDestinoId, allConcepts);
+    if (success) {
+      fetchDisposals();
+      onClose();
     }
   };
 
@@ -383,8 +367,6 @@ export default function DisposalsTable() {
     allConcepts: ConceptoMovimiento[],
     selectedAssetIds: number[],
   ) => {
-   // console.log("Executing handleMultipleAdd (multiple disposals)");
-   // console.log("User Profile at start of handleMultipleAdd:", userProfile);
     if (!userProfile?.id) {
       toast({
         title: "Error",
@@ -396,81 +378,33 @@ export default function DisposalsTable() {
       return;
     }
 
-    const nuevos: Desincorp[] = [];
     const bienesToTransfer: number[] = [];
-    let isTransferConcept = false;
     let transferFecha = "";
     let transferOrigenId = 0;
     let transferObservaciones = "";
+    let allSuccess = true;
 
     for (const data of disposalDataArray) {
-      const bien_id = Number(data.bien_id);
-      const fecha = data.fecha ? data.fecha : "";
-      const valor = Number(data.valor);
-      const cantidad = Number(data.cantidad);
-      const concepto_id = Number(data.concepto_id);
-      const dept_id = Number(data.dept_id);
-
-      if (!bien_id || !fecha || !valor || !cantidad || !concepto_id || !dept_id) {
-        toast({
-          title: "Campos requeridos",
-          description: "Todos los campos son obligatorios para cada bien.",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
+      const success = await processDisposal(data, deptDestinoId, allConcepts, true);
+      if (!success) {
+        allSuccess = false;
+        break;
       }
 
-      const dataToSend = {
-        bien_id,
-        fecha,
-        valor,
-        cantidad,
-        concepto_id,
-        dept_id,
-        observaciones: data.observaciones,
-      };
-
-      try {
-        await createDesincorp(dataToSend as Omit<Desincorp, "id">); // No necesitamos el 'created' aquí si recargamos
-        // nuevos.push(created); // No es necesario si recargamos todos los datos al final
-
-        const selectedConcept = allConcepts.find((c) => c.id === concepto_id);
-        const assetName = assets.find((a) => a.id === bien_id)?.numero_identificacion || `Bien ID: ${bien_id}`;
-        const deptOrigenName = departments.find((d) => d.id === dept_id)?.nombre || 'desconocido';
-
-       // console.log(`Multiple Disposal: Bien ID: ${bien_id}, Concepto ID: ${concepto_id}, Selected Concept:`, selectedConcept);
-
-        if (selectedConcept?.codigo === '51') {
-          isTransferConcept = true;
-          bienesToTransfer.push(bien_id);
-          transferFecha = fecha;
-          transferOrigenId = dept_id;
-          transferObservaciones = data.observaciones || "";
-        } else {
-          // Notificación para el departamento de origen (desincorporación normal)
-          await createNotificationAction({
-            dept_id: dept_id,
-            descripcion: `El bien ${assetName} ha sido desincorporado de su departamento por concepto de ${selectedConcept?.nombre || 'desconocido'}.`,
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: `Error al crear desincorporación para el bien ${bien_id}`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-       // console.error(`Error al crear desincorporación para el bien ${bien_id}:`, error);
-        return; // Stop if one fails
+      const selectedConcept = allConcepts.find((c) => c.id === Number(data.concepto_id));
+      if (selectedConcept?.codigo === '51') {
+        bienesToTransfer.push(Number(data.bien_id));
+        transferFecha = data.fecha || "";
+        transferOrigenId = Number(data.dept_id);
+        transferObservaciones = data.observaciones || "";
       }
     }
 
-   // console.log("Transfer conditions check: isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id);
+    if (!allSuccess) {
+      return;
+    }
 
-    if (isTransferConcept && deptDestinoId && bienesToTransfer.length > 0 && incorpConceptoTraspasoId) {
+    if (bienesToTransfer.length > 0 && deptDestinoId && incorpConceptoTraspasoId) {
       const deptDestinoName = departments.find((d) => d.id === deptDestinoId)?.nombre || 'desconocido';
       const deptOrigenName = departments.find((d) => d.id === transferOrigenId)?.nombre || 'desconocido';
 
@@ -488,12 +422,10 @@ export default function DisposalsTable() {
           };
           await createIncorp(incorpDataForTransfer);
 
-          // Notificación para el departamento de origen (desincorporación por traspaso)
           await createNotificationAction({
             dept_id: transferOrigenId,
             descripcion: `El bien ${asset.numero_identificacion} ha sido desincorporado de su departamento por traspaso al departamento ${deptDestinoName}.`,
           });
-          // Notificación para el departamento de destino (incorporación por traspaso)
           await createNotificationAction({
             dept_id: deptDestinoId,
             descripcion: `El bien ${asset.numero_identificacion} ha sido incorporado a su departamento por traspaso desde el departamento ${deptOrigenName}.`,
@@ -515,8 +447,6 @@ export default function DisposalsTable() {
         bienesToTransfer,
         transferObservaciones,
       );
-    } else {
-     // console.log("Transfer conditions not met. isTransferConcept:", isTransferConcept, "deptDestinoId:", deptDestinoId, "bienesToTransfer.length:", bienesToTransfer.length, "userProfile?.id:", userProfile?.id, "incorpConceptoTraspasoId:", incorpConceptoTraspasoId);
     }
 
     toast({
@@ -530,89 +460,10 @@ export default function DisposalsTable() {
     onClose();
   };
 
-  const handleTransferAndAssetUpdate = async (
-    fecha: string,
-    origen_id: number,
-    destino_id: number,
-    bienesToTransfer: number[],
-    observaciones: string,
-  ) => {
-    if (!userProfile?.id) {
-      toast({
-        title: "Error",
-        description: "No se pudo obtener el perfil del usuario para crear el traslado.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      const transferPayload: CreateTransferPayload = {
-        fecha: fecha,
-        cantidad: bienesToTransfer.length,
-        origen_id: origen_id,
-        destino_id: destino_id,
-        bienes: bienesToTransfer,
-        responsable_id: userProfile.id,
-        observaciones: observaciones,
-      };
-     // console.log("Transfer Payload:", transferPayload);
-      await createTransferRecord(transferPayload);
-      toast({
-        title: "Traslado creado",
-        description: "Se ha creado un traslado con los bienes desincorporados.",
-        status: "info",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      // Actualizar el departamento de los bienes
-      for (const bienId of bienesToTransfer) {
-        try {
-          const assetToUpdate = assets.find(asset => asset.id === bienId);
-          if (assetToUpdate) {
-            const updatedAsset = { ...assetToUpdate, dept_id: destino_id };
-           // console.log(`Updating asset ${bienId} with new dept_id: ${destino_id}`);
-            await updateAsset(bienId, updatedAsset);
-            toast({
-              title: "Bien actualizado",
-              description: `El departamento del bien ${bienId} ha sido actualizado.`,
-              status: "success",
-              duration: 1500,
-              isClosable: true,
-            });
-          } else {
-           // console.warn(`Asset with ID ${bienId} not found in local state.`);
-          }
-        } catch (assetUpdateError) {
-          toast({
-            title: "Error",
-            description: `Error al actualizar el departamento del bien ${bienId}.`,
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-         // console.error(`Error al actualizar el bien ${bienId}:`, assetUpdateError);
-        }
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Error al crear el traslado asociado.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-     // console.error("Error al crear traslado:", error);
-    }
-  };
-
   const handleEdit = async () => {
     if (selectedDisposal && newDisposal) {
       try {
-        await updateDesincorp(selectedDisposal.id, newDisposal) // No necesitamos el 'updated' aquí si recargamos
+        await updateDesincorp(selectedDisposal.id, newDisposal)
         
         toast({
           title: "Desincorporación actualizada",
@@ -621,7 +472,7 @@ export default function DisposalsTable() {
           duration: 3000,
           isClosable: true,
         })
-        fetchDisposals(); // Recargar datos después de editar
+        fetchDisposals();
         setSelectedDisposal(null)
         setNewDisposal({})
         onClose()
@@ -668,7 +519,6 @@ export default function DisposalsTable() {
     setSelectedYear(year)
   }
 
-  // Filtro por mes y año
   const filteredDisposals = useMemo(() => {
     let filtered = profileDisposals;
 
@@ -729,7 +579,6 @@ export default function DisposalsTable() {
         duration: 5000,
         isClosable: true,
       });
-     // console.error("Error exporting BM2:", error);
     }
   };
 

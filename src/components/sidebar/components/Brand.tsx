@@ -4,7 +4,7 @@ import { Flex, Icon, useColorModeValue, Image, Text } from '@chakra-ui/react';
 // Custom components
 import { HorizonLogo } from 'components/icons/Icons';
 import { HSeparator } from 'components/separator/Separator';
-import BannerAlcadia from 'assets/img/banner.png';
+import BannerAlcadia from 'assets/img/banner.webp';
 
 export function SidebarBrand() {
 	//   Chakra color mode
@@ -15,7 +15,7 @@ export function SidebarBrand() {
 	return (
 		<>
 		<Flex alignItems='center' flexDirection='column' bgColor={'type.primary'} >
-			<Image src={BannerAlcadia}></Image>
+			<Image src={BannerAlcadia} alt="Banner Alcaldía" loading="lazy" />
 			<Text fontFamily={'Roboto'} fontSize={'2xl'} textAlign={'center'} color={textColor}>{titleDepartament}</Text>
 			<HSeparator mb='20px' />
 		</Flex>

@@ -12,41 +12,18 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { FiUpload } from "react-icons/fi";
-import ColorPicker from "./ColorPicker";
 import { uploadConfigImage } from "../../../../api/SettingsApi"; // Asegúrate de que esta ruta sea correcta
+
 const GeneralSettings: React.FC = () => {
   const [primaryColor, setPrimaryColor] = useState("#310493"); // Color primario inicial
-  const [secondaryColor, setSecondaryColor] = useState("#00dafc"); // Color secundario inicial
   const [favicon, setFavicon] = useState<File | null>(null);
   const [banner, setBanner] = useState<File | null>(null);
-  const [logo, setLogo] = useState<File | null>(null);;
-  // Cargar colores desde localStorage al iniciar
+  const [logo, setLogo] = useState<File | null>(null);
+
   useEffect(() => {
-    const savedPrimaryColor = localStorage.getItem("primaryColor");
-    const savedSecondaryColor = localStorage.getItem("secondaryColor");
-
-    if (savedPrimaryColor) {
-      setPrimaryColor(savedPrimaryColor);
-      document.documentElement.style.setProperty("--chakra-colors-type-primary", savedPrimaryColor);
-    }
-
-    if (savedSecondaryColor) {
-      setSecondaryColor(savedSecondaryColor);
-      document.documentElement.style.setProperty("--chakra-colors-type-secondary", savedSecondaryColor);
-    }
+    document.documentElement.style.setProperty("--chakra-colors-type-primary", "#310493");
+    localStorage.setItem("primaryColor", "#310493");
   }, []);
-
-  const handlePrimaryColorChange = (color: string) => {
-    setPrimaryColor(color);
-    document.documentElement.style.setProperty("--chakra-colors-type-primary", color);
-    localStorage.setItem("primaryColor", color); // Guardar en localStorage
-  };
-
-  const handleSecondaryColorChange = (color: string) => {
-    setSecondaryColor(color);
-    document.documentElement.style.setProperty("--chakra-colors-type-secondary", color);
-    localStorage.setItem("secondaryColor", color); // Guardar en localStorage
-  };
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBanner(e.target.files?.[0] || null);
@@ -66,11 +43,8 @@ const GeneralSettings: React.FC = () => {
       if (logo) formData.append("logo", logo);
       if (banner) formData.append("banner", banner);
       if (favicon) formData.append("favicon", favicon);
-      // Agrega los campos de texto
       formData.append("colorprimario", primaryColor);
-      formData.append("colorsecundario", secondaryColor);
 
-      // Obtén el valor del input de nombre de la institución
       const nombreInput = document.getElementById("nombreInstitucionInput") as HTMLInputElement | null;
       if (nombreInput && nombreInput.value) {
         formData.append("nombre_institucion", nombreInput.value);
@@ -160,19 +134,6 @@ const GeneralSettings: React.FC = () => {
             <Input type="file" id="logoInput" accept="image/*" opacity={0} position="absolute" top={0} left={0} w="100%" h="100%" cursor="pointer" onChange={handleLogoChange} />
           </Box>
         </FormControl>
-
-        {/* Color Pickers en disposición horizontal */}
-        <HStack spacing={8} align="stretch">
-          <FormControl>
-            <FormLabel>Color Primario</FormLabel>
-            <ColorPicker color={primaryColor} onColorChange={handlePrimaryColorChange} />
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Color Secundario</FormLabel>
-            <ColorPicker color={secondaryColor} onColorChange={handleSecondaryColorChange} />
-          </FormControl>
-        </HStack>
 
         <Button
           colorScheme="purple"

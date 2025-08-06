@@ -39,8 +39,10 @@ export default function AuditModule() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("login")
 
-  const { cardBg, textColor, borderColor, headerBg, hoverBg } = useThemeColors()
+  const { cardBg, borderColor, headerBg, hoverBg } = useThemeColors()
   const toast = useToast()
+    const textColor = useColorModeValue("gray.800", "white")
+  
 
   // Theme colors
   const tabBorderColor = useColorModeValue("gray.200", "gray.700")

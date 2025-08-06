@@ -311,23 +311,29 @@ export const AssetTable: React.FC<AssetTableProps> = ({
               Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
             </Text>
             <HStack spacing={2}>
-              <IconButton
-                aria-label="Página anterior"
-                icon={<FiChevronLeft />}
-                onClick={goToPreviousPage}
-                isDisabled={currentPage === 1}
-                size="sm"
-              />
+            <IconButton
+              aria-label="Página anterior"
+              icon={<FiChevronLeft />}
+              onClick={goToPreviousPage}
+              isDisabled={currentPage === 1}
+              size="sm"
+              bg={currentPage === 1 ? undefined : "type.primary"}
+              color={currentPage === 1 ? "gray.500" : "white"}
+              variant={currentPage === 1 ? "outline" : "solid"}
+            />
               <Text fontSize="sm">
                 {currentPage} de {totalPages}
               </Text>
-              <IconButton
-                aria-label="Página siguiente"
-                icon={<FiChevronRight />}
-                onClick={goToNextPage}
-                isDisabled={currentPage === totalPages}
-                size="sm"
-              />
+            <IconButton
+              aria-label="Página siguiente"
+              icon={<FiChevronRight />}
+              onClick={goToNextPage}
+              isDisabled={currentPage === totalPages}
+              size="sm"
+              bg={currentPage === totalPages ? undefined : "type.primary"}
+              color={currentPage === totalPages ? "gray.500" : "white"}
+              variant={currentPage === totalPages ? "outline" : "solid"}
+            />
             </HStack>
           </Flex>
         )}
@@ -447,13 +453,16 @@ export const AssetTable: React.FC<AssetTableProps> = ({
             Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
           </Text>
           <HStack spacing={2}>
-            <IconButton
-              aria-label="Página anterior"
-              icon={<FiChevronLeft />}
-              onClick={goToPreviousPage}
-              isDisabled={currentPage === 1}
-              size="sm"
-            />
+              <IconButton
+                aria-label="Página anterior"
+                icon={<FiChevronLeft />}
+                onClick={goToPreviousPage}
+                isDisabled={currentPage === 1}
+                size="sm"
+                bg={currentPage === 1 ? undefined : "type.primary"}
+                color={currentPage === 1 ? "gray.500" : "white"}
+                variant={currentPage === 1 ? "outline" : "solid"}
+              />
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageToShow
               if (totalPages <= 5) {
@@ -470,8 +479,9 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                   <Button
                     key={pageToShow}
                     onClick={() => goToPage(pageToShow)}
+                    bg={currentPage === pageToShow ? "type.primary" : undefined}
+                    color={currentPage === pageToShow ? "white" : "type.primary"}
                     variant={currentPage === pageToShow ? "solid" : "outline"}
-                    colorScheme={currentPage === pageToShow ? "purple" : "gray"}
                     size="sm"
                   >
                     {pageToShow}
@@ -480,13 +490,16 @@ export const AssetTable: React.FC<AssetTableProps> = ({
               }
               return null
             })}
-            <IconButton
-              aria-label="Página siguiente"
-              icon={<FiChevronRight />}
-              onClick={goToNextPage}
-              isDisabled={currentPage === totalPages}
-              size="sm"
-            />
+              <IconButton
+                aria-label="Página siguiente"
+                icon={<FiChevronRight />}
+                onClick={goToNextPage}
+                isDisabled={currentPage === totalPages}
+                size="sm"
+                bg={currentPage === totalPages ? undefined : "type.primary"}
+                color={currentPage === totalPages ? "gray.500" : "white"}
+                variant={currentPage === totalPages ? "outline" : "solid"}
+              />
           </HStack>
         </Flex>
       )}

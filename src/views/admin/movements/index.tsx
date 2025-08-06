@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, lazy, Suspense } from "react"
 import { useThemeColors } from "../../../theme/useThemeColors"
 import {
   Box,
@@ -15,19 +15,21 @@ import {
   Container,
   Badge,
   Icon,
+  Spinner, // Importar Spinner para el fallback
 } from "@chakra-ui/react"
 import { FiPackage, FiArchive } from "react-icons/fi"
-import IncorporationsTable from "./Incorporations/IncorporationsTable"
-import DisposalsTable from "./Disposals/DisposalsTable"
+
+// Carga perezosa de los componentes de tabla
+const IncorporationsTable = lazy(() => import("./Incorporations/IncorporationsTable"))
+const DisposalsTable = lazy(() => import("./Disposals/DisposalsTable"))
 
 export default function AssetManagementPage() {
   const [activeTab, setActiveTab] = useState("incorporations")
-  const { cardBg, headerBg, textColor } = useThemeColors()
+  const { cardBg } = useThemeColors()
+  const textColor = useColorModeValue("gray.800", "white")
+  
 
   const bg = useColorModeValue("gray.50", "gray.900")
-  const borderBottomColor = useColorModeValue("gray.200", "gray.600")
-  const bgActive = useColorModeValue("blue.50", "blue.900")
-  const borderColor = useColorModeValue("blue.500", "blue.300")
   const hoverBg = useColorModeValue("gray.100", "gray.700")
   const tabBorderColor = useColorModeValue("gray.200", "gray.700")
 
@@ -132,10 +134,18 @@ export default function AssetManagementPage() {
           </CardBody>
         </Card>
 
-        {/* Tab Content */}
+        {/* Contenido de la pestaña */}
         <Box>
-          {activeTab === "incorporations" && <IncorporationsTable />}
-          {activeTab === "disposals" && <DisposalsTable />}
+          <Suspense
+            fallback={
+              <Flex justify="center" align="center" minH="200px">
+                <Spinner size="xl" color="blue.500" />
+              </Flex>
+            }
+          >
+            {activeTab === "incorporations" && <IncorporationsTable />}
+            {activeTab === "disposals" && <DisposalsTable />}
+          </Suspense>
         </Box>
       </Container>
     </Box>

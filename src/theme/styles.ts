@@ -5,7 +5,6 @@ export const globalStyles = {
       title: "#4632da",
       primary: "#310493",
       cbutton: "#ffffff",
-      secondary: "#00dafc",
       cardBg: "white",
       headerBg: "gray.50",
       borderColor:"gray.200",

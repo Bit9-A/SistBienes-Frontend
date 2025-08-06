@@ -78,9 +78,11 @@ const NotificationsHistory = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const { cardBg, textColor, borderColor, headerBg, hoverBg } =
+  const { cardBg, borderColor, headerBg, hoverBg } =
     useThemeColors();
   const toast = useToast();
+    const textColor = useColorModeValue("gray.800", "white")
+  
 
   // Theme colors
   const bgColor = useColorModeValue('gray.50', 'gray.900');

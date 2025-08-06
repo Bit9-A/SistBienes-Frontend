@@ -15,25 +15,29 @@ import {
   Badge,
   Icon,
   useToast,
-  HStack,
-  VStack,
-  useBreakpointValue,
+  // HStack, // Se movió a ExportButtons
+  // VStack, // Se movió a ExportButtons
+  // useBreakpointValue, // Se movió a ExportButtons
 } from "@chakra-ui/react"
 import { BsBox2 } from "react-icons/bs"
-import { FiPackage, FiDownload, FiFileText, FiTag } from "react-icons/fi"
+import { FiPackage } from "react-icons/fi"
+import React, { lazy, Suspense } from "react"
 import { AssetTable } from "./components/AssetTable"
-import { AssetForm } from "./components/AssetForm"
 import { AssetFilters } from "./components/AssetFilters"
 import { handleAddAsset, handleEditAsset, handleDeleteAsset } from "./utils/inventoryUtils"
 import { getAssets, getMarcas, getModelos, type MovableAsset } from "../../../api/AssetsApi"
 import { getDepartments, getSubGroupsM, getParroquias } from "../../../api/SettingsApi"
 import axiosInstance from "../../../utils/axiosInstance"
-import { getProfile } from "api/UserApi"
-import { exportBM1WithMarkers, generateBM4Pdf } from "views/admin/inventory/utils/inventoryExcel"
-import { ExportBM1Modal } from "./components/ExportBM1Modal"
-import { ExportBM4Modal } from "./components/ExportBM4Modal"
-import { exportQRLabels } from "views/admin/inventory/utils/inventoryLabels"
-import { ExportQRLabelsModal } from "./components/ExportQRLabelsModal"
+import { getProfile, UserProfile } from "api/UserApi"
+import { exportBM1WithMarkers, generateBM4Pdf } from "views/admin/inventory/utils/inventoryExcel" // Reimportar
+import { exportQRLabels } from "views/admin/inventory/utils/inventoryLabels" // Reimportar
+
+// Carga diferida de componentes modales y formularios
+const AssetForm = lazy(() => import("./components/AssetForm").then(module => ({ default: module.AssetForm })));
+const ExportBM1Modal = lazy(() => import("./components/ExportBM1Modal").then(module => ({ default: module.ExportBM1Modal })));
+const ExportBM4Modal = lazy(() => import("./components/ExportBM4Modal").then(module => ({ default: module.ExportBM4Modal })));
+const ExportQRLabelsModal = lazy(() => import("./components/ExportQRLabelsModal").then(module => ({ default: module.ExportQRLabelsModal })));
+const ExportButtons = lazy(() => import("./components/ExportButtons").then(module => ({ default: module.ExportButtons })));
 
 export default function Inventory() {
   const [assets, setAssets] = useState([])
@@ -54,10 +58,6 @@ export default function Inventory() {
   const [isBM4ModalOpen, setIsBM4ModalOpen] = useState(false)
 
   const toast = useToast()
-
-  // Responsive values
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
 
   // Obtener los estados de bienes /goods-status
   const getAssetStates = async () => {
@@ -108,6 +108,13 @@ export default function Inventory() {
         setAssets(assetsResult.value)
       } else {
         console.error("Error fetching assets:", assetsResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los bienes.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
         setAssets([])
       }
 
@@ -115,6 +122,13 @@ export default function Inventory() {
         setDepartments(departmentsResult.value)
       } else {
         console.error("Error fetching departments:", departmentsResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los departamentos.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
         setDepartments([])
       }
 
@@ -122,6 +136,13 @@ export default function Inventory() {
         setSubgroups(subgroupsResult.value)
       } else {
         console.error("Error fetching subgroups:", subgroupsResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los subgrupos.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
         setSubgroups([])
       }
 
@@ -129,6 +150,13 @@ export default function Inventory() {
         setMarcas(marcasResult.value)
       } else {
         console.error("Error fetching marcas:", marcasResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar las marcas.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
         setMarcas([])
       }
 
@@ -136,6 +164,13 @@ export default function Inventory() {
         setModelos(modelosResult.value)
       } else {
         console.error("Error fetching modelos:", modelosResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los modelos.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
         setModelos([])
       }
 
@@ -143,6 +178,13 @@ export default function Inventory() {
         setParroquias(parishResult.value)
       } else {
         console.error("Error fetching parroquias:", parishResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar las parroquias.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
         setParroquias([])
       }
 
@@ -150,10 +192,24 @@ export default function Inventory() {
         setAssetStates(assetStatesResult.value)
       } else {
         console.error("Error fetching asset states:", assetStatesResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los estados de bienes.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
         setAssetStates([])
       }
     } catch (error) {
       console.error("Unhandled error in fetchAllData:", error)
+      toast({
+        title: "Error crítico de carga",
+        description: "Ocurrió un error inesperado al cargar los datos iniciales.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
     }
   }
 
@@ -162,34 +218,46 @@ export default function Inventory() {
     fetchAllData()
   }, [])
 
-  // Solo mostrar assets del departamento del usuario autenticado
+  // Obtener el perfil del usuario una vez al montar el componente
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchProfile = async () => {
       try {
         const profile = await getProfile()
         setUserProfile(profile)
-        if (profile?.tipo_usuario === 1 || profile?.dept_nombre === "Bienes") {
-          setUserAssets(assets)
-          setCanFilterByDept(true)
-        } else if (profile?.dept_id) {
-          const filtered = assets.filter((asset) => asset.dept_id === profile.dept_id)
-          setUserAssets(filtered)
-          setCanFilterByDept(false)
-        } else {
-          setUserAssets(assets)
-          setCanFilterByDept(false)
-        }
       } catch (error) {
         console.error("Error fetching user profile:", error)
+        toast({
+          title: "Error al cargar perfil",
+          description: "No se pudo cargar la información del perfil del usuario.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+      }
+    }
+    fetchProfile()
+  }, []) // Se ejecuta solo una vez al montar
+
+  // Filtrar assets basados en el perfil del usuario y los assets disponibles
+  useEffect(() => {
+    if (userProfile && assets.length > 0) {
+      if (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes") {
+        setUserAssets(assets)
+        setCanFilterByDept(true)
+      } else if (userProfile.dept_id) {
+        const filtered = assets.filter((asset) => asset.dept_id === userProfile.dept_id)
+        setUserAssets(filtered)
+        setCanFilterByDept(false)
+      } else {
         setUserAssets(assets)
         setCanFilterByDept(false)
       }
+    } else if (!userProfile && assets.length > 0) {
+      // Si no hay perfil de usuario pero sí hay assets, mostrar todos los assets
+      setUserAssets(assets)
+      setCanFilterByDept(false)
     }
-
-    if (assets.length > 0) {
-      fetchUserProfile()
-    }
-  }, [assets])
+  }, [assets, userProfile]) // Depende de assets y userProfile
 
   // Filtrar assets cada vez que cambian los filtros o los assets originales
   useEffect(() => {
@@ -253,6 +321,13 @@ export default function Inventory() {
       fetchAllData() // Re-fetch data to update the table
     } catch (error) {
       console.error("Error saving asset:", error)
+      toast({
+        title: "Error al guardar bien",
+        description: "No se pudo guardar el bien. Intente de nuevo.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
     }
   }
 
@@ -262,6 +337,13 @@ export default function Inventory() {
       fetchAllData() // Re-fetch data to update the table
     } catch (error) {
       console.error("Error deleting asset:", error)
+      toast({
+        title: "Error al eliminar bien",
+        description: "No se pudo eliminar el bien. Intente de nuevo.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
     }
   }
 
@@ -391,7 +473,7 @@ export default function Inventory() {
 
         {/* Tab Content */}
         <Box>
-          {/* Botones de exportación responsive */}
+          {/* Botones de exportación */}
           <Card
             bg={cardBg}
             shadow="md"
@@ -401,85 +483,16 @@ export default function Inventory() {
             mb={{ base: 4, md: 6 }}
           >
             <CardBody p={{ base: 3, md: 4 }}>
-              {isMobile || isTablet ? (
-                <VStack spacing={3} align="stretch">
-                  <Button
-                    colorScheme="green"
-                    leftIcon={<FiDownload />}
-                    size={{ base: "md", md: "lg" }}
-                    onClick={() => {
-                      if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                        setIsExportModalOpen(true)
-                      } else {
-                        exportBM1WithMarkers(userProfile?.dept_id, userProfile?.dept_nombre)
-                      }
-                    }}
-                  >
-                    Exportar a Excel
-                  </Button>
-                  <Button
-                    colorScheme="purple"
-                    leftIcon={<FiTag />}
-                    size={{ base: "md", md: "lg" }}
-                    onClick={() => {
-                      if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                        setIsQRLabelsModalOpen(true)
-                      } else {
-                        exportQRLabels(userProfile?.dept_id, userProfile?.dept_nombre)
-                      }
-                    }}
-                  >
-                    Exportar Etiquetas QR
-                  </Button>
-                  <Button
-                    colorScheme="orange"
-                    leftIcon={<FiFileText />}
-                    size={{ base: "md", md: "lg" }}
-                    onClick={() => setIsBM4ModalOpen(true)}
-                  >
-                    Exportar BM-4
-                  </Button>
-                </VStack>
-              ) : (
-                <HStack spacing={3} justify="flex-end" wrap="wrap">
-                  <Button
-                    colorScheme="green"
-                    leftIcon={<FiDownload />}
-                    size="md"
-                    onClick={() => {
-                      if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                        setIsExportModalOpen(true)
-                      } else {
-                        exportBM1WithMarkers(userProfile?.dept_id, userProfile?.dept_nombre)
-                      }
-                    }}
-                  >
-                    Exportar a Excel
-                  </Button>
-                  <Button
-                    colorScheme="purple"
-                    leftIcon={<FiTag />}
-                    size="md"
-                    onClick={() => {
-                      if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                        setIsQRLabelsModalOpen(true)
-                      } else {
-                        exportQRLabels(userProfile?.dept_id, userProfile?.dept_nombre)
-                      }
-                    }}
-                  >
-                    Exportar Etiquetas QR
-                  </Button>
-                  <Button
-                    colorScheme="orange"
-                    leftIcon={<FiFileText />}
-                    size="md"
-                    onClick={() => setIsBM4ModalOpen(true)}
-                  >
-                    Exportar BM-4
-                  </Button>
-                </HStack>
-              )}
+              <Suspense fallback={<Box>Cargando botones de exportación...</Box>}>
+                <ExportButtons
+                  userProfile={userProfile}
+                  setIsExportModalOpen={setIsExportModalOpen}
+                  setIsQRLabelsModalOpen={setIsQRLabelsModalOpen}
+                  setIsBM4ModalOpen={setIsBM4ModalOpen}
+                  onExportBM1={exportBM1WithMarkers} // Pasar la función como prop
+                  onExportQRLabels={exportQRLabels} // Pasar la función como prop
+                />
+              </Suspense>
             </CardBody>
           </Card>
 
@@ -579,7 +592,11 @@ export default function Inventory() {
                 onClose={() => setIsBM4ModalOpen(false)}
                 departments={departments}
                 userProfile={userProfile}
-                onExport={async (deptId, mes, año, responsableId, departamentoNombre) => {
+                onExport={async (deptId: number | undefined, mes: number, año: number, responsableId: number | undefined, departamentoNombre: string | undefined) => {
+                  // La lógica de toast y generateBM4Pdf se ha movido a ExportButtons.tsx
+                  // Aquí solo se necesita llamar a la función que maneja la exportación si es necesario,
+                  // o simplemente cerrar el modal si la lógica ya está en ExportButtons.
+                  // Por ahora, se mantiene la llamada a generateBM4Pdf para asegurar la funcionalidad.
                   try {
                     await generateBM4Pdf(deptId, mes, año, responsableId, departamentoNombre)
                     toast({

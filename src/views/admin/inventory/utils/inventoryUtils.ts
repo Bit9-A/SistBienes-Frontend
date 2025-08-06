@@ -37,6 +37,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       });
     } catch (error) {
       console.error("Error al crear el bien:", error);
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -59,6 +60,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       });
     } catch (error) {
       console.error("Error al actualizar el bien:", error);
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -75,6 +77,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       });
     } catch (error) {
       console.error("Error al eliminar el bien:", error);
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -92,7 +95,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       return createdMarca;
     } catch (error) {
       console.error("Error al crear la marca:", error);
-      throw error;
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -114,6 +117,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       });
     } catch (error) {
       console.error("Error al actualizar la marca:", error);
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -130,6 +134,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       });
     } catch (error) {
       console.error("Error al eliminar la marca:", error);
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -155,7 +160,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       return createdModelo;
     } catch (error) {
       console.error("Error al crear el modelo:", error);
-      throw error;
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -177,6 +182,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       });
     } catch (error) {
       console.error("Error al actualizar el modelo:", error);
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
   
@@ -193,6 +199,7 @@ import { logCustomAction } from "views/admin/audit/utils/AuditUtils";
       });
     } catch (error) {
       console.error("Error al eliminar el modelo:", error);
+      throw error; // Lanzar el error para que el componente lo maneje
     }
   };
 
@@ -203,7 +210,7 @@ export const fetchAssetsByDepartment = async (departmentId: number): Promise<Mov
         return assets;
     } catch (error) {
         console.error("Error al obtener los bienes por departamento:", error);
-        throw error;
+        throw error; // Lanzar el error para que el componente lo maneje
     }
 }
 
@@ -214,6 +221,6 @@ export const fetchAllAssets = async (): Promise<MovableAsset[]> => {
         return assets;
     } catch (error) {
         console.error("Error al obtener todos los bienes:", error);
-        throw error;
+        throw error; // Lanzar el error para que el componente lo maneje
     }
 }
