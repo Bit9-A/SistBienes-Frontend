@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import type React from "react"
-import { useState, useEffect } from "react"
+import type React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Table,
@@ -26,18 +26,28 @@ import {
   CardHeader,
   SimpleGrid,
   useColorModeValue,
-} from "@chakra-ui/react"
-import { FiEdit, FiTrash2, FiChevronLeft, FiChevronRight, FiDatabase, FiEye } from "react-icons/fi"
-import { v4 as uuidv4 } from "uuid"
-import { AssetDetailsModal } from "./AssetDetails"
-import { getComponentsByBienId, type Component } from "../../../../api/ComponentsApi"
+} from '@chakra-ui/react';
+import {
+  FiEdit,
+  FiTrash2,
+  FiChevronLeft,
+  FiChevronRight,
+  FiDatabase,
+  FiEye,
+} from 'react-icons/fi';
+import { v4 as uuidv4 } from 'uuid';
+import { AssetDetailsModal } from './AssetDetails';
+import {
+  getComponentsByBienId,
+  type Component,
+} from '../../../../api/ComponentsApi';
 
 interface AssetTableProps {
-  assets: any[]
-  onEdit: (asset: any) => void
-  onDelete: (asset: any) => void
-  isLoading?: boolean
-  userProfile?: any
+  assets: any[];
+  onEdit: (asset: any) => void;
+  onDelete: (asset: any) => void;
+  isLoading?: boolean;
+  userProfile?: any;
 }
 
 export const AssetTable: React.FC<AssetTableProps> = ({
@@ -48,145 +58,109 @@ export const AssetTable: React.FC<AssetTableProps> = ({
   userProfile = null,
 }) => {
   // Colores del tema
-  const isAdminOrBienes = userProfile?.tipo_usuario === 1 || userProfile?.dept_nombre === "Bienes"
-  const headerBg = useColorModeValue("gray.100", "gray.800")
-  const borderColor = useColorModeValue("gray.200", "gray.700")
-  const hoverBg = useColorModeValue("gray.50", "gray.700")
-  const rowDividerColor = useColorModeValue("gray.300", "gray.600")
+  const isAdminOrBienes =
+    userProfile?.tipo_usuario === 1 || userProfile?.dept_nombre === 'Bienes';
+  const headerBg = useColorModeValue('gray.100', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const hoverBg = useColorModeValue('gray.50', 'gray.700');
+  const rowDividerColor = useColorModeValue('gray.300', 'gray.600');
 
   // Estado para la paginación
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Estado para el modal de detalles
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [selectedAsset, setSelectedAsset] = useState<any>(null)
-
-  // Estado para los componentes de cada bien
-  const [componentsByAsset, setComponentsByAsset] = useState<{
-    [key: number]: Component[]
-  }>({})
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
 
   // Resetear página cuando cambien los assets
   useEffect(() => {
-    setCurrentPage(1)
-  }, [assets])
+    setCurrentPage(1);
+  }, [assets]);
 
-  const totalPages = Math.ceil(assets.length / itemsPerPage)
+  const totalPages = Math.ceil(assets.length / itemsPerPage);
 
   // Calcular los elementos a mostrar en la página actual
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = assets.slice(indexOfFirstItem, indexOfLastItem)
-
-  // Cargar componentes solo para los bienes que son computadoras
-  useEffect(() => {
-    const fetchComponents = async () => {
-      if (!assets || assets.length === 0) return
-
-      const computers = assets.filter((a) => a.isComputer === 1 && a.id)
-      if (computers.length === 0) return
-
-      const promises = computers.map(async (asset) => {
-        try {
-          const comps = await getComponentsByBienId(asset.id)
-          return { id: asset.id, comps }
-        } catch {
-          return { id: asset.id, comps: [] }
-        }
-      })
-
-      const results = await Promise.all(promises)
-      const map: { [key: number]: Component[] } = {}
-      results.forEach(({ id, comps }) => {
-        map[id] = comps
-      })
-      setComponentsByAsset(map)
-    }
-
-    fetchComponents()
-  }, [assets])
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = assets.slice(indexOfFirstItem, indexOfLastItem);
 
   // Cambiar de página
   const goToPage = (pageNumber: number) => {
-    setCurrentPage(pageNumber)
-  }
+    setCurrentPage(pageNumber);
+  };
 
   const goToPreviousPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+      setCurrentPage(currentPage - 1);
     }
-  }
+  };
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+      setCurrentPage(currentPage + 1);
     }
-  }
+  };
 
   // Formatear valores monetarios
   const formatCurrency = (value: number | string | undefined): string => {
-    if (value === undefined || value === null) return "N/A"
-    const numValue = typeof value === "string" ? Number.parseFloat(value) : value
-    if (isNaN(numValue)) return "N/A"
-    return new Intl.NumberFormat("es-VE", {
-      style: "currency",
-      currency: "VES",
+    if (value === undefined || value === null) return 'N/A';
+    const numValue =
+      typeof value === 'string' ? Number.parseFloat(value) : value;
+    if (isNaN(numValue)) return 'N/A';
+    return new Intl.NumberFormat('es-VE', {
+      style: 'currency',
+      currency: 'VES',
       minimumFractionDigits: 2,
-    }).format(numValue)
-  }
+    }).format(numValue);
+  };
 
   // Formatear fechas
   const formatDate = (dateString: string | undefined): string => {
     if (!dateString) {
-      return "N/A"
+      return 'N/A';
     }
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return "N/A"
+      return 'N/A';
     }
-    return new Intl.DateTimeFormat("es-VE", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(date)
-  }
+    return new Intl.DateTimeFormat('es-VE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
+  };
 
   // Obtener el nombre del estado según su ID
-  const getStatusName = (statusId: string | number | undefined): { name: string; className: string } => {
-    if (!statusId) return { name: "Sin estado", className: "" }
+  const getStatusName = (
+    statusId: string | number | undefined,
+  ): { name: string; className: string } => {
+    if (!statusId) return { name: 'Sin estado', className: '' };
     switch (statusId.toString()) {
-      case "1":
-        return { name: "Nuevo", className: "new" }
-      case "2":
-        return { name: "Usado", className: "used" }
-      case "3":
-        return { name: "Dañado", className: "damaged" }
+      case '1':
+        return { name: 'Nuevo', className: 'new' };
+      case '2':
+        return { name: 'Usado', className: 'used' };
+      case '3':
+        return { name: 'Dañado', className: 'damaged' };
       default:
-        return { name: "Sin estado", className: "" }
+        return { name: 'Sin estado', className: '' };
     }
-  }
+  };
 
   // Determinar si mostrar vista móvil o de escritorio
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   // Función para abrir el modal de detalles
   const handleViewDetails = (asset: any) => {
-    setSelectedAsset(asset)
-    setShowDetailsModal(true)
-  }
+    setSelectedAsset(asset);
+    setShowDetailsModal(true);
+  };
 
-  // Función para formatear la descripción con componentes
+  // Función para formatear la descripción
   const formatDescriptionWithComponents = (asset: any) => {
-    let description = asset.nombre_descripcion
-    if (asset.isComputer === 1 && componentsByAsset[asset.id] && componentsByAsset[asset.id].length > 0) {
-      const componentsText = componentsByAsset[asset.id]
-        .map((comp) => `${comp.nombre}${comp.numero_serial ? ` (SN: ${comp.numero_serial})` : ""}`)
-        .join(", ")
-      description += ` - Componentes: ${componentsText}`
-    }
-    return description
-  }
+    return asset.nombre_descripcion;
+  };
 
   // Renderizar componente de carga
   if (isLoading) {
@@ -195,7 +169,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
         <Spinner size="xl" color="type.primary" />
         <Text mt={4}>Cargando bienes...</Text>
       </Box>
-    )
+    );
   }
 
   // Renderizar mensaje cuando no hay datos
@@ -208,7 +182,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
         <Text fontWeight="bold">No hay bienes registrados</Text>
         <Text color="gray.500">Agregue nuevos bienes para verlos aquí</Text>
       </Box>
-    )
+    );
   }
 
   // Renderizar vista móvil
@@ -255,7 +229,9 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                     )}
                   </HStack>
                 </Flex>
-                {asset.id_estado && <Badge mt={2}>{getStatusName(asset.id_estado).name}</Badge>}
+                {asset.id_estado && (
+                  <Badge mt={2}>{getStatusName(asset.id_estado).name}</Badge>
+                )}
               </CardHeader>
               <CardBody pt={0}>
                 <SimpleGrid columns={2} spacing={3}>
@@ -263,25 +239,27 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                     <Text fontWeight="bold" fontSize="sm">
                       Descripción
                     </Text>
-                    <Text fontSize="sm">{formatDescriptionWithComponents(asset)}</Text>
+                    <Text fontSize="sm">
+                      {formatDescriptionWithComponents(asset)}
+                    </Text>
                   </Box>
                   <Box>
                     <Text fontWeight="bold" fontSize="sm">
                       Departamento
                     </Text>
-                    <Text>{asset.dept_nombre || "Sin Departamento"}</Text>
+                    <Text>{asset.dept_nombre || 'Sin Departamento'}</Text>
                   </Box>
                   <Box>
                     <Text fontWeight="bold" fontSize="sm">
                       Marca
                     </Text>
-                    <Text>{asset.marca_nombre || "Sin Marca"}</Text>
+                    <Text>{asset.marca_nombre || 'Sin Marca'}</Text>
                   </Box>
                   <Box>
                     <Text fontWeight="bold" fontSize="sm">
                       Modelo
                     </Text>
-                    <Text>{asset.modelo_nombre || "Sin Modelo"}</Text>
+                    <Text>{asset.modelo_nombre || 'Sin Modelo'}</Text>
                   </Box>
                   <Box>
                     <Text fontWeight="bold" fontSize="sm">
@@ -302,43 +280,48 @@ export const AssetTable: React.FC<AssetTableProps> = ({
         </VStack>
 
         {/* Modal de detalles */}
-        <AssetDetailsModal asset={selectedAsset} isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} />
+        <AssetDetailsModal
+          asset={selectedAsset}
+          isOpen={showDetailsModal}
+          onClose={() => setShowDetailsModal(false)}
+        />
 
         {/* Paginación para móvil */}
         {totalPages > 1 && (
           <Flex mt={4} justify="space-between" align="center">
             <Text fontSize="sm">
-              Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
+              Mostrando {indexOfFirstItem + 1}-
+              {Math.min(indexOfLastItem, assets.length)} de {assets.length}
             </Text>
             <HStack spacing={2}>
-            <IconButton
-              aria-label="Página anterior"
-              icon={<FiChevronLeft />}
-              onClick={goToPreviousPage}
-              isDisabled={currentPage === 1}
-              size="sm"
-              bg={currentPage === 1 ? undefined : "type.primary"}
-              color={currentPage === 1 ? "gray.500" : "white"}
-              variant={currentPage === 1 ? "outline" : "solid"}
-            />
+              <IconButton
+                aria-label="Página anterior"
+                icon={<FiChevronLeft />}
+                onClick={goToPreviousPage}
+                isDisabled={currentPage === 1}
+                size="sm"
+                bg={currentPage === 1 ? undefined : 'type.primary'}
+                color={currentPage === 1 ? 'gray.500' : 'white'}
+                variant={currentPage === 1 ? 'outline' : 'solid'}
+              />
               <Text fontSize="sm">
                 {currentPage} de {totalPages}
               </Text>
-            <IconButton
-              aria-label="Página siguiente"
-              icon={<FiChevronRight />}
-              onClick={goToNextPage}
-              isDisabled={currentPage === totalPages}
-              size="sm"
-              bg={currentPage === totalPages ? undefined : "type.primary"}
-              color={currentPage === totalPages ? "gray.500" : "white"}
-              variant={currentPage === totalPages ? "outline" : "solid"}
-            />
+              <IconButton
+                aria-label="Página siguiente"
+                icon={<FiChevronRight />}
+                onClick={goToNextPage}
+                isDisabled={currentPage === totalPages}
+                size="sm"
+                bg={currentPage === totalPages ? undefined : 'type.primary'}
+                color={currentPage === totalPages ? 'gray.500' : 'white'}
+                variant={currentPage === totalPages ? 'outline' : 'solid'}
+              />
             </HStack>
           </Flex>
         )}
       </Box>
-    )
+    );
   }
 
   // Renderizar vista de escritorio (tabla)
@@ -351,21 +334,21 @@ export const AssetTable: React.FC<AssetTableProps> = ({
         boxShadow="sm"
         overflowX="auto"
         sx={{
-          scrollbarHeight: "8px",
-          scrollbarColor: "#888 #e0e0e0",
-          "&::-webkit-scrollbar": {
-            height: "8px",
+          scrollbarHeight: '8px',
+          scrollbarColor: '#888 #e0e0e0',
+          '&::-webkit-scrollbar': {
+            height: '8px',
           },
-          "&::-webkit-scrollbar-thumb": {
-            background: "#888",
-            borderRadius: "4px",
+          '&::-webkit-scrollbar-thumb': {
+            background: '#888',
+            borderRadius: '4px',
           },
-          "&::-webkit-scrollbar-track": {
-            background: "#e0e0e0",
+          '&::-webkit-scrollbar-track': {
+            background: '#e0e0e0',
           },
         }}
       >
-        <Table variant="simple" size="md" style={{ minWidth: "1200px" }}>
+        <Table variant="simple" size="md" style={{ minWidth: '1200px' }}>
           <Thead bg={headerBg}>
             <Tr>
               <Th>N°</Th>
@@ -385,21 +368,36 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                 transition="background 0.2s"
                 borderBottom="2px solid"
                 borderColor={rowDividerColor}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: 'pointer' }}
                 onClick={() => handleViewDetails(asset)}
               >
                 <Td>{indexOfFirstItem + index + 1}</Td>
                 <Td>
-                  <Tooltip label={asset.numero_identificacion} placement="top" hasArrow>
+                  <Tooltip
+                    label={asset.numero_identificacion}
+                    placement="top"
+                    hasArrow
+                  >
                     <Text>{asset.numero_identificacion}</Text>
                   </Tooltip>
                 </Td>
-                <Td maxW="300px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                  <Tooltip label={formatDescriptionWithComponents(asset)} placement="top" hasArrow>
-                    <Text isTruncated>{formatDescriptionWithComponents(asset)}</Text>
+                <Td
+                  maxW="300px"
+                  overflow="hidden"
+                  textOverflow="ellipsis"
+                  whiteSpace="nowrap"
+                >
+                  <Tooltip
+                    label={formatDescriptionWithComponents(asset)}
+                    placement="top"
+                    hasArrow
+                  >
+                    <Text isTruncated>
+                      {formatDescriptionWithComponents(asset)}
+                    </Text>
                   </Tooltip>
                 </Td>
-                <Td>{asset.dept_nombre || "Sin Departamento"}</Td>
+                <Td>{asset.dept_nombre || 'Sin Departamento'}</Td>
                 <Td>{formatCurrency(asset.valor_total)}</Td>
                 <Td>{formatDate(asset.fecha)}</Td>
                 <Td onClick={(e) => e.stopPropagation()}>
@@ -444,65 +442,75 @@ export const AssetTable: React.FC<AssetTableProps> = ({
       </TableContainer>
 
       {/* Modal de detalles */}
-      <AssetDetailsModal asset={selectedAsset} isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} />
+      <AssetDetailsModal
+        asset={selectedAsset}
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+      />
 
       {/* Paginación */}
       {totalPages > 1 && (
         <Flex mt={4} align="center" justify="space-between">
           <Text fontSize="sm">
-            Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, assets.length)} de {assets.length}
+            Mostrando {indexOfFirstItem + 1}-
+            {Math.min(indexOfLastItem, assets.length)} de {assets.length}
           </Text>
           <HStack spacing={2}>
-              <IconButton
-                aria-label="Página anterior"
-                icon={<FiChevronLeft />}
-                onClick={goToPreviousPage}
-                isDisabled={currentPage === 1}
-                size="sm"
-                bg={currentPage === 1 ? undefined : "type.primary"}
-                color={currentPage === 1 ? "gray.500" : "white"}
-                variant={currentPage === 1 ? "outline" : "solid"}
-              />
+            <IconButton
+              aria-label="Página anterior"
+              colorScheme="purple"
+              icon={<FiChevronLeft />}
+              onClick={goToPreviousPage}
+              isDisabled={currentPage === 1}
+              size="sm"
+              bg={currentPage === 1 ? undefined : 'type.primary'}
+              color={currentPage === 1 ? 'gray.500' : 'white'}
+              variant={currentPage === 1 ? 'outline' : 'solid'}
+            />
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageToShow
+              let pageToShow;
               if (totalPages <= 5) {
-                pageToShow = i + 1
+                pageToShow = i + 1;
               } else if (currentPage <= 3) {
-                pageToShow = i + 1
+                pageToShow = i + 1;
               } else if (currentPage >= totalPages - 2) {
-                pageToShow = totalPages - 4 + i
+                pageToShow = totalPages - 4 + i;
               } else {
-                pageToShow = currentPage - 2 + i
+                pageToShow = currentPage - 2 + i;
               }
               if (pageToShow > 0 && pageToShow <= totalPages) {
                 return (
                   <Button
+                    colorScheme="purple"
                     key={pageToShow}
                     onClick={() => goToPage(pageToShow)}
-                    bg={currentPage === pageToShow ? "type.primary" : undefined}
-                    color={currentPage === pageToShow ? "white" : "type.primary"}
-                    variant={currentPage === pageToShow ? "solid" : "outline"}
+                    bg={currentPage === pageToShow ? 'type.primary' : undefined}
+                    color={
+                      currentPage === pageToShow ? 'white' : 'type.primary'
+                    }
+                    variant={currentPage === pageToShow ? 'solid' : 'outline'}
                     size="sm"
                   >
                     {pageToShow}
                   </Button>
-                )
+                );
               }
-              return null
+              return null;
             })}
-              <IconButton
-                aria-label="Página siguiente"
-                icon={<FiChevronRight />}
-                onClick={goToNextPage}
-                isDisabled={currentPage === totalPages}
-                size="sm"
-                bg={currentPage === totalPages ? undefined : "type.primary"}
-                color={currentPage === totalPages ? "gray.500" : "white"}
-                variant={currentPage === totalPages ? "outline" : "solid"}
-              />
+            <IconButton
+              aria-label="Página siguiente"
+              colorScheme="purple"
+              icon={<FiChevronRight />}
+              onClick={goToNextPage}
+              isDisabled={currentPage === totalPages}
+              size="sm"
+              bg={currentPage === totalPages ? undefined : 'type.primary'}
+              color={currentPage === totalPages ? 'gray.500' : 'white'}
+              variant={currentPage === totalPages ? 'outline' : 'solid'}
+            />
           </HStack>
         </Flex>
       )}
     </Box>
-  )
-}
+  );
+};

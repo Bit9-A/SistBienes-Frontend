@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -13,9 +13,9 @@ import {
   Icon,
   useDisclosure,
   Button,
-} from "@chakra-ui/react";
-import { FiCpu, FiBox } from "react-icons/fi";
-import { getComponentsByBienId, Component } from "api/ComponentsApi";
+} from '@chakra-ui/react';
+import { FiCpu, FiBox } from 'react-icons/fi';
+import { getComponentsByBienId, Component } from 'api/ComponentsApi';
 
 interface DetailsComponentsModalProps {
   bienId: number | null;
@@ -66,14 +66,14 @@ export const DetailsComponentsModal: React.FC<DetailsComponentsModalProps> = ({
                   borderRadius="md"
                   p={3}
                   bg="gray.50"
-                  _dark={{ bg: "gray.800" }}
+                  _dark={{ bg: 'gray.800' }}
                 >
                   <Stack direction="row" align="center" spacing={3}>
-                    <Icon as={FiBox} color="blue.500" />
+                    <Icon as={FiBox} color="type.primary" />
                     <Box>
                       <Text fontWeight="bold">{comp.nombre}</Text>
                       <Text fontSize="sm" color="gray.600">
-                        Serial: {comp.numero_serial || "N/A"}
+                        Serial: {comp.numero_serial || 'N/A'}
                       </Text>
                     </Box>
                   </Stack>

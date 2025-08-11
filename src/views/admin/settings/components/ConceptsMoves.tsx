@@ -22,6 +22,12 @@ import {
   Text,
   useColorModeValue,
   HStack,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from '@chakra-ui/react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import {
@@ -29,15 +35,30 @@ import {
   handleEditConceptoMovimiento,
   handleDeleteConceptoMovimiento,
 } from '../utils/ConceptsMovesUtils';
-import { ConceptoMovimiento,getConceptosMovimientoDesincorporacion,getConceptosMovimientoIncorporacion } from 'api/SettingsApi';
+import {
+  ConceptoMovimiento,
+  getConceptosMovimientoDesincorporacion,
+  getConceptosMovimientoIncorporacion,
+} from 'api/SettingsApi';
 import { v4 as uuidv4 } from 'uuid'; // Asegúrate de instalar uuid si no lo tienes
 const ConceptsMoves = () => {
   const [concepts, setConcepts] = useState<ConceptoMovimiento[]>([]);
-  const [selectedConcept, setSelectedConcept] = useState<ConceptoMovimiento | null>(null);
+  const [selectedConcept, setSelectedConcept] =
+    useState<ConceptoMovimiento | null>(null);
   const [newConceptName, setNewConceptName] = useState('');
   const [newConceptCode, setNewConceptCode] = useState('');
-  const [activeType, setActiveType] = useState<'incorporacion' | 'desincorporacion'>('incorporacion');
+  const [activeType, setActiveType] = useState<
+    'incorporacion' | 'desincorporacion'
+  >('incorporacion');
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const [conceptToDelete, setConceptToDelete] =
+    useState<ConceptoMovimiento | null>(null);
+  const {
+    isOpen: isDeleteDialogOpen,
+    onOpen: onDeleteDialogOpen,
+    onClose: onDeleteDialogClose,
+  } = useDisclosure();
 
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const headerBg = useColorModeValue('gray.100', 'gray.800');
@@ -49,7 +70,7 @@ const ConceptsMoves = () => {
         activeType === 'incorporacion'
           ? await getConceptosMovimientoIncorporacion()
           : await getConceptosMovimientoDesincorporacion();
-          setConcepts(data);
+      setConcepts(data);
     } catch (error) {
       console.error('Error fetching concepts:', error);
     }
@@ -61,27 +82,49 @@ const ConceptsMoves = () => {
 
   const handleAdd = async () => {
     if (newConceptName.trim() === '' || newConceptCode.trim() === '') return;
-    await handleAddConceptoMovimiento(activeType, newConceptName, newConceptCode, setConcepts, onClose);
+    await handleAddConceptoMovimiento(
+      activeType,
+      newConceptName,
+      newConceptCode,
+      setConcepts,
+      onClose,
+    );
     fetchConcepts();
   };
 
   const handleEdit = async () => {
-    if (selectedConcept && newConceptName.trim() !== '' && newConceptCode.trim() !== '') {
+    if (
+      selectedConcept &&
+      newConceptName.trim() !== '' &&
+      newConceptCode.trim() !== ''
+    ) {
       await handleEditConceptoMovimiento(
         activeType,
         selectedConcept,
         newConceptName,
         newConceptCode,
         setConcepts,
-        onClose
+        onClose,
       );
       fetchConcepts();
     }
   };
 
-  const handleDelete = async (id: number) => {
-    await handleDeleteConceptoMovimiento(activeType, id, setConcepts);
-    fetchConcepts();
+  const handleDeleteClick = (concept: ConceptoMovimiento) => {
+    setConceptToDelete(concept);
+    onDeleteDialogOpen();
+  };
+
+  const confirmDelete = async () => {
+    if (conceptToDelete) {
+      await handleDeleteConceptoMovimiento(
+        activeType,
+        conceptToDelete.id,
+        setConcepts,
+      );
+      fetchConcepts();
+      onDeleteDialogClose();
+    }
   };
 
   const openEditModal = (concept: ConceptoMovimiento) => {
@@ -141,7 +184,11 @@ const ConceptsMoves = () => {
           </Thead>
           <Tbody>
             {concepts.map((concept, index) => (
-              <Tr key={uuidv4()} _hover={{ bg: hoverBg }} transition="background 0.2s">
+              <Tr
+                key={uuidv4()}
+                _hover={{ bg: hoverBg }}
+                transition="background 0.2s"
+              >
                 <Td>{index + 1}</Td>
                 <Td>{concept.codigo}</Td>
                 <Td>
@@ -164,7 +211,7 @@ const ConceptsMoves = () => {
                       leftIcon={<FiTrash2 />}
                       size="sm"
                       colorScheme="red"
-                      onClick={() => handleDelete(concept.id)}
+                      onClick={() => handleDeleteClick(concept)}
                     >
                       Eliminar
                     </Button>
@@ -175,6 +222,34 @@ const ConceptsMoves = () => {
           </Tbody>
         </Table>
       </TableContainer>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog
+        isOpen={isDeleteDialogOpen}
+        leastDestructiveRef={undefined}
+        onClose={onDeleteDialogClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirmar Eliminación
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              ¿Estás seguro de que deseas eliminar el concepto{' '}
+              <strong>{conceptToDelete?.nombre}</strong>? Esta acción no se
+              puede deshacer.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button onClick={onDeleteDialogClose}>Cancelar</Button>
+              <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                Eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
 
       {/* Modal para agregar/editar */}
       <Modal isOpen={isOpen} onClose={onClose}>

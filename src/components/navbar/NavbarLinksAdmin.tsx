@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from 'react';
 import {
   Avatar,
   Button,
@@ -20,163 +20,171 @@ import {
   useToast,
   Spinner, // Importar Spinner para el estado de carga
   Center, // Importar Center
-} from "@chakra-ui/react"
+} from '@chakra-ui/react';
 // Custom Components
-import { SidebarResponsive } from "components/sidebar/Sidebar"
-import PropTypes from "prop-types"
+import { SidebarResponsive } from 'components/sidebar/Sidebar';
+import PropTypes from 'prop-types';
 // Assets
-import { MdNotificationsNone } from "react-icons/md"
-import { FiUser, FiLogOut, FiSettings, FiChevronDown } from "react-icons/fi"
-import routes from "routes"
+import { MdNotificationsNone } from 'react-icons/md';
+import { FiUser, FiLogOut, FiSettings, FiChevronDown } from 'react-icons/fi';
+import routes from 'routes';
 // API
-import { getProfile, logout as logoutApi, type UserProfile } from "../../api/UserApi"
-import { handleLogout as Logout } from "../../views/auth/signIn/utils/authUtils"
-import { useNavigate } from "react-router-dom"
+import {
+  getProfile,
+  logout as logoutApi,
+  type UserProfile,
+} from '../../api/UserApi';
+import { handleLogout as Logout } from '../../views/auth/signIn/utils/authUtils';
+import { useNavigate } from 'react-router-dom';
 import {
   fetchNotifications,
   fetchNotificationsByDeptId,
   type Notification,
-} from "../../views/admin/notifications/utils/NotificationsUtils"
-import { updateNotificationStatus } from "../../api/NotificationsApi" // Importar desde la API
-
+} from '../../views/admin/notifications/utils/NotificationsUtils';
+import { updateNotificationStatus } from '../../api/NotificationsApi'; // Importar desde la API
 
 interface HeaderLinksProps {
-  secondary: boolean
-  onProfileClick?: () => void
-  onLogout?: () => void
-  user: UserProfile
+  secondary: boolean;
+  onProfileClick?: () => void;
+  onLogout?: () => void;
+  user: UserProfile;
 }
-export default function HeaderLinks({ secondary, onProfileClick, onLogout, user }: HeaderLinksProps) {
-  const toast = useToast()
-  const navigate = useNavigate()
+export default function HeaderLinks({
+  secondary,
+  onProfileClick,
+  onLogout,
+  user,
+}: HeaderLinksProps) {
+  const toast = useToast();
+  const navigate = useNavigate();
 
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [loadingNotifications, setLoadingNotifications] = useState(true)
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(true);
 
   // Chakra Color Mode
-  const navbarIcon = useColorModeValue("gray.400", "white")
-  const menuBg = useColorModeValue("white", "navy.800")
-  const textColor = useColorModeValue("secondaryGray.900", "white")
-  const borderColor = useColorModeValue("#E6ECFA", "rgba(135, 140, 189, 0.3)")
+  const navbarIcon = useColorModeValue('gray.400', 'white');
+  const menuBg = useColorModeValue('white', 'navy.800');
+  const textColor = useColorModeValue('secondaryGray.900', 'white');
+  const borderColor = useColorModeValue('#E6ECFA', 'rgba(135, 140, 189, 0.3)');
   const shadow = useColorModeValue(
-    "14px 17px 40px 4px rgba(112, 144, 176, 0.18)",
-    "14px 17px 40px 4px rgba(112, 144, 176, 0.06)",
-  )
-  const hoverBg = useColorModeValue("gray.50", "whiteAlpha.100")
-  const subtitleColor = useColorModeValue("gray.600", "gray.400")
+    '14px 17px 40px 4px rgba(112, 144, 176, 0.18)',
+    '14px 17px 40px 4px rgba(112, 144, 176, 0.06)',
+  );
+  const hoverBg = useColorModeValue('gray.50', 'whiteAlpha.100');
+  const subtitleColor = useColorModeValue('gray.600', 'gray.400');
 
   const loadNotifications = useCallback(async () => {
-    setLoadingNotifications(true)
+    setLoadingNotifications(true);
     try {
-      const profile = userProfile || (await getProfile())
-      setUserProfile(profile)
-      const userIsAdmin = profile.tipo_usuario === 1
-      setIsAdmin(userIsAdmin)
+      const profile = userProfile || (await getProfile());
+      setUserProfile(profile);
+      const userIsAdmin = profile.tipo_usuario === 1;
+      setIsAdmin(userIsAdmin);
 
-      let data: Notification[] = []
+      let data: Notification[] = [];
       if (userIsAdmin) {
-        data = (await fetchNotifications()) || []
+        data = (await fetchNotifications()) || [];
       } else if (profile?.dept_id) {
-        data = (await fetchNotificationsByDeptId(profile.dept_id)) || []
+        data = (await fetchNotificationsByDeptId(profile.dept_id)) || [];
       }
-      setNotifications(data)
-      setUnreadCount(data.filter((n) => n.isRead === 0).length)
+      setNotifications(data);
+      setUnreadCount(data.filter((n) => n.isRead === 0).length);
     } catch (error) {
-      console.error("Error fetching notifications:", error)
+      console.error('Error fetching notifications:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar las notificaciones.",
-        status: "error",
+        title: 'Error',
+        description: 'No se pudieron cargar las notificaciones.',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      })
+      });
     } finally {
-      setLoadingNotifications(false)
+      setLoadingNotifications(false);
     }
-  }, [userProfile, toast])
+  }, [userProfile, toast]);
 
   useEffect(() => {
-    loadNotifications()
-  }, [loadNotifications])
+    loadNotifications();
+  }, [loadNotifications]);
 
   const handleMarkAsRead = async (id: number) => {
     try {
-      await updateNotificationStatus(id, 1)
-      await loadNotifications()
+      await updateNotificationStatus(id, 1);
+      await loadNotifications();
       toast({
-        title: "Notificación marcada como leída",
-        status: "success",
+        title: 'Notificación marcada como leída',
+        status: 'success',
         duration: 2000,
         isClosable: true,
-      })
+      });
     } catch (error) {
-      console.error("Error marking notification as read:", error)
+      console.error('Error marking notification as read:', error);
       toast({
-        title: "Error",
-        description: "No se pudo marcar la notificación como leída",
-        status: "error",
+        title: 'Error',
+        description: 'No se pudo marcar la notificación como leída',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      })
+      });
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
+    return new Date(dateString).toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   const handleLogout = async () => {
     try {
-      await Logout()
+      await Logout();
       toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión exitosamente.",
-        status: "info",
+        title: 'Sesión cerrada',
+        description: 'Has cerrado sesión exitosamente.',
+        status: 'info',
         duration: 3000,
         isClosable: true,
-      })
-      navigate("/auth/sign-in")
+      });
+      navigate('/auth/sign-in');
     } catch (error) {
-      console.error("Error al cerrar sesión:", error)
+      console.error('Error al cerrar sesión:', error);
       toast({
-        title: "Error",
-        description: "No se pudo cerrar sesión. Inténtalo de nuevo.",
-        status: "error",
+        title: 'Error',
+        description: 'No se pudo cerrar sesión. Inténtalo de nuevo.',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      })
+      });
     }
-  }
+  };
 
   const handleProfileClick = () => {
     if (onProfileClick) {
-      onProfileClick()
+      onProfileClick();
     } else {
-      navigate("/admin/profile")
+      navigate('/admin/profile');
     }
-  }
+  };
 
   // Valores del usuario
-  const userName = user.nombre_completo
-  const userRole = user.nombre_tipo_usuario
-  const userEmail = user.email
+  const userName = user.nombre_completo;
+  const userRole = user.nombre_tipo_usuario;
+  const userEmail = user.email;
 
   return (
     <Flex
-      w={{ sm: "100%", md: "auto" }}
+      w={{ sm: '100%', md: 'auto' }}
       alignItems="center"
       flexDirection="row"
       bg={menuBg}
-      flexWrap={secondary ? { base: "wrap", md: "nowrap" } : "unset"}
+      flexWrap={secondary ? { base: 'wrap', md: 'nowrap' } : 'unset'}
       p="10px"
       borderRadius="30px"
       boxShadow={shadow}
@@ -186,7 +194,14 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
       {/* Notificaciones */}
       <Menu>
         <MenuButton p="0px" position="relative">
-          <Icon mt="6px" as={MdNotificationsNone} color={navbarIcon} w="18px" h="18px" me="10px" />
+          <Icon
+            mt="6px"
+            as={MdNotificationsNone}
+            color={navbarIcon}
+            w="18px"
+            h="18px"
+            me="10px"
+          />
           {/* Badge de notificaciones */}
           {unreadCount > 0 && (
             <Badge
@@ -213,9 +228,9 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
           bg={menuBg}
           border="none"
           mt="22px"
-          me={{ base: "30px", md: "unset" }}
-          minW={{ base: "unset", md: "350px" }}
-          maxW={{ base: "320px", md: "unset" }}
+          me={{ base: '30px', md: 'unset' }}
+          minW={{ base: 'unset', md: '350px' }}
+          maxW={{ base: '320px', md: 'unset' }}
         >
           <Flex w="100%" mb="20px" justify="space-between" align="center">
             <Text fontSize="md" fontWeight="600" color={textColor}>
@@ -230,7 +245,9 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
           {loadingNotifications ? (
             <Center py={4}>
               <Spinner size="sm" color="blue.500" />
-              <Text ml={2} fontSize="sm" color={subtitleColor}>Cargando...</Text>
+              <Text ml={2} fontSize="sm" color={subtitleColor}>
+                Cargando...
+              </Text>
             </Center>
           ) : notifications.length === 0 ? (
             <Text fontSize="sm" color={subtitleColor} textAlign="center" py={4}>
@@ -242,13 +259,17 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
                 <Box
                   key={notification.id}
                   p={3}
-                  bg={notification.isRead === 0 ? hoverBg : "transparent"}
+                  bg={notification.isRead === 0 ? hoverBg : 'transparent'}
                   borderRadius="md"
                   cursor="pointer"
                   onClick={() => handleMarkAsRead(notification.id)}
                   _hover={{ bg: hoverBg }}
                 >
-                  <Text fontSize="sm" fontWeight={notification.isRead === 0 ? "medium" : "normal"} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight={notification.isRead === 0 ? 'medium' : 'normal'}
+                    mb={1}
+                  >
                     {notification.descripcion}
                   </Text>
                   <Text fontSize="xs" color={subtitleColor}>
@@ -261,7 +282,7 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
                   variant="link"
                   colorScheme="blue"
                   size="sm"
-                  onClick={() => navigate("/admin/notifications")}
+                  onClick={() => navigate('/admin/notifications')}
                   mt={2}
                 >
                   Ver todas las notificaciones
@@ -276,14 +297,9 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
       <Menu>
         <MenuButton p="0px" position="relative">
           <HStack spacing={3} cursor="pointer">
-            <Avatar
-              size="sm"
-              name={userName}
-              bg="brand.500"
-              color="white"
-            />
+            <Avatar size="sm" name={userName} bg="brand.500" color="white" />
             <VStack
-              display={{ base: "none", md: "flex" }}
+              display={{ base: 'none', md: 'flex' }}
               alignItems="flex-start"
               spacing="1px"
               ml="2"
@@ -295,7 +311,7 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
                 {userRole}
               </Text>
             </VStack>
-            <Box display={{ base: "none", md: "flex" }}>
+            <Box display={{ base: 'none', md: 'flex' }}>
               <FiChevronDown />
             </Box>
           </HStack>
@@ -310,8 +326,8 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
         >
           <Flex flexDirection="column" p="10px">
             <MenuItem
-              _hover={{ bg: "none" }}
-              _focus={{ bg: "none" }}
+              _hover={{ bg: 'none' }}
+              _focus={{ bg: 'none' }}
               borderRadius="8px"
               px="14px"
             >
@@ -322,7 +338,7 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
             <Divider my={2} borderColor={borderColor} />
             <MenuItem
               _hover={{ bg: hoverBg }}
-              _focus={{ bg: "none" }}
+              _focus={{ bg: 'none' }}
               borderRadius="8px"
               px="14px"
               onClick={handleProfileClick}
@@ -330,18 +346,10 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
               <Icon as={FiUser} me="8px" />
               <Text fontSize="sm">Perfil</Text>
             </MenuItem>
+
             <MenuItem
               _hover={{ bg: hoverBg }}
-              _focus={{ bg: "none" }}
-              borderRadius="8px"
-              px="14px"
-            >
-              <Icon as={FiSettings} me="8px" />
-              <Text fontSize="sm">Configuración</Text>
-            </MenuItem>
-            <MenuItem
-              _hover={{ bg: hoverBg }}
-              _focus={{ bg: "none" }}
+              _focus={{ bg: 'none' }}
               color="red.400"
               borderRadius="8px"
               px="14px"
@@ -354,7 +362,7 @@ export default function HeaderLinks({ secondary, onProfileClick, onLogout, user 
         </MenuList>
       </Menu>
     </Flex>
-  )
+  );
 }
 
 HeaderLinks.propTypes = {
@@ -362,4 +370,4 @@ HeaderLinks.propTypes = {
   onProfileClick: PropTypes.func,
   onLogout: PropTypes.func,
   user: PropTypes.object.isRequired,
-}
+};
