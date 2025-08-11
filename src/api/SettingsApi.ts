@@ -12,9 +12,12 @@ export interface GeneralConfig {
     nombre_institucion: string;
 }
 
+
+
 // Mostrar los datos de la configuracion general 
-export const getGeneralConfig = async (): Promise<any> => {
+export const getGeneralConfig = async (): Promise<GeneralConfig> => {
     const response = await axiosInstance.get("/config/");
+
     return response.data;
 };
 

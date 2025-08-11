@@ -1,4 +1,11 @@
-import { mode } from '@chakra-ui/theme-tools';;
+import { mode } from '@chakra-ui/theme-tools';
+
+export const images = {
+	
+
+};
+
+
 export const globalStyles = {
 	colors: {
 	 type: {
