@@ -15,6 +15,13 @@ import {
   Badge,
   Icon,
   useToast,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure,
   // HStack, // Se movió a ExportButtons
   // VStack, // Se movió a ExportButtons
   // useBreakpointValue, // Se movió a ExportButtons
@@ -56,6 +63,16 @@ export default function Inventory() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false)
   const [isQRLabelsModalOpen, setIsQRLabelsModalOpen] = useState(false)
   const [isBM4ModalOpen, setIsBM4ModalOpen] = useState(false)
+  const { isOpen: isConfirmOpen, onOpen: onConfirmOpen, onClose: onConfirmClose } = useDisclosure()
+  const cancelRef = React.useRef()
+
+  const [bm4ExportParams, setBm4ExportParams] = useState<{
+    deptId: number | undefined
+    mes: number
+    año: number
+    responsableId: number | undefined
+    departamentoNombre: string | undefined
+  } | null>(null)
 
   const toast = useToast()
 
@@ -592,32 +609,128 @@ export default function Inventory() {
                 onClose={() => setIsBM4ModalOpen(false)}
                 departments={departments}
                 userProfile={userProfile}
-                onExport={async (deptId: number | undefined, mes: number, año: number, responsableId: number | undefined, departamentoNombre: string | undefined) => {
-                  // La lógica de toast y generateBM4Pdf se ha movido a ExportButtons.tsx
-                  // Aquí solo se necesita llamar a la función que maneja la exportación si es necesario,
-                  // o simplemente cerrar el modal si la lógica ya está en ExportButtons.
-                  // Por ahora, se mantiene la llamada a generateBM4Pdf para asegurar la funcionalidad.
-                  try {
-                    await generateBM4Pdf(deptId, mes, año, responsableId, departamentoNombre)
-                    toast({
-                      title: "Exportación BM4 iniciada",
-                      description: `Se está generando el reporte BM4 para ${departamentoNombre} (${mes}/${año}).`,
-                      status: "info",
-                      duration: 5000,
-                      isClosable: true,
-                    })
-                  } catch (error) {
+                onExport={async (
+                  deptId: number | undefined,
+                  mes: number,
+                  año: number,
+                  responsableId: number | undefined,
+                  departamentoNombre: string | undefined,
+                  forceUpdate: boolean = false,
+                ) => {
+                  if (deptId === undefined || responsableId === undefined || departamentoNombre === undefined) {
                     toast({
                       title: "Error de exportación",
-                      description: `No se pudo generar el reporte BM4.`,
+                      description: "Faltan parámetros necesarios para generar el reporte BM4.",
                       status: "error",
-                      duration: 5000, 
+                      duration: 5000,
                       isClosable: true,
-                    })
-                    console.error("Error exporting BM4:", error)
+                    });
+                    return;
+                  }
+
+                  const result = await generateBM4Pdf(
+                    deptId,
+                    mes,
+                    año,
+                    responsableId,
+                    departamentoNombre,
+                    forceUpdate,
+                  );
+
+                  if (result.success) {
+                    toast({
+                      title: "Reporte BM4 generado",
+                      description: `El reporte BM4 para ${departamentoNombre} (${mes}/${año}) se ha descargado.`,
+                      status: "success",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    setIsBM4ModalOpen(false); // Cerrar el modal después de la descarga exitosa
+                  } else if (result.reportExists) {
+                    // Conflicto: el reporte ya existe
+                    setBm4ExportParams({ deptId, mes, año, responsableId, departamentoNombre });
+                    onConfirmOpen(); // Abrir el modal de confirmación
+                  } else {
+                    toast({
+                      title: "Error de exportación",
+                      description: result.errorMessage || `No se pudo generar el reporte BM4.`,
+                      status: "error",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    console.error("Error exporting BM4:", result.errorMessage);
                   }
                 }}
               />
+
+              {/* Modal de confirmación para sobrescribir BM4 */}
+              <AlertDialog isOpen={isConfirmOpen} leastDestructiveRef={cancelRef as React.RefObject<any>} onClose={onConfirmClose}>
+                <AlertDialogOverlay>
+                  <AlertDialogContent>
+                    <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                      Reporte BM-4 Existente
+                    </AlertDialogHeader>
+
+                    <AlertDialogBody>
+                      Ya existe un reporte BM-4 para el mes y departamento seleccionados. ¿Desea sobrescribirlo?
+                    </AlertDialogBody>
+
+                    <AlertDialogFooter>
+                      <Button ref={cancelRef as React.RefObject<any>} onClick={onConfirmClose}>
+                        Cancelar
+                      </Button>
+                      <Button
+                        colorScheme="red"
+                        onClick={async () => {
+                          onConfirmClose();
+                          if (bm4ExportParams && bm4ExportParams.deptId !== undefined && bm4ExportParams.responsableId !== undefined && bm4ExportParams.departamentoNombre !== undefined) {
+                            // Reintentar la exportación con forceUpdate: true
+                            const result = await generateBM4Pdf(
+                              bm4ExportParams.deptId,
+                              bm4ExportParams.mes,
+                              bm4ExportParams.año,
+                              bm4ExportParams.responsableId,
+                              bm4ExportParams.departamentoNombre,
+                              true,
+                            );
+
+                            if (result.success) {
+                              toast({
+                                title: "Reporte BM4 generado",
+                                description: `El reporte BM4 para ${bm4ExportParams.departamentoNombre} (${bm4ExportParams.mes}/${bm4ExportParams.año}) se ha descargado.`,
+                                status: "success",
+                                duration: 5000,
+                                isClosable: true,
+                              });
+                              setIsBM4ModalOpen(false);
+                            } else {
+                              toast({
+                                title: "Error de exportación",
+                                description: result.errorMessage || `No se pudo generar el reporte BM4 al sobrescribir.`,
+                                status: "error",
+                                duration: 5000,
+                                isClosable: true,
+                              });
+                              console.error("Error exporting BM4 on overwrite:", result.errorMessage);
+                            }
+                          } else {
+                            toast({
+                              title: "Error de exportación",
+                              description: "Parámetros de exportación BM4 incompletos para sobrescribir.",
+                              status: "error",
+                              duration: 5000,
+                              isClosable: true,
+                            });
+                          }
+                        }}
+                        ml={3}
+                      >
+                        Sobrescribir
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialogOverlay>
+              </AlertDialog>
             </CardBody>
           </Card>
         </Box>

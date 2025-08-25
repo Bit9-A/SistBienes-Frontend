@@ -53,58 +53,64 @@ export async function generateBM4Pdf(
   año: number,
   responsableId: number,
   departamentoNombre: string, // Para el nombre del archivo
-) {
+  forceUpdate: boolean = false,
+): Promise<{ success: boolean; reportExists?: boolean; errorMessage?: string }> {
   try {
+    console.log("Info: ", deptId, mes, año, responsableId,forceUpdate)
     const respuesta = await axiosInstance.post('/excel/bm4', {
-      dept_id: deptId,
+      deptId: deptId,
       mes: mes,
       año: año,
-      responsable_id: responsableId,
+      responsableId: responsableId,
+      departamentoNombre: departamentoNombre,
+      forceUpdate: forceUpdate,
     }, {
       responseType: 'blob', // Importante para manejar la respuesta como un Blob (PDF en este caso)
     });
 
-    if (respuesta.status !== 200) {
-      const errorText = await respuesta.data.text();
-      let errorMessage = `Fallo al generar el archivo PDF BM4.`;
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.message || errorMessage;
-      } catch (parseError) {
-        errorMessage = errorText || errorMessage;
-      }
-      throw new Error(errorMessage);
-    }
+    if (respuesta.status === 200) {
+      const fecha = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      const contentDisposition = respuesta.headers['content-disposition'];
+      let nombreArchivo = `BM4_Reporte_${departamentoNombre}_${mes}-${año}.pdf`; // Nombre por defecto si no se encuentra en el header
 
-    const fecha = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-    const contentDisposition = respuesta.headers['content-disposition'];
-    let nombreArchivo = `BM4_${departamentoNombre}_${mes}_${año}_${fecha}.pdf`; // Nombre por defecto si no se encuentra en el header
-
-    if (contentDisposition) {
-      const matchNombreArchivo = contentDisposition.match(/filename\*?=['"](?:UTF-8'')?([^"']+)/i);
-      if (matchNombreArchivo && matchNombreArchivo[1]) {
-        try {
-          nombreArchivo = decodeURIComponent(matchNombreArchivo[1]);
-        } catch (e) {
-          console.warn("Error decoding filename, using raw filename:", matchNombreArchivo[1]);
-          nombreArchivo = matchNombreArchivo[1];
+      if (contentDisposition) {
+        const matchNombreArchivo = contentDisposition.match(/filename\*?=['"](?:UTF-8'')?([^"']+)/i);
+        if (matchNombreArchivo && matchNombreArchivo[1]) {
+          try {
+            nombreArchivo = decodeURIComponent(matchNombreArchivo[1]);
+          } catch (e) {
+            console.warn("Error decoding filename, using raw filename:", matchNombreArchivo[1]);
+            nombreArchivo = matchNombreArchivo[1];
+          }
         }
       }
-    }
 
-    const blob = new Blob([respuesta.data], { type: 'application/pdf' }); // Tipo MIME para PDF
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nombreArchivo;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+      const blob = new Blob([respuesta.data], { type: 'application/pdf' }); // Tipo MIME para PDF
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      return { success: true };
+    }
+    return { success: false, errorMessage: 'Respuesta inesperada del servidor.' };
 
   } catch (error: any) {
+    if (error.response && error.response.status === 409) {
+      try {
+        const errorData = JSON.parse(await error.response.data.text());
+        if (errorData.reportExists) {
+          return { success: false, reportExists: true, errorMessage: errorData.message };
+        }
+      } catch (parseError) {
+        console.warn("Could not parse error response for 409 conflict:", parseError);
+      }
+    }
     console.error('Error al descargar el archivo PDF BM4:', error);
-    alert(`Error: ${error.message}`);
+    return { success: false, errorMessage: error.message || 'Error desconocido al generar el reporte BM4.' };
   }
 }
 
