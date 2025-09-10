@@ -12,7 +12,7 @@ const axiosInstance = axios.create({
 
 // Interceptor para agregar el token a las peticiones
 axiosInstance.interceptors.request.use(
-  (config) => {
+  (config:any) => {
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -26,15 +26,15 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
+  (error:Error) => {
     return Promise.reject(error);
   }
 );
 
 // Interceptor para manejar respuestas y errores de autenticación
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response:any) => response,
+  (error: any) => {
     console.error("Error en la solicitud:", error);
     
     // Si el error es 401 (No autorizado), limpiar localStorage y redirigir al login
