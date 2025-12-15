@@ -367,7 +367,7 @@ const UserManage = () => {
                       <SearchIcon color="gray.400" />
                     </InputLeftElement>
                     <Input
-                      placeholder="Buscar usuario..."
+                      placeholder="    Buscar usuario..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       borderRadius="md"
@@ -443,19 +443,7 @@ const UserManage = () => {
                   </Menu>
                 </HStack>
 
-                <Button
-                  color="type.title"
-                  leftIcon={<Icon as={FiDownload} />}
-                  variant="outline"
-                  colorScheme="type.primary"
-                  size={{ base: 'md', md: 'md' }}
-                  w={{ base: 'full', lg: 'auto' }}
-                  minW={{ base: 'auto', lg: '120px' }}
-                  fontSize={{ base: 'sm', md: 'md' }}
-                >
-                  <Box display={{ base: 'none', sm: 'block' }}>Exportar</Box>
-                  <Box display={{ base: 'block', sm: 'none' }}>Export</Box>
-                </Button>
+
               </Flex>
 
               <Box
