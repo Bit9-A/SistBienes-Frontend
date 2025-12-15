@@ -1,195 +1,740 @@
-import React, { useState, useEffect } from 'react';
+"use client"
+
+import { useState, useEffect } from "react"
 import {
   Box,
   Button,
   Flex,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Input,
-  FormControl,
-  FormLabel,
-  Textarea,
+  Heading,
+  Card,
+  CardHeader,
+  CardBody,
   useColorModeValue,
-  SimpleGrid,
-} from '@chakra-ui/react';
+  Stack,
+  Container,
+  Badge,
+  Icon,
+  useToast,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure,
+  // HStack, // Se movió a ExportButtons
+  // VStack, // Se movió a ExportButtons
+  // useBreakpointValue, // Se movió a ExportButtons
+} from "@chakra-ui/react"
+import { BsBox2 } from "react-icons/bs"
+import { FiPackage } from "react-icons/fi"
+import React, { lazy, Suspense } from "react"
+import { AssetTable } from "./components/AssetTable"
+import { AssetFilters } from "./components/AssetFilters"
+import { handleAddAsset, handleEditAsset, handleDeleteAsset } from "./utils/inventoryUtils"
+import { getAssets, getMarcas, getModelos, type MovableAsset } from "../../../api/AssetsApi"
+import { getDepartments, getSubGroupsM, getParroquias } from "../../../api/SettingsApi"
+import axiosInstance from "../../../utils/axiosInstance"
+import { getProfile, UserProfile } from "api/UserApi"
+import { exportBM1WithMarkers, generateBM4Pdf } from "views/admin/inventory/utils/inventoryExcel" // Reimportar
+import { exportQRLabels } from "views/admin/inventory/utils/inventoryLabels" // Reimportar
 
-// Interfaz para los bienes
-interface BienMueble {
-  id: number;
-  grupo: number;
-  subgrupo: number;
-  cantidad: number;
-  nombre: string;
-  descripcion: string;
-  marca: string;
-  modelo: string;
-  numero_serial: string;
-  valor_unitario: number;
-  valor_total: number;
-  fecha: string;
-  departamento: number;
-  id_estado: number;
-  id_Parroquia: number;
-}
+// Carga diferida de componentes modales y formularios
+const AssetForm = lazy(() => import("./components/AssetForm").then(module => ({ default: module.AssetForm })));
+const ExportBM1Modal = lazy(() => import("./components/ExportBM1Modal").then(module => ({ default: module.ExportBM1Modal })));
+const ExportBM4Modal = lazy(() => import("./components/ExportBM4Modal").then(module => ({ default: module.ExportBM4Modal })));
+const ExportQRLabelsModal = lazy(() => import("./components/ExportQRLabelsModal").then(module => ({ default: module.ExportQRLabelsModal })));
+const ExportButtons = lazy(() => import("./components/ExportButtons").then(module => ({ default: module.ExportButtons })));
 
 export default function Inventory() {
-  const [bienes, setBienes] = useState<BienMueble[]>([]); // Estado para los bienes
-  const [nuevoBien, setNuevoBien] = useState<Partial<BienMueble>>({}); // Estado para el formulario
+  const [assets, setAssets] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [subgroups, setSubgroups] = useState([])
+  const [parroquias, setParroquias] = useState([])
+  const [marcas, setMarcas] = useState([])
+  const [modelos, setModelos] = useState([])
+  const [selectedAsset, setSelectedAsset] = useState(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [assetStates, setAssetStates] = useState([])
+  const [userProfile, setUserProfile] = useState(null)
+  const [canFilterByDept, setCanFilterByDept] = useState(false)
+  const [userAssets, setUserAssets] = useState([])
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+  const [isQRLabelsModalOpen, setIsQRLabelsModalOpen] = useState(false)
+  const [isBM4ModalOpen, setIsBM4ModalOpen] = useState(false)
+  const { isOpen: isConfirmOpen, onOpen: onConfirmOpen, onClose: onConfirmClose } = useDisclosure()
+  const cancelRef = React.useRef()
 
-  const textColor = useColorModeValue('secondaryGray.900', 'white');
+  const [bm4ExportParams, setBm4ExportParams] = useState<{
+    deptId: number | undefined
+    mes: number
+    año: number
+    responsableId: number | undefined
+    departamentoNombre: string | undefined
+  } | null>(null)
 
-  // Simulación de carga de datos desde la base de datos
-  useEffect(() => {
-    // Aquí puedes reemplazar con una llamada a tu API
-    setBienes([
-      {
-        id: 1,
-        grupo: 1,
-        subgrupo: 1,
-        cantidad: 10,
-        nombre: 'Silla',
-        descripcion: 'Silla de oficina ergonómica',
-        marca: 'ErgoChair',
-        modelo: 'X200',
-        numero_serial: '12345ABC',
-        valor_unitario: 150.0,
-        valor_total: 1500.0,
-        fecha: '2025-04-08',
-        departamento: 1,
-        id_estado: 1,
-        id_Parroquia: 1,
-      },
-    ]);
-  }, []);
+  const toast = useToast()
 
-  // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNuevoBien({ ...nuevoBien, [name]: value });
-  };
+  // Obtener los estados de bienes /goods-status
+  const getAssetStates = async () => {
+    const response = await axiosInstance.get("/goods-status")
+    return response.data.statusGoods
+  }
 
-  // Manejar envío del formulario
-  const handleSubmit = () => {
-    if (nuevoBien.nombre && nuevoBien.cantidad) {
-      const nuevoId = bienes.length + 1;
-      const bienConId = { ...nuevoBien, id: nuevoId } as BienMueble;
-      setBienes([...bienes, bienConId]);
-      setNuevoBien({});
+  // Filtros
+  const [filteredAssets, setFilteredAssets] = useState([])
+  const [filters, setFilters] = useState({
+    departmentId: undefined,
+    startDate: "",
+    endDate: "",
+    order: "recent",
+    search: "",
+    isActive: 1, // Añadir filtro isActive por defecto a 1 (activos)
+  })
+
+  // Colores y estilos
+  const cardBg = useColorModeValue("white", "gray.700")
+  const tabBorderColor = useColorModeValue("gray.200", "gray.700")
+  const textColor = useColorModeValue("gray.800", "white")
+  const hoverBg = useColorModeValue("gray.100", "gray.700")
+  const bg = useColorModeValue("gray.50", "gray.900")
+
+  // Función para cargar los bienes y otros datos
+  const fetchAllData = async () => {
+    try {
+      const [
+        assetsResult,
+        departmentsResult,
+        subgroupsResult,
+        marcasResult,
+        modelosResult,
+        parishResult,
+        assetStatesResult,
+      ] = await Promise.allSettled([
+        getAssets(),
+        getDepartments(),
+        getSubGroupsM(),
+        getMarcas(),
+        getModelos(),
+        getParroquias(),
+        getAssetStates(),
+      ])
+
+      if (assetsResult.status === "fulfilled") {
+        setAssets(assetsResult.value)
+      } else {
+        console.error("Error fetching assets:", assetsResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los bienes.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+        setAssets([])
+      }
+
+      if (departmentsResult.status === "fulfilled") {
+        setDepartments(departmentsResult.value)
+      } else {
+        console.error("Error fetching departments:", departmentsResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los departamentos.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+        setDepartments([])
+      }
+
+      if (subgroupsResult.status === "fulfilled") {
+        setSubgroups(subgroupsResult.value)
+      } else {
+        console.error("Error fetching subgroups:", subgroupsResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los subgrupos.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+        setSubgroups([])
+      }
+
+      if (marcasResult.status === "fulfilled") {
+        setMarcas(marcasResult.value)
+      } else {
+        console.error("Error fetching marcas:", marcasResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar las marcas.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+        setMarcas([])
+      }
+
+      if (modelosResult.status === "fulfilled") {
+        setModelos(modelosResult.value)
+      } else {
+        console.error("Error fetching modelos:", modelosResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los modelos.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+        setModelos([])
+      }
+
+      if (parishResult.status === "fulfilled") {
+        setParroquias(parishResult.value)
+      } else {
+        console.error("Error fetching parroquias:", parishResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar las parroquias.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+        setParroquias([])
+      }
+
+      if (assetStatesResult.status === "fulfilled") {
+        setAssetStates(assetStatesResult.value)
+      } else {
+        console.error("Error fetching asset states:", assetStatesResult.reason)
+        toast({
+          title: "Error de carga",
+          description: "No se pudieron cargar los estados de bienes.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+        setAssetStates([])
+      }
+    } catch (error) {
+      console.error("Unhandled error in fetchAllData:", error)
+      toast({
+        title: "Error crítico de carga",
+        description: "Ocurrió un error inesperado al cargar los datos iniciales.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
     }
-  };
+  }
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchAllData()
+  }, [])
+
+  // Obtener el perfil del usuario una vez al montar el componente
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await getProfile()
+        setUserProfile(profile)
+      } catch (error) {
+        console.error("Error fetching user profile:", error)
+        toast({
+          title: "Error al cargar perfil",
+          description: "No se pudo cargar la información del perfil del usuario.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        })
+      }
+    }
+    fetchProfile()
+  }, []) // Se ejecuta solo una vez al montar
+
+  // Filtrar assets basados en el perfil del usuario y los assets disponibles
+  useEffect(() => {
+    if (userProfile && assets.length > 0) {
+      if (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes") {
+        setUserAssets(assets)
+        setCanFilterByDept(true)
+      } else if (userProfile.dept_id) {
+        const filtered = assets.filter((asset) => asset.dept_id === userProfile.dept_id)
+        setUserAssets(filtered)
+        setCanFilterByDept(false)
+      } else {
+        setUserAssets(assets)
+        setCanFilterByDept(false)
+      }
+    } else if (!userProfile && assets.length > 0) {
+      // Si no hay perfil de usuario pero sí hay assets, mostrar todos los assets
+      setUserAssets(assets)
+      setCanFilterByDept(false)
+    }
+  }, [assets, userProfile]) // Depende de assets y userProfile
+
+  // Filtrar assets cada vez que cambian los filtros o los assets originales
+  useEffect(() => {
+    let filtered = [...userAssets]
+
+    if (canFilterByDept && filters.departmentId) {
+      filtered = filtered.filter((a) => a.dept_id === filters.departmentId)
+    }
+
+    if (filters.startDate) {
+      filtered = filtered.filter((a) => a.fecha && new Date(a.fecha) >= new Date(filters.startDate))
+    }
+
+    if (filters.endDate) {
+      filtered = filtered.filter((a) => a.fecha && new Date(a.fecha) <= new Date(filters.endDate))
+    }
+
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      filtered = filtered.filter((a) =>
+        Object.values(a).some((val) => val && String(val).toLowerCase().includes(searchLower)),
+      )
+    }
+
+    // Filtrar por estado activo/inactivo/todos
+    if (filters.isActive !== -1) {
+      // -1 significa "Todos"
+      filtered = filtered.filter((a) => a.isActive === filters.isActive)
+    }
+
+    if (filters.order === "recent") {
+      filtered = filtered.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+    } else {
+      filtered = filtered.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+    }
+
+    setFilteredAssets(filtered)
+  }, [userAssets, filters, canFilterByDept])
+
+  // Handlers
+  const handleFormSubmit = async (asset: MovableAsset, logDetails?: string) => {
+    try {
+      if (isEditing) {
+        await handleEditAsset(
+          asset.id,
+          asset,
+          setAssets,
+          () => setIsFormOpen(false),
+          logDetails || `Se editó el bien con ID: ${asset.id}`,
+        )
+      } else {
+        await handleAddAsset(
+          asset,
+          setAssets,
+          () => setIsFormOpen(false),
+          logDetails || `Se creó el bien con N°: ${asset.numero_identificacion}`,
+        )
+      }
+      setSelectedAsset(null)
+      setIsEditing(false)
+      fetchAllData() // Re-fetch data to update the table
+    } catch (error) {
+      console.error("Error saving asset:", error)
+      toast({
+        title: "Error al guardar bien",
+        description: "No se pudo guardar el bien. Intente de nuevo.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleDelete = async (assetId: any) => {
+    try {
+      await handleDeleteAsset(assetId, setAssets)
+      fetchAllData() // Re-fetch data to update the table
+    } catch (error) {
+      console.error("Error deleting asset:", error)
+      toast({
+        title: "Error al eliminar bien",
+        description: "No se pudo eliminar el bien. Intente de nuevo.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleFilter = (newFilters: any) => {
+    setFilters({
+      departmentId: newFilters.departmentId,
+      startDate: newFilters.startDate,
+      endDate: newFilters.endDate,
+      order: newFilters.order,
+      search: newFilters.search,
+      isActive: newFilters.isActive, // Asegurarse de que isActive se actualice
+    })
+  }
+
+  // Tabs (solo uno activo en este ejemplo)
+  const tabs = [
+    {
+      id: "inventory",
+      label: "Inventario",
+      icon: FiPackage,
+      color: "purple",
+      description: "Gestión de bienes muebles",
+    },
+  ]
+
+  const [activeTab] = useState("inventory")
+  const activeTabData = tabs.find((tab) => tab.id === activeTab)
 
   return (
-    <Box p="20px">
-      <Flex justify="space-between" align="center" mb="20px">
-        <Box fontSize="2xl" fontWeight="bold" color={textColor}>
-          Inventario de Bienes
-        </Box>
-      </Flex>
+    <Box minH="100vh" bg={bg} pt={{ base: "130px", md: "80px", xl: "80px" }}>
+      <Container maxW="100vw" px={{ base: 2, md: 4 }} py={{ base: 2, md: 4 }} w="full">
+        {/* Main Header */}
+        <Card
+          bg={cardBg}
+          shadow="lg"
+          borderRadius="xl"
+          border="1px"
+          borderColor={tabBorderColor}
+          mb={{ base: 4, md: 6 }}
+        >
+          <CardHeader p={{ base: 4, md: 6 }}>
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              justify="space-between"
+              align={{ base: "start", lg: "center" }}
+              gap={{ base: 3, md: 4 }}
+            >
+              <Box>
+                <Flex align="center" gap={{ base: 2, md: 3 }} mb={2}>
+                  <Box p={{ base: 1.5, md: 2 }} bg="blue.100" borderRadius="lg">
+                    <FiPackage size={24} color="#0059ae" />
+                  </Box>
+                  <Heading size={{ base: "md", md: "lg" }} fontWeight="bold" color={textColor}>
+                    Gestión de Bienes
+                  </Heading>
+                </Flex>
+                <Box color="gray.600" fontSize={{ base: "xs", md: "sm" }} display={{ base: "none", sm: "block" }}>
+                  Sistema integral para la administración de bienes muebles
+                </Box>
+              </Box>
+              {activeTabData && (
+                <Badge
+                  colorScheme={activeTabData.color}
+                  variant="subtle"
+                  px={{ base: 2, md: 3 }}
+                  py={1}
+                  borderRadius="full"
+                  fontSize={{ base: "xs", md: "sm" }}
+                  mt={{ base: 2, lg: 0 }}
+                >
+                  {activeTabData.label}
+                </Badge>
+              )}
+            </Flex>
+          </CardHeader>
+        </Card>
 
-      {/* Tabla de bienes */}
-      <Box overflowX="auto" mb="20px">
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Nombre</Th>
-              <Th>Descripción</Th>
-              <Th>Marca</Th>
-              <Th>Modelo</Th>
-              <Th>Cantidad</Th>
-              <Th>Valor Unitario</Th>
-              <Th>Valor Total</Th>
-              <Th>Fecha</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {bienes.map((bien) => (
-              <Tr key={bien.id}>
-                <Td>{bien.nombre}</Td>
-                <Td>{bien.descripcion}</Td>
-                <Td>{bien.marca}</Td>
-                <Td>{bien.modelo}</Td>
-                <Td>{bien.cantidad}</Td>
-                <Td>{bien.valor_unitario}</Td>
-                <Td>{bien.valor_total}</Td>
-                <Td>{bien.fecha}</Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
+        {/* Tab Navigation */}
+        <Card
+          bg={cardBg}
+          shadow="md"
+          borderRadius="xl"
+          border="1px"
+          borderColor={tabBorderColor}
+          mb={{ base: 4, md: 6 }}
+        >
+          <CardBody p={{ base: 3, md: 4 }}>
+            <Stack direction={{ base: "column", md: "row" }} spacing={{ base: 2, md: 2 }}>
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "solid" : "ghost"}
+                  colorScheme={activeTab === tab.id ? tab.color : "gray"}
+                  bg={activeTab === tab.id ? `${tab.color}.500` : "transparent"}
+                  color={activeTab === tab.id ? "white" : textColor}
+                  borderRadius="lg"
+                  _hover={{
+                    bg: activeTab === tab.id ? `${tab.color}.600` : hoverBg,
+                    transform: "translateY(-1px)",
+                  }}
+                  transition="all 0.2s"
+                  leftIcon={<Icon as={tab.icon} />}
+                  size={{ base: "md", md: "lg" }}
+                  fontWeight="medium"
+                  flex={{ base: "1", md: "auto" }}
+                  minW={{ base: "auto", md: "200px" }}
+                  boxShadow={activeTab === tab.id ? "md" : "none"}
+                  isActive={activeTab === tab.id}
+                  w={{ base: "full", md: "auto" }}
+                >
+                  <Box textAlign="left">
+                    <Box fontSize={{ base: "sm", md: "md" }}>{tab.label}</Box>
+                    <Box
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      opacity={0.8}
+                      fontWeight="normal"
+                      display={{ base: "none", md: "block" }}
+                    >
+                      {tab.description}
+                    </Box>
+                  </Box>
+                </Button>
+              ))}
+            </Stack>
+          </CardBody>
+        </Card>
 
-      {/* Formulario para agregar bienes */}
-      <Box>
-        <Box fontSize="xl" fontWeight="bold" color={textColor} mb="10px">
-          Agregar Nuevo Bien
+        {/* Tab Content */}
+        <Box>
+          {/* Botones de exportación */}
+          <Card
+            bg={cardBg}
+            shadow="md"
+            borderRadius="xl"
+            border="1px"
+            borderColor={tabBorderColor}
+            mb={{ base: 4, md: 6 }}
+          >
+            <CardBody p={{ base: 3, md: 4 }}>
+              <Suspense fallback={<Box>Cargando botones de exportación...</Box>}>
+                <ExportButtons
+                  userProfile={userProfile}
+                  setIsExportModalOpen={setIsExportModalOpen}
+                  setIsQRLabelsModalOpen={setIsQRLabelsModalOpen}
+                  setIsBM4ModalOpen={setIsBM4ModalOpen}
+                  onExportBM1={exportBM1WithMarkers} // Pasar la función como prop
+                  onExportQRLabels={exportQRLabels} // Pasar la función como prop
+                />
+              </Suspense>
+            </CardBody>
+          </Card>
+
+          {/* Filtros y tabla de bienes */}
+          <Card
+            bg={cardBg}
+            shadow="md"
+            borderRadius="xl"
+            border="1px"
+            borderColor={tabBorderColor}
+            mb={{ base: 4, md: 6 }}
+          >
+            <CardBody p={{ base: 3, md: 4 }}>
+              <Flex
+                direction={{ base: "column", lg: "row" }}
+                justify="space-between"
+                align={{ base: "stretch", lg: "center" }}
+                mb={{ base: 3, md: 4 }}
+                gap={{ base: 3, md: 4 }}
+              >
+                <Box flex={{ base: "1", lg: "auto" }} w={{ base: "full", lg: "auto" }}>
+                  <AssetFilters departments={departments} onFilter={handleFilter} canFilterByDept={canFilterByDept} />
+                </Box>
+                <Flex gap={2} align="center">
+                  <Button
+                    bgColor="type.primary"
+                    colorScheme="purple"
+                    size={{ base: "md", md: "md" }}
+                    leftIcon={<BsBox2 />}
+                    onClick={() => {
+                      setSelectedAsset(null)
+                      setIsEditing(false)
+                      setIsFormOpen(true)
+                    }}
+                    w={{ base: "full", lg: "auto" }}
+                    minW={{ base: "auto", lg: "160px" }}
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    <Box display={{ base: "none", sm: "block" }}>Agregar Bien</Box>
+                    <Box display={{ base: "block", sm: "none" }}>Agregar</Box>
+                  </Button>
+                </Flex>
+              </Flex>
+
+              <Box bg={cardBg} p={{ base: 2, md: 4 }} borderRadius="lg" boxShadow="sm" overflowX="auto">
+                <AssetTable
+                  assets={filteredAssets}
+                  onEdit={(asset) => {
+                    setSelectedAsset(asset)
+                    setIsEditing(true)
+                    setIsFormOpen(true)
+                    toast({
+                      title: "Editando bien",
+                      description: `Abriendo formulario para editar el bien con ID: ${asset.id}`,
+                      status: "info",
+                      duration: 2000,
+                      isClosable: true,
+                      position: "top",
+                    })
+                  }}
+                  onDelete={(asset) => handleDelete(asset.id)}
+                  userProfile={userProfile}
+                />
+              </Box>
+
+              {isFormOpen && (
+                <AssetForm
+                  isOpen={isFormOpen}
+                  onClose={() => setIsFormOpen(false)}
+                  onSubmit={handleFormSubmit}
+                  asset={selectedAsset}
+                  departments={departments}
+                  subgroups={subgroups}
+                  marcas={marcas}
+                  modelos={modelos}
+                  parroquias={parroquias}
+                  assetStates={assetStates}
+                />
+              )}
+
+              <ExportBM1Modal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                departments={departments}
+                onExport={exportBM1WithMarkers}
+              />
+
+              <ExportQRLabelsModal
+                isOpen={isQRLabelsModalOpen}
+                onClose={() => setIsQRLabelsModalOpen(false)}
+                departments={departments}
+                onExport={exportQRLabels}
+              />
+
+              <ExportBM4Modal
+                isOpen={isBM4ModalOpen}
+                onClose={() => setIsBM4ModalOpen(false)}
+                departments={departments}
+                userProfile={userProfile}
+                onExport={async (
+                  deptId: number | undefined,
+                  mes: number,
+                  año: number,
+                  responsableId: number | undefined,
+                  departamentoNombre: string | undefined,
+                  forceUpdate: boolean = false,
+                ) => {
+                  if (deptId === undefined || responsableId === undefined || departamentoNombre === undefined) {
+                    toast({
+                      title: "Error de exportación",
+                      description: "Faltan parámetros necesarios para generar el reporte BM4.",
+                      status: "error",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    return;
+                  }
+
+                  const result = await generateBM4Pdf(
+                    deptId,
+                    mes,
+                    año,
+                    responsableId,
+                    departamentoNombre,
+                    forceUpdate,
+                  );
+
+                  if (result.success) {
+                    toast({
+                      title: "Reporte BM4 generado",
+                      description: `El reporte BM4 para ${departamentoNombre} (${mes}/${año}) se ha descargado.`,
+                      status: "success",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    setIsBM4ModalOpen(false); // Cerrar el modal después de la descarga exitosa
+                  } else if (result.reportExists) {
+                    // Conflicto: el reporte ya existe
+                    setBm4ExportParams({ deptId, mes, año, responsableId, departamentoNombre });
+                    onConfirmOpen(); // Abrir el modal de confirmación
+                  } else {
+                    toast({
+                      title: "Error de exportación",
+                      description: result.errorMessage || `No se pudo generar el reporte BM4.`,
+                      status: "error",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    console.error("Error exporting BM4:", result.errorMessage);
+                  }
+                }}
+              />
+
+              {/* Modal de confirmación para sobrescribir BM4 */}
+              <AlertDialog isOpen={isConfirmOpen} leastDestructiveRef={cancelRef as React.RefObject<any>} onClose={onConfirmClose}>
+                <AlertDialogOverlay>
+                  <AlertDialogContent>
+                    <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                      Reporte BM-4 Existente
+                    </AlertDialogHeader>
+
+                    <AlertDialogBody>
+                      Ya existe un reporte BM-4 para el mes y departamento seleccionados. ¿Desea sobrescribirlo?
+                    </AlertDialogBody>
+
+                    <AlertDialogFooter>
+                      <Button ref={cancelRef as React.RefObject<any>} onClick={onConfirmClose}>
+                        Cancelar
+                      </Button>
+                      <Button
+                        colorScheme="red"
+                        onClick={async () => {
+                          onConfirmClose();
+                          if (bm4ExportParams && bm4ExportParams.deptId !== undefined && bm4ExportParams.responsableId !== undefined && bm4ExportParams.departamentoNombre !== undefined) {
+                            // Reintentar la exportación con forceUpdate: true
+                            const result = await generateBM4Pdf(
+                              bm4ExportParams.deptId,
+                              bm4ExportParams.mes,
+                              bm4ExportParams.año,
+                              bm4ExportParams.responsableId,
+                              bm4ExportParams.departamentoNombre,
+                              true,
+                            );
+
+                            if (result.success) {
+                              toast({
+                                title: "Reporte BM4 generado",
+                                description: `El reporte BM4 para ${bm4ExportParams.departamentoNombre} (${bm4ExportParams.mes}/${bm4ExportParams.año}) se ha descargado.`,
+                                status: "success",
+                                duration: 5000,
+                                isClosable: true,
+                              });
+                              setIsBM4ModalOpen(false);
+                            } else {
+                              toast({
+                                title: "Error de exportación",
+                                description: result.errorMessage || `No se pudo generar el reporte BM4 al sobrescribir.`,
+                                status: "error",
+                                duration: 5000,
+                                isClosable: true,
+                              });
+                              console.error("Error exporting BM4 on overwrite:", result.errorMessage);
+                            }
+                          } else {
+                            toast({
+                              title: "Error de exportación",
+                              description: "Parámetros de exportación BM4 incompletos para sobrescribir.",
+                              status: "error",
+                              duration: 5000,
+                              isClosable: true,
+                            });
+                          }
+                        }}
+                        ml={3}
+                      >
+                        Sobrescribir
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialogOverlay>
+              </AlertDialog>
+            </CardBody>
+          </Card>
         </Box>
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing="20px">
-          <FormControl>
-            <FormLabel>Nombre</FormLabel>
-            <Input
-              name="nombre"
-              value={nuevoBien.nombre || ''}
-              onChange={handleInputChange}
-              placeholder="Nombre del bien"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Descripción</FormLabel>
-            <Textarea
-              name="descripcion"
-              value={nuevoBien.descripcion || ''}
-              onChange={handleInputChange}
-              placeholder="Descripción del bien"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Marca</FormLabel>
-            <Input
-              name="marca"
-              value={nuevoBien.marca || ''}
-              onChange={handleInputChange}
-              placeholder="Marca"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Modelo</FormLabel>
-            <Input
-              name="modelo"
-              value={nuevoBien.modelo || ''}
-              onChange={handleInputChange}
-              placeholder="Modelo"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Cantidad</FormLabel>
-            <Input
-              name="cantidad"
-              type="number"
-              value={nuevoBien.cantidad || ''}
-              onChange={handleInputChange}
-              placeholder="Cantidad"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Valor Unitario</FormLabel>
-            <Input
-              name="valor_unitario"
-              type="number"
-              step="0.01"
-              value={nuevoBien.valor_unitario || ''}
-              onChange={handleInputChange}
-              placeholder="Valor Unitario"
-            />
-          </FormControl>
-        </SimpleGrid>
-        <Button mt="20px" colorScheme="blue" onClick={handleSubmit}>
-          Agregar Bien
-        </Button>
-      </Box>
+      </Container>
     </Box>
-  );
+  )
 }

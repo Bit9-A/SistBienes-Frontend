@@ -1,240 +1,186 @@
-/* eslint-disable */
-/*!
-  _   _  ___  ____  ___ ________  _   _   _   _ ___   
- | | | |/ _ \|  _ \|_ _|__  / _ \| \ | | | | | |_ _| 
- | |_| | | | | |_) || |  / / | | |  \| | | | | || | 
- |  _  | |_| |  _ < | | / /| |_| | |\  | | |_| || |
- |_| |_|\___/|_| \_\___/____\___/|_| \_|  \___/|___|
-                                                                                                                                                                                                                                                                                                                                       
-=========================================================
-* Horizon UI - v1.1.0
-=========================================================
-
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2022 Horizon UI (https://www.horizon-ui.com/)
-
-* Designed and Coded by Simmmple
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
-import React from "react";
-import { NavLink } from "react-router-dom";
-// Chakra imports
+import React, { useState,useEffect } from 'react';
 import {
   Box,
   Button,
-  Checkbox,
   Flex,
   FormControl,
   FormLabel,
   Heading,
-  Icon,
   Input,
   InputGroup,
   InputRightElement,
   Text,
+  Image,
   useColorModeValue,
-} from "@chakra-ui/react";
-// Custom components
-import { HSeparator } from "components/separator/Separator";
-import DefaultAuth from "layouts/auth/Default";
-// Assets
-import illustration from "assets/img/auth/auth.png";
-import { FcGoogle } from "react-icons/fc";
-import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { RiEyeCloseLine } from "react-icons/ri";
+  useToast,
+} from '@chakra-ui/react';
+import { MdOutlineRemoveRedEye } from 'react-icons/md';
+import { RiEyeCloseLine } from 'react-icons/ri';
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import banner from 'assets/img/banner.png';
+import { handleLogin,handleLogout } from '../signIn/utils/authUtils'; // Asegúrate de que la ruta sea correcta
+import { getProfile } from '../../../api/UserApi'; // Ajusta la ruta si es necesario
 
 
-function SignIn() {
+
+
+const SignIn = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const toast = useToast();
+  const navigate = useNavigate(); // Inicializa useNavigate
+
+  const handlePasswordVisibility = () => setShowPassword(!showPassword);
+
+  useEffect(() => {
+    // Verifica si el usuario ya está autenticado al cargar el componente
+    if (localStorage.getItem("user") || localStorage.getItem("token")) {
+      handleLogout()
+      toast({
+        title: 'Sesión cerrada',
+        description: 'Has sido desconectado exitosamente.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, []);
+
+
+  const handleSubmit = async () => {
+    if (!username || !password) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, completa todos los campos.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      await handleLogin(username, password);
+      // Obtener el perfil del usuario después de iniciar sesión
+      const profile = await getProfile();
+      toast({
+        title: 'Inicio de sesión exitoso',
+        description: 'Bienvenido al sistema.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      // Redirigir según el tipo de usuario
+      if (profile.nombre_tipo_usuario === 'Administrador') {
+        navigate('/admin/default');
+      } else {
+        navigate('/admin/asset-management');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
   // Chakra color mode
-  const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
-  const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
-  const textColorBrand = useColorModeValue("brand.500", "white");
-  const brandStars = useColorModeValue("brand.500", "brand.400");
-  const googleBg = useColorModeValue("secondaryGray.300", "whiteAlpha.200");
-  const googleText = useColorModeValue("navy.700", "white");
-  const googleHover = useColorModeValue(
-    { bg: "gray.200" },
-    { bg: "whiteAlpha.300" }
-  );
-  const googleActive = useColorModeValue(
-    { bg: "secondaryGray.300" },
-    { bg: "whiteAlpha.200" }
-  );
-  const [show, setShow] = React.useState(false);
-  const handleClick = () => setShow(!show);
+  const textColor = useColorModeValue('navy.700', 'white');
+  const textColorSecondary = useColorModeValue('gray.400', 'gray.400');
+
   return (
-    <DefaultAuth illustrationBackground={illustration} image={illustration}>
+    <Flex
+      w="100%"
+      h="100vh"
+      alignItems="center"
+      justifyContent="center"
+      bg={useColorModeValue('gray.50', 'gray.800')}
+    >
       <Flex
-        maxW={{ base: "100%", md: "max-content" }}
-        w='100%'
-        mx={{ base: "auto", lg: "0px" }}
-        me='auto'
-        h='100%'
-        alignItems='start'
-        justifyContent='center'
-        mb={{ base: "30px", md: "60px" }}
-        px={{ base: "25px", md: "0px" }}
-        mt={{ base: "40px", md: "14vh" }}
-        flexDirection='column'>
-        <Box me='auto'>
-          <Heading color={textColor} fontSize='36px' mb='10px'>
-            Sign In
-          </Heading>
-          <Text
-            mb='36px'
-            ms='4px'
-            color={textColorSecondary}
-            fontWeight='400'
-            fontSize='md'>
-            Enter your email and password to sign in!
-          </Text>
-        </Box>
+        w={{ base: '90%', md: '800px' }}
+        bg={useColorModeValue('white', 'gray.700')}
+        borderRadius="lg"
+        boxShadow="lg"
+        overflow="hidden"
+      >
+        {/* Banner */}
         <Flex
-          zIndex='2'
-          direction='column'
-          w={{ base: "100%", md: "420px" }}
-          maxW='100%'
-          background='transparent'
-          borderRadius='15px'
-          mx={{ base: "auto", lg: "unset" }}
-          me='auto'
-          mb={{ base: "20px", md: "auto" }}>
-          <Button
-            fontSize='sm'
-            me='0px'
-            mb='26px'
-            py='15px'
-            h='50px'
-            borderRadius='16px'
-            bg={googleBg}
-            color={googleText}
-            fontWeight='500'
-            _hover={googleHover}
-            _active={googleActive}
-            _focus={googleActive}>
-            <Icon as={FcGoogle as React.ElementType} w='20px' h='20px' me='10px' />
-            Sign in with Google
-          </Button>
-          <Flex align='center' mb='25px'>
-            <HSeparator />
-            <Text color='gray.400' mx='14px'>
-              or
-            </Text>
-            <HSeparator />
-          </Flex>
-          <FormControl>
-            <FormLabel
-              display='flex'
-              ms='4px'
-              fontSize='sm'
-              fontWeight='500'
-              color={textColor}
-              mb='8px'>
-              Email<Text color={brandStars}>*</Text>
-            </FormLabel>
+          alignItems="center"
+          justifyContent="center"
+          bgColor="type.primary"
+          display={{ base: 'none', md: 'flex' }}
+        >
+          <Image src={banner} alt="Banner Alcaldía" objectFit="contain" />
+        </Flex>
+
+        {/* Formulario de inicio de sesión */}
+        <Box w={{ base: '100%', md: '60%' }} p={8}>
+          <Heading color={textColor} fontSize="2xl" mb={4}>
+            Iniciar Sesión
+          </Heading>
+          <Text color={textColorSecondary} mb={6}>
+            Ingresa tu correo y contraseña para acceder al sistema.
+          </Text>
+          <FormControl mb={4}>
+            <FormLabel color={textColor}>Nombre de Usuario</FormLabel>
             <Input
-              isRequired={true}
-              variant='auth'
-              fontSize='sm'
-              ms={{ base: "0px", md: "0px" }}
-              type='email'
-              placeholder='mail@simmmple.com'
-              mb='24px'
-              fontWeight='500'
-              size='lg'
+              type="text"
+              placeholder="Nombre de usuario"
+              focusBorderColor="type.primary"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
-            <FormLabel
-              ms='4px'
-              fontSize='sm'
-              fontWeight='500'
-              color={textColor}
-              display='flex'>
-              Password<Text color={brandStars}>*</Text>
-            </FormLabel>
-            <InputGroup size='md'>
+          </FormControl>
+          <FormControl mb={6}>
+            <FormLabel color={textColor}>Contraseña</FormLabel>
+            <InputGroup>
               <Input
-                isRequired={true}
-                fontSize='sm'
-                placeholder='Min. 8 characters'
-                mb='24px'
-                size='lg'
-                type={show ? "text" : "password"}
-                variant='auth'
+                type={showPassword ? 'text' : 'password'}
+                placeholder="********"
+                focusBorderColor="type.primary"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSubmit();
+                  }
+                }}
               />
-              <InputRightElement display='flex' alignItems='center' mt='4px'>
-                <Icon
-                  color={textColorSecondary}
-                  _hover={{ cursor: "pointer" }}
-                  as={show ? RiEyeCloseLine as React.ElementType: MdOutlineRemoveRedEye as React.ElementType}
-                  onClick={handleClick}
-                />
+              <InputRightElement>
+                <Button
+                  variant="ghost"
+                  onClick={handlePasswordVisibility}
+                  size="sm"
+                >
+                  {showPassword ? (
+                    <RiEyeCloseLine color={textColorSecondary} />
+                  ) : (
+                    <MdOutlineRemoveRedEye color={textColorSecondary} />
+                  )}
+                </Button>
               </InputRightElement>
             </InputGroup>
-            <Flex justifyContent='space-between' align='center' mb='24px'>
-              <FormControl display='flex' alignItems='center'>
-                <Checkbox
-                  id='remember-login'
-                  colorScheme='brandScheme'
-                  me='10px'
-                />
-                <FormLabel
-                  htmlFor='remember-login'
-                  mb='0'
-                  fontWeight='normal'
-                  color={textColor}
-                  fontSize='sm'>
-                  Keep me logged in
-                </FormLabel>
-              </FormControl>
-              <NavLink to='/auth/forgot-password'>
-                <Text
-                  color={textColorBrand}
-                  fontSize='sm'
-                  w='124px'
-                  fontWeight='500'>
-                  Forgot password?
-                </Text>
-              </NavLink>
-            </Flex>
-            <Button
-              fontSize='sm'
-              variant='brand'
-              fontWeight='500'
-              w='100%'
-              h='50'
-              mb='24px'>
-              Sign In
-            </Button>
           </FormControl>
-          <Flex
-            flexDirection='column'
-            justifyContent='center'
-            alignItems='start'
-            maxW='100%'
-            mt='0px'>
-            <Text color={textColorDetails} fontWeight='400' fontSize='14px'>
-              Not registered yet?
-              <NavLink to='/auth/sign-up'>
-                <Text
-                  color={textColorBrand}
-                  as='span'
-                  ms='5px'
-                  fontWeight='500'>
-                  Create an Account
-                </Text>
-              </NavLink>
-            </Text>
-          </Flex>
-        </Flex>
+          <Button
+            w="100%"
+            bg="type.primary"
+            color="white"
+            _hover={{ bg: 'type.primary', opacity: 0.9 }}
+            mb={4}
+            onClick={handleSubmit}
+          >
+            Iniciar Sesión
+          </Button>
+          <Text fontSize="sm" color={textColorSecondary} textAlign="center">
+            ¿Olvidaste tu contraseña? Contacta al administrador.
+          </Text>
+        </Box>
       </Flex>
-    </DefaultAuth>
+    </Flex>
   );
-}
+};
 
 export default SignIn;

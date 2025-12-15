@@ -1,6 +1,23 @@
 import { mode } from '@chakra-ui/theme-tools';
+
+export const images = {
+	
+
+};
+
+
 export const globalStyles = {
 	colors: {
+	 type: {
+      title: "#4632da",
+      primary: "#310493",
+      cbutton: "#ffffff",
+      cardBg: "white",
+      headerBg: "gray.50",
+      borderColor:"gray.200",
+      hoverBg: "gray.50",
+      textColor: "type.title",
+    },
 		brand: {
 			100: '#E9E3FF',
 			200: '#422AFB',
@@ -80,18 +97,22 @@ export const globalStyles = {
 	},
 	styles: {
 		global: (props: any) => ({
-			body: {
-				overflowX: 'hidden',
-				bg: mode('secondaryGray.300', 'navy.900')(props),
-				fontFamily: 'DM Sans',
-				letterSpacing: '-0.5px'
-			},
-			input: {
-				color: 'gray.700'
-			},
-			html: {
-				fontFamily: 'DM Sans'
-			}
-		})
-	}
+		  body: {
+			overflowX: "hidden",
+			bg: mode("secondaryGray.300", "navy.900")(props),
+			fontFamily: "DM Sans",
+			letterSpacing: "-0.5px",
+		  },
+		  "*": {
+			fontFamily: "DM Sans",
+			letterSpacing: "-0.5px",
+		  },
+		  input: {
+			color: "gray.700",
+		  },
+		  html: {
+			fontFamily: "DM Sans",
+		  },
+		}),
+	  }
 };

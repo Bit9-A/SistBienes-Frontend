@@ -1,136 +1,130 @@
-/*!
-  _   _  ___  ____  ___ ________  _   _   _   _ ___   
- | | | |/ _ \|  _ \|_ _|__  / _ \| \ | | | | | |_ _| 
- | |_| | | | | |_) || |  / / | | |  \| | | | | || | 
- |  _  | |_| |  _ < | | / /| |_| | |\  | | |_| || |
- |_| |_|\___/|_| \_\___/____\___/|_| \_|  \___/|___|
-                                                                                                                                                                                                                                                                                                                                       
-=========================================================
-* Horizon UI - v1.1.0
-=========================================================
-
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2022 Horizon UI (https://www.horizon-ui.com/)
-
-* Designed and Coded by Simmmple
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
 // Chakra imports
-import { Avatar, Box, Flex, FormLabel, Icon, Select, SimpleGrid, useColorModeValue } from '@chakra-ui/react';
-// Assets
-import Usa from 'assets/img/dashboards/usa.png';
+import {
+  Avatar,
+  Box,
+  Container,
+  Flex,
+  FormLabel,
+  Icon,
+  Text,
+  SimpleGrid,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import React, { useEffect, useState, Suspense } from 'react';
+//Data Api
+import {
+  DashboardCountsTotal,
+  getDashboardTotal,
+  DashboardCountsLastWeek,
+  getDashboardCountsLastWeek,
+} from '../../../api/DashboardApi';
 // Custom components
 import MiniCalendar from 'components/calendar/MiniCalendar';
 import MiniStatistics from 'components/card/MiniStatistics';
 import IconBox from 'components/icons/IconBox';
-import { MdAddTask, MdAttachMoney, MdBarChart, MdFileCopy } from 'react-icons/md';
-import CheckTable from 'views/admin/rtl/components/CheckTable';
-import ComplexTable from 'views/admin/default/components/ComplexTable';
-import DailyTraffic from 'views/admin/default/components/DailyTraffic';
-import PieCard from 'views/admin/default/components/PieCard';
-import Tasks from 'views/admin/default/components/Tasks';
+import { MdFileCopy } from 'react-icons/md';
+const PieCard = React.lazy(() => import('views/admin/default/components/PieCard'));
 import TotalSpent from 'views/admin/default/components/TotalSpent';
-import WeeklyRevenue from 'views/admin/default/components/WeeklyRevenue';
-import tableDataCheck from 'views/admin/default/variables/tableDataCheck';
-import tableDataComplex from 'views/admin/default/variables/tableDataComplex';
+import BarChart from 'views/admin/default/components/BarChart';
+import ColumnChart from 'views/admin/default/components/ColummChart';
+// Data MiniStatistics
 
 export default function UserReports() {
-	// Chakra Color Mode
-	const brandColor = useColorModeValue('brand.500', 'white');
-	const boxBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
-	return (
-		<Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
-			<SimpleGrid columns={{ base: 1, md: 2, lg: 3, '2xl': 6 }} gap='20px' mb='20px'>
-				<MiniStatistics
-					startContent={
-						<IconBox
-							w='56px'
-							h='56px'
-							bg={boxBg}
-							icon={<Icon w='32px' h='32px' as={MdBarChart  as React.ElementType} color={brandColor} />}
-						/>
-					}
-					name='Earnings'
-					value='$350.4'
-				/>
-				<MiniStatistics
-					startContent={
-						<IconBox
-							w='56px'
-							h='56px'
-							bg={boxBg}
-							icon={<Icon w='32px' h='32px' as={MdAttachMoney  as React.ElementType} color={brandColor} />}
-						/>
-					}
-					name='Spend this month'
-					value='$642.39'
-				/>
-				<MiniStatistics growth='+23%' name='Sales' value='$574.34' />
-				<MiniStatistics
-					endContent={
-						<Flex me='-16px' mt='10px'>
-							<FormLabel htmlFor='balance'>
-								<Avatar src={Usa} />
-							</FormLabel>
-							<Select id='balance' variant='mini' mt='5px' me='0px' defaultValue='usd'>
-								<option value='usd'>USD</option>
-								<option value='eur'>EUR</option>
-								<option value='gba'>GBA</option>
-							</Select>
-						</Flex>
-					}
-					name='Your balance'
-					value='$1,000'
-				/>
-				<MiniStatistics
-					startContent={
-						<IconBox
-							w='56px'
-							h='56px'
-							bg='linear-gradient(90deg, #4481EB 0%, #04BEFE 100%)'
-							icon={<Icon w='28px' h='28px' as={MdAddTask  as React.ElementType} color='white' />}
-						/>
-					}
-					name='New Tasks'
-					value='154'
-				/>
-				<MiniStatistics
-					startContent={
-						<IconBox
-							w='56px'
-							h='56px'
-							bg={boxBg}
-							icon={<Icon w='32px' h='32px' as={MdFileCopy  as React.ElementType} color={brandColor} />}
-						/>
-					}
-					name='Total Projects'
-					value='2935'
-				/>
-			</SimpleGrid>
+  // Chakra Color Mode
+  const brandColor = useColorModeValue('brand.500', 'white');
+  const boxBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
+  const [counts, setCounts] = useState<DashboardCountsTotal[]>([]);
+  const [lastweekCounts, setLastweekCounts] = useState<
+    DashboardCountsLastWeek[]
+  >([]);
+  const [loading, setLoading] = useState(true);
 
-			<SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px' mb='20px'>
-				<TotalSpent />
-				<WeeklyRevenue />
-			</SimpleGrid>
-			<SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap='20px' mb='20px'>
-				<CheckTable tableData={tableDataCheck} />
-				<SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px'>
-					<DailyTraffic />
-					<PieCard />
-				</SimpleGrid>
-			</SimpleGrid>
-			<SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap='20px' mb='20px'>
-				<ComplexTable tableData={tableDataComplex} />
-				<SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px'>
-					<Tasks />
-					<MiniCalendar h='100%' minW='100%' selectRange={false} />
-				</SimpleGrid>
-			</SimpleGrid>
-		</Box>
-	);
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const response = await getDashboardTotal();
+        setCounts(Array.isArray(response) ? response : []);
+        const lastWeekResponse = await getDashboardCountsLastWeek();
+        setLastweekCounts(
+          Array.isArray(lastWeekResponse) ? lastWeekResponse : [],
+        );
+      } catch (error) {
+        console.error('Error fetching dashboard counts:', error);
+        setCounts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
+  if (loading) return <Text>Cargando...</Text>;
+  return (
+    <Box pt={{ base: '130px', md: '90px', xl: '90px' }}>
+      <Container
+        maxW="100vw"
+        px={{ base: 2, md: 4 }}
+        py={{ base: 2, md: 4 }}
+        w="full"
+      >
+        <SimpleGrid
+          columns={{ base: 1, md: 2, lg: 3, '2xl': 6 }}
+          gap="20px"
+          mb="20px"
+        >
+          <BarChart />
+          <Suspense fallback={<div>Cargando gráfico...</div>}>
+            <PieCard />
+          </Suspense>
+          <MiniCalendar h="100%" minW="100%" selectRange={false} />
+          <MiniStatistics
+            startContent={
+              <IconBox
+                w="56px"
+                h="56px"
+                bg={boxBg}
+                icon={
+                  <Icon
+                    w="32px"
+                    h="32px"
+                    as={MdFileCopy as React.ElementType}
+                    color={brandColor}
+                  />
+                }
+              />
+            }
+            name="Total Bienes"
+            value={counts.length > 0 ? counts[0].suma_cantidad : '0'}
+          />
+          <div />
+          <MiniStatistics
+            startContent={
+              <IconBox
+                w="56px"
+                h="56px"
+                bg={boxBg}
+                icon={
+                  <Icon
+                    w="32px"
+                    h="32px"
+                    as={MdFileCopy as React.ElementType}
+                    color={brandColor}
+                  />
+                }
+              />
+            }
+            name="Bines Registrados en la última semana"
+            value={
+              lastweekCounts.length > 0 ? lastweekCounts[0].ultimaSemana : '0'
+            }
+          />
+        </SimpleGrid>
+        <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap="20px" mb="20px">
+          <TotalSpent />
+          <ColumnChart />
+        </SimpleGrid>
+      </Container>
+    </Box>
+  );
 }
