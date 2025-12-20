@@ -68,7 +68,7 @@ const SignIn = () => {
         isClosable: true,
       });
       // Redirigir según el tipo de usuario
-      if (profile.nombre_tipo_usuario === 'Administrador') {
+      if (profile.nombre_tipo_usuario === 'Administrador' || profile.nombre_tipo_usuario === 'Superadmin') {
         navigate('/admin/default');
       } else {
         navigate('/admin/asset-management');
