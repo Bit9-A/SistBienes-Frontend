@@ -5,11 +5,24 @@ import axiosInstance from '../../../../utils/axiosInstance';
  * @param deptId ID del departamento.
  * @param departamentoNombre Nombre del departamento.
  */
-export async function exportQRLabels(deptId: number, departamentoNombre: string) {
+export async function exportQRLabels(
+  deptId: number,
+  departamentoNombre: string,
+) {
   try {
-    const respuesta = await axiosInstance.post('/labels/qr', { deptId: deptId }, {
-      responseType: 'blob', // Importante para manejar la respuesta como un Blob
-    });
+    console.log(
+      '[exportQRLabels] Sending request with deptId:',
+      deptId,
+      'type:',
+      typeof deptId,
+    );
+    const respuesta = await axiosInstance.post(
+      '/labels/qr',
+      { deptId: deptId },
+      {
+        responseType: 'blob', // Importante para manejar la respuesta como un Blob
+      },
+    );
 
     if (respuesta.status !== 200) {
       throw new Error('Fallo al generar el archivo PDF de etiquetas QR');
@@ -27,7 +40,9 @@ export async function exportQRLabels(deptId: number, departamentoNombre: string)
       }
     }
 
-    const blob = new Blob([respuesta.data], { type: respuesta.headers['content-type'] });
+    const blob = new Blob([respuesta.data], {
+      type: respuesta.headers['content-type'],
+    });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -36,7 +51,6 @@ export async function exportQRLabels(deptId: number, departamentoNombre: string)
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
-
   } catch (error: any) {
     console.error('Error al descargar el archivo PDF de etiquetas QR:', error);
     alert(`Error: ${error.message}`);

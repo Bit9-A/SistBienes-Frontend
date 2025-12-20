@@ -155,68 +155,81 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
       <ModalOverlay />
-      <ModalContent >
+      <ModalContent>
         <ModalHeader>Crear Nuevo Usuario</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Stack spacing={4}>
-            <FormControl>
-              <FormLabel>Nombre</FormLabel>
-              <Input
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                placeholder="Nombre"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Apellido</FormLabel>
-              <Input
-                name="apellido"
-                value={formData.apellido}
-                onChange={handleChange}
-                placeholder="Apellido"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Nombre de Usuario</FormLabel>
-              <Input
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Nombre de usuario"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Email</FormLabel>
-              <Input
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-                type="email"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Cédula</FormLabel>
-              <Input
-                name="cedula"
-                value={formData.cedula}
-                onChange={handleChange}
-                placeholder="V-12345678"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Teléfono</FormLabel>
-              <Input
-                name="telefono"
-                value={formData.telefono}
-                onChange={handleChange}
-                placeholder="Teléfono"
-              />
-            </FormControl>
+            {/* Row 1: Nombre y Apellido */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Nombre</FormLabel>
+                <Input
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  placeholder="Nombre"
+                />
+              </FormControl>
+              <FormControl flex={1}>
+                <FormLabel>Apellido</FormLabel>
+                <Input
+                  name="apellido"
+                  value={formData.apellido}
+                  onChange={handleChange}
+                  placeholder="Apellido"
+                />
+              </FormControl>
+            </Stack>
+
+            {/* Row 2: Username y Email */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Nombre de Usuario</FormLabel>
+                <Input
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Nombre de usuario"
+                />
+              </FormControl>
+              <FormControl flex={1}>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Email"
+                  type="email"
+                />
+              </FormControl>
+            </Stack>
+
+            {/* Row 3: Cédula y Teléfono */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Cédula</FormLabel>
+                <Input
+                  name="cedula"
+                  value={formData.cedula}
+                  onChange={handleChange}
+                  placeholder="V-12345678"
+                />
+              </FormControl>
+              <FormControl flex={1}>
+                <FormLabel>Teléfono</FormLabel>
+                <Input
+                  name="telefono"
+                  value={formData.telefono}
+                  onChange={handleChange}
+                  placeholder="Teléfono"
+                />
+              </FormControl>
+            </Stack>
+
+            {/* Row 4: Contraseña */}
             <FormControl>
               <FormLabel>Contraseña</FormLabel>
               <Input
@@ -227,83 +240,87 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                 type="password"
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Tipo de Usuario</FormLabel>
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  rightIcon={<ChevronDownIcon />}
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
-                  _focus={{ boxShadow: 'outline' }}
-                  w="100%"
-                  textAlign="left"
-                >
-                  {userRoles.find(
-                    (role) => role.id === Number(formData.tipo_usuario),
-                  )?.nombre || 'Seleccione un tipo de usuario'}
-                </MenuButton>
-                <MenuList
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                >
-                  {userRoles.map((role) => (
-                    <MenuItem
-                      key={role.id}
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          tipo_usuario: role.id.toString(),
-                        }))
-                      }
-                    >
-                      {role.nombre}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
-            </FormControl>
 
-            <FormControl>
-              <FormLabel >Departamento</FormLabel>
-              <Menu >
-                <MenuButton
-                  as={Button}
-                  rightIcon={<ChevronDownIcon />}
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
-                  _focus={{ boxShadow: 'outline' }}
-                  w="100%"
-                  textAlign="left"
-                >
-                  {departments.find(
-                    (dept) => dept.id === Number(formData.dept_id),
-                  )?.nombre || 'Seleccione un departamento'}
-                </MenuButton>
-                <MenuList
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                  maxH="300px"
-                  overflowY="auto"
-                >
-                  {departments.map((dept) => (
-                    <MenuItem
-                      key={dept.id}
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          dept_id: dept.id.toString(),
-                        }))
-                      }
-                    >
-                      {dept.nombre}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
-            </FormControl>
+            {/* Row 5: Tipo de Usuario y Departamento */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Tipo de Usuario</FormLabel>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                    _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                    _focus={{ boxShadow: 'outline' }}
+                    w="100%"
+                    textAlign="left"
+                  >
+                    {userRoles.find(
+                      (role) => role.id === Number(formData.tipo_usuario),
+                    )?.nombre || 'Seleccione un tipo de usuario'}
+                  </MenuButton>
+                  <MenuList
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  >
+                    {userRoles.map((role) => (
+                      <MenuItem
+                        key={role.id}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            tipo_usuario: role.id.toString(),
+                          }))
+                        }
+                      >
+                        {role.nombre}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Menu>
+              </FormControl>
+
+              <FormControl flex={1}>
+                <FormLabel>Departamento</FormLabel>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                    _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                    _focus={{ boxShadow: 'outline' }}
+                    w="100%"
+                    textAlign="left"
+                  >
+                    {departments.find(
+                      (dept) => dept.id === Number(formData.dept_id),
+                    )?.nombre || 'Seleccione un departamento'}
+                  </MenuButton>
+                  <MenuList
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                    maxH="300px"
+                    overflowY="auto"
+                  >
+                    {departments.map((dept) => (
+                      <MenuItem
+                        key={dept.id}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            dept_id: dept.id.toString(),
+                          }))
+                        }
+                      >
+                        {dept.nombre}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Menu>
+              </FormControl>
+            </Stack>
           </Stack>
         </ModalBody>
         <ModalFooter>
@@ -378,7 +395,12 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
   };
 
   const handleSubmit = () => {
-    if (!formData.nombre || !formData.apellido || !formData.username || !formData.email) {
+    if (
+      !formData.nombre ||
+      !formData.apellido ||
+      !formData.username ||
+      !formData.email
+    ) {
       toast({
         title: 'Error',
         description: 'Por favor, completa todos los campos obligatorios.',
@@ -401,68 +423,81 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Editar Usuario</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Stack spacing={4}>
-            <FormControl>
-              <FormLabel>Nombre</FormLabel>
-              <Input
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                placeholder="Nombre"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Apellido</FormLabel>
-              <Input
-                name="apellido"
-                value={formData.apellido}
-                onChange={handleChange}
-                placeholder="Apellido"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Nombre de Usuario</FormLabel>
-              <Input
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Nombre de usuario"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Email</FormLabel>
-              <Input
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-                type="email"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Cédula</FormLabel>
-              <Input
-                name="cedula"
-                value={formData.cedula}
-                onChange={handleChange}
-                placeholder="V-12345678"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Teléfono</FormLabel>
-              <Input
-                name="telefono"
-                value={formData.telefono}
-                onChange={handleChange}
-                placeholder="Teléfono"
-              />
-            </FormControl>
+            {/* Row 1: Nombre y Apellido */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Nombre</FormLabel>
+                <Input
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  placeholder="Nombre"
+                />
+              </FormControl>
+              <FormControl flex={1}>
+                <FormLabel>Apellido</FormLabel>
+                <Input
+                  name="apellido"
+                  value={formData.apellido}
+                  onChange={handleChange}
+                  placeholder="Apellido"
+                />
+              </FormControl>
+            </Stack>
+
+            {/* Row 2: Username y Email */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Nombre de Usuario</FormLabel>
+                <Input
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Nombre de usuario"
+                />
+              </FormControl>
+              <FormControl flex={1}>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Email"
+                  type="email"
+                />
+              </FormControl>
+            </Stack>
+
+            {/* Row 3: Cédula y Teléfono */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Cédula</FormLabel>
+                <Input
+                  name="cedula"
+                  value={formData.cedula}
+                  onChange={handleChange}
+                  placeholder="V-12345678"
+                />
+              </FormControl>
+              <FormControl flex={1}>
+                <FormLabel>Teléfono</FormLabel>
+                <Input
+                  name="telefono"
+                  value={formData.telefono}
+                  onChange={handleChange}
+                  placeholder="Teléfono"
+                />
+              </FormControl>
+            </Stack>
+
+            {/* Row 4: Activo */}
             <FormControl>
               <FormLabel>Activo</FormLabel>
               <Select
@@ -474,83 +509,87 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                 <option value="0">No</option>
               </Select>
             </FormControl>
-            <FormControl>
-              <FormLabel>Tipo de Usuario</FormLabel>
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  rightIcon={<ChevronDownIcon />}
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
-                  _focus={{ boxShadow: 'outline' }}
-                  w="100%"
-                  textAlign="left"
-                >
-                  {userRoles.find(
-                    (role) => role.id === Number(formData.tipo_usuario),
-                  )?.nombre || 'Seleccione un tipo de usuario'}
-                </MenuButton>
-                <MenuList
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                >
-                  {userRoles.map((role) => (
-                    <MenuItem
-                      key={role.id}
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          tipo_usuario: role.id.toString(),
-                        }))
-                      }
-                    >
-                      {role.nombre}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
-            </FormControl>
 
-            <FormControl>
-              <FormLabel>Departamento</FormLabel>
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  rightIcon={<ChevronDownIcon />}
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                  _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
-                  _focus={{ boxShadow: 'outline' }}
-                  w="100%"
-                  textAlign="left"
-                >
-                  {departments.find(
-                    (dept) => dept.id === Number(formData.dept_id),
-                  )?.nombre || 'Seleccione un departamento'}
-                </MenuButton>
-                <MenuList
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={useColorModeValue('gray.300', 'gray.600')}
-                  maxH="300px"
-                  overflowY="auto"
-                >
-                  {departments.map((dept) => (
-                    <MenuItem
-                      key={dept.id}
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          dept_id: dept.id.toString(),
-                        }))
-                      }
-                    >
-                      {dept.nombre}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
-            </FormControl>
+            {/* Row 5: Tipo de Usuario y Departamento */}
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+              <FormControl flex={1}>
+                <FormLabel>Tipo de Usuario</FormLabel>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                    _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                    _focus={{ boxShadow: 'outline' }}
+                    w="100%"
+                    textAlign="left"
+                  >
+                    {userRoles.find(
+                      (role) => role.id === Number(formData.tipo_usuario),
+                    )?.nombre || 'Seleccione un tipo de usuario'}
+                  </MenuButton>
+                  <MenuList
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                  >
+                    {userRoles.map((role) => (
+                      <MenuItem
+                        key={role.id}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            tipo_usuario: role.id.toString(),
+                          }))
+                        }
+                      >
+                        {role.nombre}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Menu>
+              </FormControl>
+
+              <FormControl flex={1}>
+                <FormLabel>Departamento</FormLabel>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                    _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                    _focus={{ boxShadow: 'outline' }}
+                    w="100%"
+                    textAlign="left"
+                  >
+                    {departments.find(
+                      (dept) => dept.id === Number(formData.dept_id),
+                    )?.nombre || 'Seleccione un departamento'}
+                  </MenuButton>
+                  <MenuList
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={useColorModeValue('gray.300', 'gray.600')}
+                    maxH="300px"
+                    overflowY="auto"
+                  >
+                    {departments.map((dept) => (
+                      <MenuItem
+                        key={dept.id}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            dept_id: dept.id.toString(),
+                          }))
+                        }
+                      >
+                        {dept.nombre}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Menu>
+              </FormControl>
+            </Stack>
           </Stack>
         </ModalBody>
         <ModalFooter>

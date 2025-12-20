@@ -5,9 +5,9 @@ import {
   useBreakpointValue,
   Icon,
   Box,
-} from "@chakra-ui/react"
-import { FiDownload, FiFileText, FiTag } from "react-icons/fi"
-import { UserProfile } from "api/UserApi" // Asumiendo que tienes un tipo UserProfile
+} from '@chakra-ui/react';
+import { FiDownload, FiFileText, FiTag } from 'react-icons/fi';
+import { UserProfile } from 'api/UserApi'; // Asumiendo que tienes un tipo UserProfile
 
 interface ExportButtonsProps {
   userProfile: UserProfile | null;
@@ -27,8 +27,8 @@ export function ExportButtons({
   onExportBM1,
   onExportQRLabels,
 }: ExportButtonsProps) {
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const isTablet = useBreakpointValue({ base: false, md: true, lg: false });
 
   return (
     <>
@@ -37,12 +37,17 @@ export function ExportButtons({
           <Button
             colorScheme="green"
             leftIcon={<FiDownload />}
-            size={{ base: "md", md: "lg" }}
+            size={{ base: 'md', md: 'lg' }}
             onClick={() => {
-              if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                setIsExportModalOpen(true)
+              if (
+                userProfile &&
+                (userProfile.tipo_usuario === 1 ||
+                  userProfile.tipo_usuario === 5 ||
+                  userProfile.dept_nombre === 'Bienes')
+              ) {
+                setIsExportModalOpen(true);
               } else {
-                onExportBM1(userProfile?.dept_id, userProfile?.dept_nombre)
+                onExportBM1(userProfile?.dept_id, userProfile?.dept_nombre);
               }
             }}
           >
@@ -51,12 +56,20 @@ export function ExportButtons({
           <Button
             colorScheme="purple"
             leftIcon={<FiTag />}
-            size={{ base: "md", md: "lg" }}
+            size={{ base: 'md', md: 'lg' }}
             onClick={() => {
-              if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                setIsQRLabelsModalOpen(true)
+              if (
+                userProfile &&
+                (userProfile.tipo_usuario === 1 ||
+                  userProfile.tipo_usuario === 5 ||
+                  userProfile.dept_nombre === 'Bienes')
+              ) {
+                setIsQRLabelsModalOpen(true);
               } else {
-                onExportQRLabels(userProfile?.dept_id, userProfile?.dept_nombre)
+                onExportQRLabels(
+                  userProfile?.dept_id,
+                  userProfile?.dept_nombre,
+                );
               }
             }}
           >
@@ -65,7 +78,7 @@ export function ExportButtons({
           <Button
             colorScheme="orange"
             leftIcon={<FiFileText />}
-            size={{ base: "md", md: "lg" }}
+            size={{ base: 'md', md: 'lg' }}
             onClick={() => setIsBM4ModalOpen(true)}
           >
             Exportar BM-4
@@ -78,10 +91,15 @@ export function ExportButtons({
             leftIcon={<FiDownload />}
             size="md"
             onClick={() => {
-              if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                setIsExportModalOpen(true)
+              if (
+                userProfile &&
+                (userProfile.tipo_usuario === 1 ||
+                  userProfile.tipo_usuario === 5 ||
+                  userProfile.dept_nombre === 'Bienes')
+              ) {
+                setIsExportModalOpen(true);
               } else {
-                onExportBM1(userProfile?.dept_id, userProfile?.dept_nombre)
+                onExportBM1(userProfile?.dept_id, userProfile?.dept_nombre);
               }
             }}
           >
@@ -92,10 +110,18 @@ export function ExportButtons({
             leftIcon={<FiTag />}
             size="md"
             onClick={() => {
-              if (userProfile && (userProfile.tipo_usuario === 1 || userProfile.dept_nombre === "Bienes")) {
-                setIsQRLabelsModalOpen(true)
+              if (
+                userProfile &&
+                (userProfile.tipo_usuario === 1 ||
+                  userProfile.tipo_usuario === 5 ||
+                  userProfile.dept_nombre === 'Bienes')
+              ) {
+                setIsQRLabelsModalOpen(true);
               } else {
-                onExportQRLabels(userProfile?.dept_id, userProfile?.dept_nombre)
+                onExportQRLabels(
+                  userProfile?.dept_id,
+                  userProfile?.dept_nombre,
+                );
               }
             }}
           >
@@ -112,5 +138,5 @@ export function ExportButtons({
         </HStack>
       )}
     </>
-  )
+  );
 }

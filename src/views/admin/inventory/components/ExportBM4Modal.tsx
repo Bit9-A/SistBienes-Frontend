@@ -28,7 +28,13 @@ interface ExportBM4ModalProps {
   onClose: () => void;
   departments: Department[];
   userProfile: UserProfile | null;
-  onExport: (deptId: number, mes: number, año: number, responsableId: number, departamentoNombre: string) => void;
+  onExport: (
+    deptId: number,
+    mes: number,
+    año: number,
+    responsableId: number,
+    departamentoNombre: string,
+  ) => void;
 }
 
 export const ExportBM4Modal: React.FC<ExportBM4ModalProps> = ({
@@ -38,11 +44,20 @@ export const ExportBM4Modal: React.FC<ExportBM4ModalProps> = ({
   userProfile,
   onExport,
 }) => {
-  const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | undefined>(undefined);
-  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<
+    number | undefined
+  >(undefined);
+  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(
+    undefined,
+  );
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear(),
+  );
 
-  const isAdminOrBienes = userProfile?.tipo_usuario === 1 || userProfile?.dept_nombre === 'Bienes'; // Asumiendo role_id 1 para admin y dept_nombre 'Bienes'
+  const isAdminOrBienes =
+    userProfile?.tipo_usuario === 1 ||
+    userProfile?.tipo_usuario === 5 ||
+    userProfile?.dept_nombre === 'Bienes'; // Asumiendo role_id 1 para admin y dept_nombre 'Bienes'
 
   useEffect(() => {
     if (!isAdminOrBienes && userProfile?.dept_id) {
@@ -54,17 +69,29 @@ export const ExportBM4Modal: React.FC<ExportBM4ModalProps> = ({
 
   const handleExportClick = () => {
     if (selectedMonth && selectedYear && userProfile?.id) {
-      const deptIdToExport = isAdminOrBienes ? selectedDepartmentId : userProfile.dept_id;
-      const deptName = departments.find(d => d.id === deptIdToExport)?.nombre || 'Desconocido';
+      const deptIdToExport = isAdminOrBienes
+        ? selectedDepartmentId
+        : userProfile.dept_id;
+      const deptName =
+        departments.find((d) => d.id === deptIdToExport)?.nombre ||
+        'Desconocido';
 
       if (deptIdToExport) {
-        onExport(deptIdToExport, selectedMonth, selectedYear, userProfile.id, deptName);
+        onExport(
+          deptIdToExport,
+          selectedMonth,
+          selectedYear,
+          userProfile.id,
+          deptName,
+        );
         onClose();
       } else {
         alert('Por favor, selecciona un departamento, mes y año.');
       }
     } else {
-      alert('Por favor, selecciona un mes y año, y asegúrate de que el perfil de usuario esté cargado.');
+      alert(
+        'Por favor, selecciona un mes y año, y asegúrate de que el perfil de usuario esté cargado.',
+      );
     }
   };
 
@@ -96,7 +123,9 @@ export const ExportBM4Modal: React.FC<ExportBM4ModalProps> = ({
                 <FormLabel>Departamento</FormLabel>
                 <Select
                   placeholder="Selecciona un departamento"
-                  onChange={(e) => setSelectedDepartmentId(Number(e.target.value))}
+                  onChange={(e) =>
+                    setSelectedDepartmentId(Number(e.target.value))
+                  }
                   value={selectedDepartmentId || ''}
                 >
                   {departments.map((dept) => (
@@ -111,7 +140,10 @@ export const ExportBM4Modal: React.FC<ExportBM4ModalProps> = ({
             {!isAdminOrBienes && userProfile?.dept_id && (
               <FormControl>
                 <FormLabel>Departamento</FormLabel>
-                <Text>{departments.find(d => d.id === userProfile.dept_id)?.nombre || 'Cargando...'}</Text>
+                <Text>
+                  {departments.find((d) => d.id === userProfile.dept_id)
+                    ?.nombre || 'Cargando...'}
+                </Text>
               </FormControl>
             )}
 
