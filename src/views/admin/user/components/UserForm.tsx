@@ -54,14 +54,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    username: '', // <-- Nuevo campo
+    username: '',
     email: '',
     cedula: '',
     telefono: '',
     tipo_usuario: '2',
     dept_id: '1',
     password: '',
-    // isActive no se muestra ni se edita aquí
   });
 
   const toast = useToast();
@@ -165,7 +164,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
             {/* Row 1: Nombre y Apellido */}
             <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
               <FormControl flex={1}>
-                <FormLabel>Nombre<span style={{ color: 'red' }}> *</span></FormLabel>
+                <FormLabel>
+                  Nombre<span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Input
                   name="nombre"
                   value={formData.nombre}
@@ -174,7 +175,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                 />
               </FormControl>
               <FormControl flex={1}>
-                <FormLabel>Apellido<span style={{ color: 'red' }}> *</span></FormLabel>
+                <FormLabel>
+                  Apellido<span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Input
                   name="apellido"
                   value={formData.apellido}
@@ -187,7 +190,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
             {/* Row 2: Username y Email */}
             <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
               <FormControl flex={1}>
-                <FormLabel>Nombre de Usuario <span style={{ color: 'red' }}> *</span></FormLabel>
+                <FormLabel>
+                  Nombre de Usuario <span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Input
                   name="username"
                   value={formData.username}
@@ -196,9 +201,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                 />
               </FormControl>
               <FormControl flex={1}>
-                <FormLabel>Email<span style={{ color: 'red' }}> *</span> </FormLabel>
+                <FormLabel>
+                  Email<span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Input
-                  name="email "
+                  name="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Email"
@@ -210,7 +217,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
             {/* Row 3: Cédula y Teléfono */}
             <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
               <FormControl flex={1}>
-                <FormLabel>Cédula<span style={{ color: 'red' }}> *</span></FormLabel>
+                <FormLabel>
+                  Cédula<span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Input
                   name="cedula"
                   value={formData.cedula}
@@ -220,7 +229,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                 />
               </FormControl>
               <FormControl flex={1}>
-                <FormLabel>Teléfono<span style={{ color: 'red' }}> *</span></FormLabel>
+                <FormLabel>
+                  Teléfono<span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Input
                   name="telefono"
                   value={formData.telefono}
@@ -233,7 +244,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
 
             {/* Row 4: Contraseña */}
             <FormControl>
-              <FormLabel>Contraseña<span style={{ color: 'red' }}> *</span></FormLabel>
+              <FormLabel>
+                Contraseña<span style={{ color: 'red' }}> *</span>
+              </FormLabel>
               <Input
                 name="password"
                 value={formData.password}
@@ -246,7 +259,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
             {/* Row 5: Tipo de Usuario y Departamento */}
             <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
               <FormControl flex={1}>
-                <FormLabel>Tipo de Usuario<span style={{ color: 'red' }}> *</span></FormLabel>
+                <FormLabel>
+                  Tipo de Usuario<span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Menu>
                   <MenuButton
                     as={Button}
@@ -284,7 +299,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
               </FormControl>
 
               <FormControl flex={1}>
-                <FormLabel>Departamento<span style={{ color: 'red' }}> *</span></FormLabel>
+                <FormLabel>
+                  Departamento<span style={{ color: 'red' }}> *</span>
+                </FormLabel>
                 <Menu>
                   <MenuButton
                     as={Button}

@@ -79,7 +79,9 @@ export default function DisposalsForm({
   const toast = useToast();
 
   const isAdminOrBienes =
-    userProfile?.tipo_usuario === 1 || userProfile?.dept_nombre === 'Bienes';
+    userProfile?.tipo_usuario === 1 ||
+    userProfile?.tipo_usuario === 5 ||
+    userProfile?.dept_nombre === 'Bienes';
 
   useEffect(() => {
     if (!isAdminOrBienes && userProfile?.dept_id) {
@@ -136,7 +138,9 @@ export default function DisposalsForm({
   const bienesDisponibles = useMemo(() => {
     if (!selectedDeptId) return [];
     // Filtrar por departamento y solo bienes activos (isActive = 1)
-    return assets.filter((a) => a.dept_id === selectedDeptId && a.isActive === 1);
+    return assets.filter(
+      (a) => a.dept_id === selectedDeptId && a.isActive === 1,
+    );
   }, [assets, selectedDeptId]);
 
   // Cuando seleccionas bienes, guarda los bienes y cierra el modal de selección
@@ -178,15 +182,17 @@ export default function DisposalsForm({
       return;
     }
 
-    const disposalDataArray: Partial<Desincorp>[] = selectedAssets.map((asset) => ({
-      bien_id: asset.id,
-      fecha: newDisposal.fecha ?? '',
-      valor: asset.valor_total,
-      cantidad: 1,
-      concepto_id: Number(newDisposal.concepto_id),
-      dept_id: selectedDeptId,
-      observaciones: newDisposal.observaciones ?? '',
-    }));
+    const disposalDataArray: Partial<Desincorp>[] = selectedAssets.map(
+      (asset) => ({
+        bien_id: asset.id,
+        fecha: newDisposal.fecha ?? '',
+        valor: asset.valor_total,
+        cantidad: 1,
+        concepto_id: Number(newDisposal.concepto_id),
+        dept_id: selectedDeptId,
+        observaciones: newDisposal.observaciones ?? '',
+      }),
+    );
 
     //console.log("Calling handleMultipleAdd from DisposalsForm.tsx");
     //console.log("disposalDataArray:", disposalDataArray);
