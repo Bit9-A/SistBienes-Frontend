@@ -49,14 +49,13 @@ const GeneralSettings: React.FC = () => {
     localStorage.setItem('primaryColor', '#310493');
 
     const fetchConfig = async () => {
-      console.log('Fetching general configuration...');
+      //console.log('Fetching general configuration...');
       const baseURL = import.meta.env.VITE_API_BASE_URL; // Mover baseURL aquí
-      console.log('Base URL:', baseURL);
+      //console.log('Base URL:', baseURL);
 
       try {
         const config: GeneralConfig = await getGeneralConfig();
-        console.log('Configuración obtenida (en General.tsx):', config); // Log adicional para depuración
-
+        //console.log('Configuración obtenida (en General.tsx):', config); // Log adicional para depuración
         if (config) {
           // Asegurarse de que config no es undefined
           setPrimaryColor(config.colorprimario || '#310493');
@@ -65,21 +64,21 @@ const GeneralSettings: React.FC = () => {
           if (config.url_favicon) {
             const fullUrl = `${baseURL}${config.url_favicon}`;
             setFaviconPreview(fullUrl);
-            console.log('Favicon URL (en General.tsx):', fullUrl);
+            // console.log('Favicon URL (en General.tsx):', fullUrl);
           } else {
             setFaviconPreview(null);
           }
           if (config.url_banner) {
             const fullUrl = `${baseURL}${config.url_banner}`;
             setBannerPreview(fullUrl);
-            console.log('Banner URL (en General.tsx):', fullUrl);
+            // console.log('Banner URL (en General.tsx):', fullUrl);
           } else {
             setBannerPreview(null);
           }
           if (config.url_logo) {
             const fullUrl = `${baseURL}${config.url_logo}`;
             setLogoPreview(fullUrl);
-            console.log('Logo URL (en General.tsx):', fullUrl);
+            // console.log('Logo URL (en General.tsx):', fullUrl);
           } else {
             setLogoPreview(null);
           }
@@ -87,7 +86,7 @@ const GeneralSettings: React.FC = () => {
           if (config.url_impresion_1) {
             const fullUrl = `${baseURL}${config.url_impresion_1}`;
             setImpresion1Preview(fullUrl);
-            console.log('Impresion 1 URL (en General.tsx):', fullUrl);
+            // console.log('Impresion 1 URL (en General.tsx):', fullUrl);
           } else {
             setImpresion1Preview(null);
           }
@@ -95,7 +94,7 @@ const GeneralSettings: React.FC = () => {
           if (config.url_impresion_2) {
             const fullUrl = `${baseURL}${config.url_impresion_2}`;
             setImpresion2Preview(fullUrl);
-            console.log('Impresion 2 URL (en General.tsx):', fullUrl);
+            // console.log('Impresion 2 URL (en General.tsx):', fullUrl);
           } else {
             setImpresion2Preview(null);
           }

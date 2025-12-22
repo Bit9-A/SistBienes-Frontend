@@ -615,8 +615,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
               : undefined;
             if (currentFecha !== originalFecha) {
               changes.push(
-                `${key}: '${originalFecha || 'N/A'}' -> '${
-                  currentFecha || 'N/A'
+                `${key}: '${originalFecha || 'N/A'}' -> '${currentFecha || 'N/A'
                 }'`,
               );
             }
@@ -644,7 +643,7 @@ export const AssetForm: React.FC<AssetFormProps> = ({
         });
       }
 
-      console.log('Sending asset data:', assetData); // Debug log
+      //console.log('Sending asset data:', assetData); // Debug log
       await onSubmit(assetData, logDetails); // Pass logDetails to onSubmit
 
       toast({

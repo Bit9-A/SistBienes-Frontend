@@ -10,12 +10,12 @@ export async function exportQRLabels(
   departamentoNombre: string,
 ) {
   try {
-    console.log(
+    /*console.log(
       '[exportQRLabels] Sending request with deptId:',
       deptId,
       'type:',
       typeof deptId,
-    );
+    );*/
     const respuesta = await axiosInstance.post(
       '/labels/qr',
       { deptId: deptId },

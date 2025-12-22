@@ -21,7 +21,7 @@ export async function exportBM1WithMarkers(deptId: number, departamentoNombre: s
     const fecha = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
     const contentDisposition = respuesta.headers['content-disposition'];
 
-  
+
     // Extraer el nombre del archivo del header 'content-disposition'
     let nombreArchivo = `BM1_${departamentoNombre}_${fecha}.xlsx`; // Nombre por defecto si no se encuentra en el header'
     if (contentDisposition) {
@@ -56,7 +56,7 @@ export async function generateBM4Pdf(
   forceUpdate: boolean = false,
 ): Promise<{ success: boolean; reportExists?: boolean; errorMessage?: string }> {
   try {
-    console.log("Info: ", deptId, mes, año, responsableId,forceUpdate)
+    //console.log("Info: ", deptId, mes, año, responsableId,forceUpdate)
     const respuesta = await axiosInstance.post('/excel/bm4', {
       deptId: deptId,
       mes: mes,
