@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+const baseURL = import.meta.env.VITE_API_URL;
 
 const axiosInstance = axios.create({
   baseURL: baseURL,
@@ -12,7 +12,7 @@ const axiosInstance = axios.create({
 
 // Interceptor para agregar el token a las peticiones
 axiosInstance.interceptors.request.use(
-  (config:any) => {
+  (config: any) => {
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -26,23 +26,23 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error:Error) => {
+  (error: Error) => {
     return Promise.reject(error);
   }
 );
 
 // Interceptor para manejar respuestas y errores de autenticación
 axiosInstance.interceptors.response.use(
-  (response:any) => response,
+  (response: any) => response,
   (error: any) => {
     console.error("Error en la solicitud:", error);
-    
+
     // Si el error es 401 (No autorizado), limpiar localStorage y redirigir al login
     if (error.response?.status === 401) {
       localStorage.removeItem("user");
       window.location.href = "/auth/sign-in";
     }
-    
+
     return Promise.reject(error);
   }
 );
